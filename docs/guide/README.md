@@ -11,6 +11,7 @@ How to set up, run, and develop ss-video. Product intent lives in the
 | [Setup](setup.md) | Detailed setup options, GPU, CVAT |
 | [Local services](quickstart-local.md) | API, worker, and UI with hot-reload |
 | [Production](quickstart-production.md) | Production deployment checklist |
+| [Learning path](../learning_path/README.md) | How to study ingest, search, realtime, and the sidecar |
 
 ## Development
 

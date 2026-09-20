@@ -128,6 +128,11 @@ Before reporting completion:
 
 Current-state pages retain decisions and results. The plan never becomes a changelog.
 
+Unscheduled ideas belong under `## Future-task candidates` in the plan, not in a
+lane. Promote an id only after the specification has a capability row. The
+learning-path [future directions](../learning_path/07_future_directions.md) page
+explains the operator gaps behind those ids.
+
 ## Checks
 
 | Command | What it enforces |

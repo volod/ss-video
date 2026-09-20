@@ -10,5 +10,6 @@ This directory separates product intent, forward work, current behavior, and con
 | How should work be performed? | [Guide](guide/README.md) and [AGENTS.md](../AGENTS.md) |
 | How is a component configured or called? | [Reference](reference/README.md) |
 | How is it operated? | [Operations](operations/README.md) and [runbooks](runbooks/README.md) |
+| How do I study ingest and search? | [Learning path](learning_path/README.md) |
 
 `make lint-spec-plan` and `make lint-doc-links` run in `make lint`.

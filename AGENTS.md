@@ -51,3 +51,4 @@ Compiled wheels MUST be cached under `.data/wheels/<package-name>_<key>/`.
 | What exists and where? | `docs/impl/current.md` |
 | What happened to a finished task? | `docs/impl/records/` |
 | How is work performed? | `docs/guide/` and this file |
+| How do I study the stack? | `docs/learning_path/` |

@@ -27,7 +27,7 @@ src/selfsuvis/
   scripts/      ssv-env, ssv-migrate, quality checks
 docker/         compose files and container definitions
 tests/          unit, integration, assets, and shared test helpers
-docs/           specification, current implementation, guides, runbooks
+docs/           specification, current implementation, guides, runbooks, learning path
 ```
 
 Video Settings come from `selfsuvis.pipeline.core.config` (ss-perception package).

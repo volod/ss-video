@@ -1,0 +1,187 @@
+# Frigate NVR configuration
+# Resource tuning is driven by COOP_FRIGATE_* variables in .data/.env.
+# Detector thread count: COOP_FRIGATE_DETECTOR_THREADS (default: 2 for 4-core minimum spec).
+# Cameras: 5 IP/PoE cameras, one per section (enabled: false until RTSP URLs are set).
+# Audio: handled by coop SoundAnalyzer consuming Frigate RTSP re-streams (port 8555).
+#
+# Before enabling cameras:
+#   1. Replace placeholder RTSP URLs below with real camera IPs.
+#   2. Set COOP_FRIGATE_HWACCEL_PRESET in .data/.env or edit hwaccel_args below:
+#        Intel QSV H.264:  preset-intel-qsv-h264  (default)
+#        Intel QSV H.265:  preset-intel-qsv-h265
+#        AMD/Intel VAAPI:  preset-vaapi
+#        CPU only:         remove hwaccel_args entirely
+#   3. Set FRIGATE_MQTT_PASSWORD in .data/.env.
+#   4. Verify /dev/dri/renderD128 is accessible: ls -la /dev/dri/
+
+mqtt:
+  enabled: true
+  host: mosquitto
+  port: 1883
+  user: frigate
+  password: "{FRIGATE_MQTT_PASSWORD}"
+  topic_prefix: frigate
+  stats_interval: 60
+
+auth:
+  enabled: true
+  reset_admin_password: true
+  cookie_secure: false
+
+# Intel QSV hardware decode (J4105, Intel UHD 600, iHD driver).
+# All cameras inherit these global ffmpeg settings.
+ffmpeg:
+  global_args:
+    - -hide_banner
+    - -loglevel
+    - warning
+  hwaccel_args: preset-intel-qsv-h264    # change to preset-intel-qsv-h265 for H.265 cameras
+  output_args:
+    record: preset-record-generic-audio-copy
+
+detectors:
+  # CPU detector. Thread count comes from COOP_FRIGATE_DETECTOR_THREADS in .data/.env.
+  # Minimum spec (4-core): 2 threads. Mid spec (6-8-core): 4 threads.
+  # For better performance add a Google Coral USB TPU and switch to type: edgetpu.
+  cpu1:
+    type: cpu
+    num_threads: "{COOP_FRIGATE_DETECTOR_THREADS}"
+
+# Object detection model: default MobileNetV2 SSD (bundled with Frigate)
+model:
+  width: 320
+  height: 320
+
+# Recording: 7-day rolling retention, triggered clips on detection
+record:
+  enabled: true
+  retain:
+    days: 1       # increase if storage allows; J4105 typically on small SSD
+    mode: motion
+  events:
+    retain:
+      default: 7
+      mode: active_objects
+
+# Motion thresholds per camera are inherited from defaults below.
+motion:
+  threshold: 25
+  contour_area: 100
+  improve_contrast: true
+
+snapshots:
+  enabled: true
+  timestamp: true
+  bounding_box: true
+  retain:
+    default: 7
+
+# ── Cameras (5 sections, 1 IP/PoE camera each) ─────────────────────────────
+# Replace 192.168.1.10X with your actual camera IPs.
+# Section microphones (2 per section) are consumed by SoundAnalyzer separately
+# via Frigate RTSP re-streams: rtsp://localhost:8555/section_N
+# To stream microphone RTSP into Frigate as a camera, add a 6th entry with
+# roles: [audio] (requires Frigate audio detection feature, extra CPU ~10%).
+
+cameras:
+  section_1:
+    enabled: false    # set true after configuring RTSP URL
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.1.101:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+      enabled: true
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  section_2:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.1.102:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+      enabled: true
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  section_3:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.1.103:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+      enabled: true
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  section_4:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.1.104:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+      enabled: true
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+  section_5:
+    enabled: false
+    ffmpeg:
+      inputs:
+        - path: rtsp://192.168.1.105:554/stream1
+          roles:
+            - detect
+            - record
+    detect:
+      width: 1280
+      height: 720
+      fps: 5
+      enabled: true
+    objects:
+      track:
+        - person
+        - car
+        - dog
+        - cat
+
+version: 0.17-0

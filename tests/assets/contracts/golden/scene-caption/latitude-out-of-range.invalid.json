@@ -1,0 +1,18 @@
+{
+  "mission_id": "mission-0917",
+  "frame_id": "frame-000042",
+  "gps_lat": 91.0,
+  "gps_lon": 30.5236,
+  "gps_alt": 181.5,
+  "t_sec": 12.5,
+  "caption": "A red pickup truck parked beside the north gate.",
+  "facts_json": {
+    "scene_summary": "A red pickup truck parked beside the north gate.",
+    "objects": [
+      "truck",
+      "gate"
+    ],
+    "people_count": 0
+  },
+  "created_at": "2026-09-19T08:00:00.500000Z"
+}

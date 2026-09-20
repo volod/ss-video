@@ -1,0 +1,17 @@
+{
+  "type": "new",
+  "before": {},
+  "after": {
+    "id": "1726752000.512-fixture",
+    "camera": "entrance",
+    "label": "person",
+    "score": 0.81,
+    "top_score": 0.84,
+    "start_time": 1726752000.5,
+    "end_time": null,
+    "has_snapshot": true,
+    "has_clip": false,
+    "box": [264, 450, 667, 853],
+    "region": [250, 400, 700, 900]
+  }
+}

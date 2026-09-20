@@ -1,0 +1,29 @@
+{
+  "artifact_id": "sup_3f2a9c1e",
+  "format": "pytorch",
+  "path": "dino_sup_best.pt",
+  "sha256": "a45ce46b15a0f994434ae1d9910f32b475cb268bbeefd93b781f6096afde9173",
+  "size_bytes": 31,
+  "base_model": "dinov3_vitb14",
+  "producer": "selfsuvis.worker.handlers.finetune",
+  "created_at": "2026-09-19T08:00:00Z",
+  "training_data": {
+    "kind": "cvat_annotations",
+    "ref": "frames.al_tag=annotated",
+    "sample_count": 418
+  },
+  "metrics": [
+    {
+      "name": "best_accuracy",
+      "value": 0.9125
+    },
+    {
+      "name": "distribution_shift",
+      "value": 0.0412
+    },
+    {
+      "name": "epochs",
+      "value": 12.0
+    }
+  ]
+}

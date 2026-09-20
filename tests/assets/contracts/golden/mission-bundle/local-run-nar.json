@@ -1,0 +1,21 @@
+{
+  "mission_id": "nar",
+  "created_at": "2026-09-19T04:55:26.509176Z",
+  "time_base": "media",
+  "platform": {
+    "robot_id": "robot_0"
+  },
+  "videos": [
+    {
+      "video_id": "nar",
+      "path": "nar.mp4",
+      "sha256": "97f9c941e2cb013d2ddd82f19ded47bd06ab02304b54c60f2872b559d4dc5f50",
+      "size_bytes": 14788625,
+      "duration_sec": 25.42585,
+      "fps": 60.0,
+      "width": 1080,
+      "height": 1920
+    }
+  ],
+  "sidecars": []
+}

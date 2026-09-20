@@ -1,0 +1,14 @@
+{
+  "ts": "2026-09-19T08:02:03.500000Z",
+  "zone_id": "north-gate",
+  "sensor_id": "mic-03",
+  "confidence": 0.91,
+  "payload": {
+    "label": "drone",
+    "band_hz": [
+      120,
+      380
+    ]
+  },
+  "artifact_uri": "clips/north-gate/2026-09-19T080203.wav"
+}

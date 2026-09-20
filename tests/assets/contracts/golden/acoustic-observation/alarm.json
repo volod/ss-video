@@ -1,0 +1,18 @@
+{
+  "camera": "entrance",
+  "recorded_at": "2026-09-19T08:00:00.500000Z",
+  "chunk_duration_sec": 4.0,
+  "speech_transcript": "stay back",
+  "acoustic_events": [
+    {
+      "event": "alarm",
+      "energy_ratio": 1.0
+    },
+    {
+      "event": "glass",
+      "energy_ratio": 1.0
+    }
+  ],
+  "rms_db": -11.426960277003118,
+  "silence": false
+}

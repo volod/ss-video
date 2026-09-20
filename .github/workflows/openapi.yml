@@ -1,0 +1,46 @@
+name: OpenAPI spec diff gate
+
+on:
+  pull_request:
+    paths:
+      - "src/selfsuvis/app/**"
+      - "docs/api/**"
+      - ".github/workflows/openapi.yml"
+      - "pyproject.toml"
+
+jobs:
+  openapi-check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+
+      - name: Install minimal deps for OpenAPI export
+        run: |
+          # --no-deps keeps torch/transformers off this job. Importing app.main
+          # and fusion_rt.app still needs the FastAPI stack plus ss_kit from
+          # published ss-common (web + mqtt extras for FusionSettings).
+          pip install -e ".[dev]" --no-deps
+          pip install --no-deps \
+            "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-perception" \
+            "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-mapping" \
+            "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-fusion" \
+            "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=apps/fusion-rt"
+          pip install \
+            fastapi pydantic sse-starlette asyncpg python-multipart \
+            httpx numpy pillow requests scipy pyyaml \
+            "ss-common[web,mqtt] @ git+https://github.com/volod/ss-common.git@v0.1.0"
+
+      - name: Export OpenAPI spec
+        run: make export-openapi
+
+      - name: Fail if spec changed without committing
+        run: |
+          if ! git diff --exit-code -- docs/api/video-openapi.json docs/api/fusion-rt-openapi.json; then
+            echo "ERROR: OpenAPI specs are out of date."
+            echo "Run 'make export-openapi && git add docs/api/video-openapi.json docs/api/fusion-rt-openapi.json' and commit."
+            exit 1
+          fi

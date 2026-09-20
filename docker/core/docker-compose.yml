@@ -1,0 +1,313 @@
+# Run all services as current host user so data/cache dirs are owned by you.
+# Requires: UID and GID env vars (make up sets these automatically).
+# Container env priority: shell `environment:` > DATA_DIR/.env (optional) >
+# packaged prod defaults in src/selfsuvis/env/prod.env (ss-perception package data).
+#
+# Shared network `selfsuvis-net` lets the API reach ss-sens Mosquitto.
+# Frigate is profile `frigate` (`make frigate-up`).
+#
+# Vision images bind-mount the host wheel cache ($DATA_DIR/wheels, default
+# ../../.data/wheels). That named context overrides the empty Dockerfile
+# `wheels` stage so image builds do not COPY from docker/ and .data stays
+# dockerignored.
+x-wheels: &wheels
+  wheels: ${WHEELS_DIR:-../../.data/wheels}
+
+networks:
+  default:
+    name: selfsuvis-net
+
+services:
+  redis:
+    image: redis:7-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    command: redis-server --appendonly yes --appendfsync everysec
+    volumes:
+      - ${DATA_DIR:-../../.data}/redis:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  postgres:
+    image: postgres:16-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      POSTGRES_USER: selfsuvis
+      POSTGRES_PASSWORD: selfsuvis
+      POSTGRES_DB: selfsuvis
+    volumes:
+      - ${DATA_DIR:-../../.data}/postgres:/var/lib/postgresql/data
+      - ./postgres-init:/docker-entrypoint-initdb.d:ro
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U selfsuvis"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  qdrant:
+    build:
+      context: ../..
+      dockerfile: docker/qdrant/Dockerfile.qdrant
+    user: "0:0"
+    environment:
+      - UID=${UID:-1000}
+      - GID=${GID:-1000}
+    ports:
+      - "6333:6333"
+    volumes:
+      - ${DATA_DIR:-../../.data}/qdrant:/qdrant/storage
+      - ../../config/qdrant/qdrant.yaml:/qdrant/config/config.yaml:ro
+
+  api:
+    build:
+      context: ../..
+      dockerfile: docker/core/Dockerfile.api
+      additional_contexts: *wheels
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    image: selfsuvis-api:local
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - DATA_DIR=/app/data
+      - DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - REDIS_URL=redis://redis:6379/0
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - TORCH_HOME=/app/cache/torch
+      - OPENCLIP_CACHE_DIR=/app/cache/open_clip
+      - TORCHINDUCTOR_CACHE_DIR=/app/cache/inductor
+      - LOGNAME=app
+      - COOP_MQTT_HOST=${COOP_MQTT_HOST:-mosquitto}
+      - COOP_MQTT_PORT=${COOP_MQTT_PORT:-1883}
+      - COOP_MQTT_USER=${COOP_MQTT_USER:-ss-sens}
+      - COOP_MQTT_PASSWORD=${COOP_MQTT_PASSWORD:-}
+      - COOP_MQTT_TLS=false
+      - COOP_SITE_ID=${COOP_SITE_ID:-local}
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    ports:
+      - "8000:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  fusion-rt:
+    build:
+      context: ../..
+      dockerfile: docker/core/Dockerfile.fusion_rt
+    image: selfsuvis-fusion-rt:local
+    command: ["uvicorn", "selfsuvis.fusion_rt.app:app", "--host", "0.0.0.0", "--port", "8000"]
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      - DATA_DIR=/app/data
+      - DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - REDIS_URL=redis://redis:6379/0
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - LOGNAME=app
+      - COOP_MQTT_HOST=${COOP_MQTT_HOST:-mosquitto}
+      - COOP_MQTT_PORT=${COOP_MQTT_PORT:-1883}
+      - COOP_MQTT_USER=${COOP_MQTT_USER:-ss-sens}
+      - COOP_MQTT_PASSWORD=${COOP_MQTT_PASSWORD:-}
+      - COOP_MQTT_TLS=false
+      - COOP_SITE_ID=${COOP_SITE_ID:-local}
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    ports:
+      - "8001:8000"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  worker:
+    build:
+      context: ../..
+      dockerfile: docker/core/Dockerfile.worker
+      additional_contexts: *wheels
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      - QDRANT_HOST=qdrant
+      - QDRANT_PORT=6333
+      - DATA_DIR=/app/data
+      - DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - REDIS_URL=redis://redis:6379/0
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - TORCH_HOME=/app/cache/torch
+      - OPENCLIP_CACHE_DIR=/app/cache/open_clip
+      - TORCHINDUCTOR_CACHE_DIR=/app/cache/inductor
+      - LOGNAME=app
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      qdrant:
+        condition: service_started
+      redis:
+        condition: service_healthy
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - capabilities: [gpu]
+
+  ui:
+    build:
+      context: ../..
+      dockerfile: docker/core/Dockerfile.ui
+      additional_contexts: *wheels
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      - API_URL=http://api:8000
+      - FUSION_RT_URL=http://fusion-rt:8000
+      - DATA_DIR=/app/data
+      - HOME=/tmp
+      - STREAMLIT_BROWSER_GATHER_USAGE_STATS=false
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+    ports:
+      - "8501:8501"
+    depends_on:
+      - api
+      - fusion-rt
+
+  nginx:
+    image: nginxinc/nginx-unprivileged:1.25-alpine
+    user: "${UID:-1000}:${GID:-1000}"
+    volumes:
+      - ../../config/nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ${DATA_DIR:-../../.data}:/app/data:ro
+    ports:
+      - "8080:8080"
+    depends_on:
+      - api
+
+  mediamtx:
+    image: bluenviron/mediamtx:1
+    user: "${UID:-1000}:${GID:-1000}"
+    ports:
+      - "8554:8554"   # RTSP
+      - "1935:1935"   # RTMP
+      - "8888:8888"   # HLS / HTTP
+      - "8889:8889"   # WebRTC
+      - "8890:8890/udp" # WebRTC ICE/UDP
+      - "8189:8189/udp" # WebRTC ICE/UDP
+    environment:
+      MTX_API: "yes"
+      MTX_APIADDRESS: ":9997"
+      MTX_RTSPTRANSPORTS: tcp
+      MTX_WEBRTCADDITIONALHOSTS: ${MEDIAMTX_WEBRTC_HOST:-127.0.0.1}
+    volumes:
+      - ../../config/mediamtx/mediamtx.yml:/mediamtx.yml:ro
+      - ${DATA_DIR:-../../.data}/mediamtx:/recordings
+
+  # ── Frigate NVR (profile: frigate) ──────────────────────────────────────────
+  # Hardware decode: set FRIGATE_LIBVA_DRIVER_NAME and map /dev/dri/renderD128.
+  # RTSP port 8555 on host avoids conflict with mediamtx (8554).
+  # Requires ss-sens Mosquitto on selfsuvis-net (MQTT host `mosquitto`).
+  frigate:
+    image: ghcr.io/blakeblackshear/frigate:stable
+    container_name: ssv-frigate
+    restart: unless-stopped
+    profiles:
+      - frigate
+    privileged: true
+    ports:
+      - "127.0.0.1:8971:8971"
+      - "127.0.0.1:8555:8554"
+    devices:
+      - /dev/dri/renderD128
+    volumes:
+      - ${DATA_DIR:-../../.data}/coop/frigate:/config
+      - ${DATA_DIR:-../../.data}/frigate-media:/media/frigate
+    environment:
+      FRIGATE_RTSP_PASSWORD: ${FRIGATE_RTSP_PASSWORD:-}
+      FRIGATE_MQTT_PASSWORD: ${FRIGATE_MQTT_PASSWORD:-}
+      LIBVA_DRIVER_NAME: ${FRIGATE_LIBVA_DRIVER_NAME:-iHD}
+      COOP_FRIGATE_DETECTOR_THREADS: ${COOP_FRIGATE_DETECTOR_THREADS:-2}
+    shm_size: ${COOP_FRIGATE_SHM_SIZE:-256mb}
+    healthcheck:
+      test: ["CMD-SHELL", "curl -sk https://127.0.0.1:8971/login -o /dev/null -w '%{http_code}' | grep -q '200'"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 45s
+    logging:
+      driver: json-file
+      options:
+        max-size: "50m"
+        max-file: "5"
+    deploy:
+      resources:
+        limits:
+          cpus: "${COOP_FRIGATE_CPUS:-2.00}"
+          memory: ${COOP_FRIGATE_MEMORY:-2560M}
+        reservations:
+          cpus: "0.25"
+          memory: 512M
+

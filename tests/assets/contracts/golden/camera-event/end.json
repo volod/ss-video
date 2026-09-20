@@ -1,0 +1,28 @@
+{
+  "event_id": "1789804900.100000-a7c1de",
+  "camera": "yard",
+  "label": "fox",
+  "score": 0.625,
+  "top_score": 0.9375,
+  "event_type": "end",
+  "started_at": "2026-09-19T08:01:40.250000Z",
+  "ended_at": "2026-09-19T08:01:52.750000Z",
+  "has_snapshot": true,
+  "has_clip": true,
+  "region": {},
+  "raw": {
+    "type": "end",
+    "after": {
+      "id": "1789804900.100000-a7c1de",
+      "camera": "yard",
+      "label": "fox",
+      "score": 0.625,
+      "top_score": 0.9375,
+      "start_time": 1789804900.25,
+      "end_time": 1789804912.75,
+      "has_snapshot": true,
+      "has_clip": true,
+      "region": {}
+    }
+  }
+}

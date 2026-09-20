@@ -1,0 +1,56 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: ${{ github.event_name == 'pull_request' }}
+
+env:
+  PYTHON_VERSION: "3.11"
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      - name: Install ruff and ss-common
+        run: |
+          uv venv .venv --python "$PYTHON_VERSION"
+          uv pip install --python .venv "ruff>=0.16,<0.17"
+          uv pip install --python .venv "import-linter>=2.1"
+          uv pip install --python .venv "ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0"
+          echo "$GITHUB_WORKSPACE/.venv/bin" >> "$GITHUB_PATH"
+      - run: make lint
+
+  unit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v6
+      # Light suite only (`make test-ci`). No torch, opencv, ffmpeg, or vision extras.
+      # `--no-deps` keeps transformers/onnxruntime/qdrant off this job; the packages
+      # below are what the remaining tests import.
+      - name: Install light unit-test dependencies
+        run: |
+          uv venv .venv --python "$PYTHON_VERSION"
+          uv pip install --python .venv -e ".[dev]" --no-deps
+          uv pip install --python .venv --no-deps \
+            "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-perception" \
+            "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-mapping" \
+            "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-fusion" \
+            "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=apps/fusion-rt"
+          uv pip install --python .venv \
+            pytest pytest-asyncio \
+            fastapi pydantic sse-starlette asyncpg python-multipart \
+            httpx numpy pillow requests scipy scikit-learn plyfile \
+            PyYAML python-dotenv redis openai "qdrant-client>=1.19.1,<2" jinja2 aiomqtt \
+            "ss-common[web] @ git+https://github.com/volod/ss-common.git@v0.1.0"
+      - run: make test-ci

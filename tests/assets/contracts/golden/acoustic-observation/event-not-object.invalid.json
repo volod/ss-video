@@ -1,0 +1,10 @@
+{
+  "camera": "entrance",
+  "recorded_at": "2026-09-19T08:00:00.500000Z",
+  "chunk_duration_sec": 4.0,
+  "acoustic_events": [
+    "alarm"
+  ],
+  "rms_db": -113.01029995663981,
+  "silence": true
+}

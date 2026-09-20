@@ -1,0 +1,5 @@
+{"topic":"/gps/fix","stamp":2.0,"payload":{"lat":50.4501,"lon":30.5234,"altitude":110.0,"east":0.0,"north":0.0,"up":0.0}}
+{"topic":"/imu","stamp":2.03,"payload":{"yaw":0.4,"vx":1.2,"vy":0.1,"vz":0.0}}
+{"topic":"/barometer","stamp":2.05,"payload":{"altitude":111.2}}
+{"topic":"/mag","stamp":2.06,"payload":{"heading":0.39}}
+{"topic":"/camera/image_raw","stamp":2.08,"payload":{"frame_id":"cam_0001","width":1280,"height":720}}

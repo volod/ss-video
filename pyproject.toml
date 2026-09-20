@@ -1,0 +1,183 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "selfsuvis"
+version = "0.1.0"
+description = "Outdoor autonomy perception stack — spatial memory engine for robotics"
+readme = "README.md"
+requires-python = ">=3.10"
+dependencies = [
+    # Web / API
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.27",
+    "streamlit>=1.37",
+    "python-multipart>=0.0.9",
+    "httpx>=0.27",
+    "requests>=2.31",
+    # Data / ML (CPU-only core)
+    "numpy>=1.26",
+    "pillow>=10.2",
+    "scikit-image>=0.22",
+    "scikit-learn>=1.4",
+    "plyfile>=0.9",
+    "tqdm>=4.66",
+    "onnxruntime>=1.18",  # CPU base; install_requirements.sh upgrades to onnxruntime-gpu on CUDA machines
+    "onnxscript>=0.1",
+    # NLP / LLM
+    "transformers>=4.47",
+    "accelerate>=0.26",
+    "faster-whisper>=1.0",
+    "sentencepiece>=0.1.99",
+    "tiktoken>=0.6",
+    # Storage / DB
+    "qdrant-client>=1.19.1,<2",
+    "asyncpg>=0.29",
+    "pydantic>=2.8",
+    "python-dotenv>=1.0",
+    "redis>=5.0",
+    "sse-starlette>=1.6",
+    "PyYAML>=6.0",
+    "aiomqtt>=2.3",
+    # AI service clients
+    "openai>=1.0",
+    "google-genai>=1.0",
+    # Utilities
+    "psutil>=5.9",
+    "verovio>=3.12",
+    # Shared contracts and runtime helpers (published tag).
+    "ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0",
+    # Published ss-fusion workspace members (uv [tool.uv.sources] git pins;
+    # pip also honors these PEP 508 subdirectory URLs).
+    "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-perception",
+    "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-mapping",
+    "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-fusion",
+    "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=apps/fusion-rt",
+]
+
+[project.optional-dependencies]
+# Full vision stack — requires CUDA for training/inference at speed.
+# torch is NOT listed here; install_requirements.sh handles it with the
+# correct CUDA wheel index (pytorch.org/whl/cuXXX).
+vision = [
+    "torchvision>=0.16",
+    "open-clip-torch>=2.24",
+    "opencv-python>=4.10",
+    "einops>=0.8",
+    "ultralytics>=8.3",
+    "xformers>=0.0.35",
+    "sam3",
+    "sam2",
+    "segment-anything>=1.0",
+    "rfdetr>=1.1",
+    "gsplat>=1.4",   # CUDA JIT kernels compiled on first use; CPU machines skip gracefully
+    "faiss-cpu>=1.8",
+    "pycolmap>=4.0",
+    "ninja>=1.13",   # build tool for CUDA extension compilation
+]
+# Mapper service (ICP fusion only — no GPU, no torch).
+mapper = [
+    "numpy>=1.26",
+    "open3d>=0.18",
+    "plyfile>=0.9",
+    "scipy>=1.10",
+    "python-dotenv>=1.0",
+    "fastapi>=0.115",
+    "uvicorn[standard]>=0.27",
+    "asyncpg>=0.29",
+]
+dev = [
+    "pytest>=8.0",
+    "pytest-asyncio>=0.23",
+    "ruff>=0.16,<0.17",
+    "import-linter>=2.1",
+]
+
+[project.scripts]
+ssv-env              = "selfsuvis.scripts.generate_env:main"
+ssv-migrate          = "selfsuvis.scripts.migrate_postgres:main"
+ssv-realtime-bridge  = "selfsuvis.realtime.bridge_runtime:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
+
+[tool.setuptools.package-data]
+"selfsuvis.app" = ["templates/**/*"]
+"selfsuvis" = ["env/*.env"]
+
+# ── pytest ────────────────────────────────────────────────────────────────────
+[tool.pytest.ini_options]
+cache_dir = ".data/.pytest_cache"
+testpaths = ["tests"]
+pythonpath = [
+    "src",
+]
+asyncio_mode = "auto"
+filterwarnings = [
+    "ignore::DeprecationWarning",
+    "ignore::FutureWarning",
+]
+markers = [
+    "slow: marks tests as slow (deselect with -m 'not slow')",
+    "heavy: needs torch, opencv, ffmpeg, or other vision/ML deps; GitHub CI excludes these",
+    "benchmark: performance or model-lab benchmarks; GitHub CI excludes these",
+    "gpu: requires a CUDA GPU (deselect with -m 'not gpu')",
+    "integration: requires running Docker services",
+    "load: marks tests as load/performance tests (requires locust)",
+]
+
+# ── ruff ─────────────────────────────────────────────────────────────────────
+[tool.ruff]
+cache-dir = ".data/.ruff_cache"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "W", "I", "UP"]
+ignore = ["E501"]
+
+[tool.ruff.lint.isort]
+known-first-party = ["selfsuvis", "ssv_vdp", "ss_kit", "ss_contracts"]
+
+# ── pyright ──────────────────────────────────────────────────────────────────
+[tool.pyright]
+pythonVersion = "3.10"
+pythonPlatform = "Linux"
+extraPaths = ["src"]
+venvPath = "."
+venv = ".venv"
+typeCheckingMode = "basic"
+
+# ── coverage ─────────────────────────────────────────────────────────────────
+[tool.coverage.run]
+source = ["src/selfsuvis"]
+omit = ["*/tests/*", "*/__main__.py"]
+
+[tool.coverage.report]
+show_missing = true
+
+[tool.uv.sources]
+ss-common = { git = "https://github.com/volod/ss-common", tag = "v0.1.0" }
+ss-perception = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-perception" }
+ss-mapping = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-mapping" }
+ss-fusion = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-fusion" }
+fusion-rt = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "apps/fusion-rt" }
+
+[tool.importlinter]
+root_packages = ["selfsuvis"]
+
+[[tool.importlinter.contracts]]
+name = "Video layer (ss-fusion packages are installed from the published git tag)"
+type = "layers"
+# Highest to lowest. Same-layer modules may import each other (`:`). Mixed parent
+# packages are omitted so descendants are not inherited by the wrong layer.
+# Perception, mapping, and fusion modules are installed from the published
+# ss-fusion git tag; exhaustive is false so those imports are allowed.
+exhaustive = false
+ignore_imports = []
+layers = [
+    "selfsuvis.app : selfsuvis.camera_cli : selfsuvis.mapper : selfsuvis.pipeline.mapping.icp : selfsuvis.pipeline.mapping.mapper : selfsuvis.pipeline.media.bridge_common : selfsuvis.pipeline.media.download : selfsuvis.pipeline.media.drone_bridge : selfsuvis.pipeline.media.mavlink : selfsuvis.pipeline.media.mission_bundle : selfsuvis.pipeline.media.network : selfsuvis.pipeline.media.ros_bridge : selfsuvis.pipeline.media.rtsp_captioner : selfsuvis.pipeline.media.rtsp_ingest : selfsuvis.pipeline.realtime : selfsuvis.pipeline.storage.global_maps : selfsuvis.pipeline.storage.jobs : selfsuvis.pipeline.storage.map_cache : selfsuvis.pipeline.storage.migrate_video : selfsuvis.pipeline.storage.missions : selfsuvis.pipeline.storage.processed : selfsuvis.pipeline.storage.realtime : selfsuvis.pipeline.workflows : selfsuvis.realtime : selfsuvis.scripts.backfill_captions : selfsuvis.scripts.generate_env : selfsuvis.scripts.migrate_postgres : selfsuvis.scripts.quality : selfsuvis.scripts.shell_helpers : selfsuvis.scripts.smoke_florence : selfsuvis.ui : selfsuvis.worker",
+]
+
+

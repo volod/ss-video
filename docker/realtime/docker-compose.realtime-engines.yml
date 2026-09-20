@@ -1,0 +1,87 @@
+# docker/realtime/docker-compose.realtime-engines.yml
+#
+# Optional open-source SLAM / occupancy sidecars. This compose module is limited
+# to OSS engines and does not ship the project-owned reference mapper image.
+#
+# Usage:
+#   docker compose -f docker/core/docker-compose.yml -f docker/realtime/docker-compose.realtime-engines.yml up -d
+
+networks:
+  default:
+    name: selfsuvis-net
+
+services:
+  realtime-vins-fusion:
+    image: ${REALTIME_VINS_FUSION_IMAGE:?set REALTIME_VINS_FUSION_IMAGE to a VINS-Fusion-compatible sidecar image}
+    container_name: realtime-vins-fusion
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_ENGINE_NAME: vins_fusion
+      REALTIME_ENGINE_ROLE: pose
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8111:8101"
+
+  realtime-orbslam3:
+    image: ${REALTIME_ORBSLAM3_IMAGE:?set REALTIME_ORBSLAM3_IMAGE to an ORB-SLAM3-compatible sidecar image}
+    container_name: realtime-orbslam3
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_ENGINE_NAME: orbslam3
+      REALTIME_ENGINE_ROLE: pose
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8112:8101"
+
+  realtime-liosam:
+    image: ${REALTIME_LIOSAM_IMAGE:?set REALTIME_LIOSAM_IMAGE to a LIO-SAM-compatible sidecar image}
+    container_name: realtime-liosam
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_ENGINE_NAME: liosam
+      REALTIME_ENGINE_ROLE: pose
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8113:8101"
+
+  realtime-nvblox:
+    image: ${REALTIME_NVBLOX_IMAGE:?set REALTIME_NVBLOX_IMAGE to an nvblox-compatible sidecar image}
+    container_name: realtime-nvblox
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_ENGINE_NAME: nvblox
+      REALTIME_ENGINE_ROLE: occupancy
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8114:8101"
+
+  realtime-voxblox:
+    image: ${REALTIME_VOXBLOX_IMAGE:?set REALTIME_VOXBLOX_IMAGE to a voxblox-compatible sidecar image}
+    container_name: realtime-voxblox
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_ENGINE_NAME: voxblox
+      REALTIME_ENGINE_ROLE: occupancy
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8115:8101"

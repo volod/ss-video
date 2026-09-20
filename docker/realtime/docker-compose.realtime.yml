@@ -1,0 +1,19 @@
+services:
+  realtime-reference:
+    build:
+      context: ../..
+      dockerfile: docker/realtime/Dockerfile.realtime_reference
+      additional_contexts:
+        wheels: ${WHEELS_DIR:-../../.data/wheels}
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      DATA_DIR: /data
+      MAPS_DIR: /data/maps
+      REALTIME_POSE_BACKEND: ${REALTIME_POSE_BACKEND:-stub}
+      REALTIME_OCCUPANCY_BACKEND: ${REALTIME_OCCUPANCY_BACKEND:-stub}
+    volumes:
+      - ${DATA_DIR:-../../.data}:/data
+    ports:
+      - "8101:8101"

@@ -1,0 +1,14 @@
+# Custom Qdrant image: chown storage then run as non-root (UID:GID).
+# Keep the tag in lockstep with qdrant-client in pyproject.toml (1.19.x) so
+# query_points() hits /collections/{name}/points/query.
+FROM qdrant/qdrant:v1.19.1
+
+# Install gosu to drop privileges (Debian-based image)
+RUN apt-get update && apt-get install -y --no-install-recommends gosu \
+    && rm -rf /var/lib/apt/lists/*
+
+COPY docker/qdrant/qdrant-entrypoint.sh /qdrant-entrypoint.sh
+RUN chmod +x /qdrant-entrypoint.sh
+
+ENTRYPOINT ["/qdrant-entrypoint.sh"]
+CMD ["/qdrant/qdrant", "--config-path", "/qdrant/config/config.yaml"]

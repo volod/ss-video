@@ -1,0 +1,197 @@
+# CVAT annotation service — run alongside the main stack OR standalone.
+#
+# Start with main stack:
+#   make cvat-up
+#
+# Standalone:
+#   docker compose -f docker/cvat/docker-compose.cvat.yml up -d
+#
+# First-time setup (create admin user):
+#   docker compose -f docker/cvat/docker-compose.cvat.yml exec cvat_server \
+#     python manage.py createsuperuser
+#
+# UI: http://localhost:8091
+# API: http://localhost:8090/api/
+#
+# Data stored under .data/cvat/ (separate from selfsuvis data/).
+# CVAT has its own postgres + redis — no schema conflict with selfsuvis.
+
+services:
+  cvat_db:
+    image: postgres:16-alpine
+    container_name: cvat_db
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cvat
+      POSTGRES_USER: root
+      POSTGRES_PASSWORD: root
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/db:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U root -d cvat"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cvat_redis_inmem:
+    image: redis:7.2-alpine
+    container_name: cvat_redis_inmem
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cvat_redis_ondisk:
+    image: redis:7.2-alpine
+    container_name: cvat_redis_ondisk
+    restart: unless-stopped
+    command: redis-server --save 60 1 --appendonly yes
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/redis:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  cvat_opa:
+    image: openpolicyagent/opa:0.63.0-rootless
+    container_name: cvat_opa
+    restart: unless-stopped
+    command:
+      - run
+      - --server
+      - --log-level=error
+      - --set=decision_logs.console=true
+      - --set=services.cvat.url=http://cvat_server:8080
+      - --set=bundles.cvat.service=cvat
+      - --set=bundles.cvat.resource=/api/auth/rules
+      - --set=bundles.cvat.polling.min_delay_seconds=5
+      - --set=bundles.cvat.polling.max_delay_seconds=15
+
+  cvat_server:
+    image: cvat/server:v2.16.2
+    container_name: cvat_server
+    restart: unless-stopped
+    environment:
+      DJANGO_MODWSGI_EXTRA_ARGS: ""
+      ALLOWED_HOSTS: "*"
+      CVAT_REDIS_INMEM_HOST: cvat_redis_inmem
+      CVAT_REDIS_INMEM_PORT: "6379"
+      CVAT_REDIS_ONDISK_HOST: cvat_redis_ondisk
+      CVAT_REDIS_ONDISK_PORT: "6379"
+      CVAT_POSTGRES_HOST: cvat_db
+      CVAT_POSTGRES_PORT: "5432"
+      CVAT_POSTGRES_DBNAME: cvat
+      CVAT_POSTGRES_USER: root
+      CVAT_POSTGRES_PASSWORD: root
+      IAM_OPA_BUNDLE: "1"
+      IAM_OPA_DATA_URL: http://cvat_opa:8181/v1/data
+      NUMPROCS: "1"
+      SMOKESCREEN_OPTS: ""
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/server/data:/home/django/data
+      - ${DATA_DIR:-../../.data}/cvat/server/keys:/home/django/keys
+      - ${DATA_DIR:-../../.data}/cvat/server/logs:/home/django/logs
+      - ${DATA_DIR:-../../.data}/cvat/server/models:/home/django/models
+    depends_on:
+      cvat_db:
+        condition: service_healthy
+      cvat_redis_inmem:
+        condition: service_healthy
+      cvat_redis_ondisk:
+        condition: service_healthy
+      cvat_opa:
+        condition: service_started
+
+  cvat_ui:
+    image: cvat/ui:v2.16.2
+    container_name: cvat_ui
+    restart: unless-stopped
+    depends_on:
+      - cvat_server
+
+  cvat_worker_import:
+    image: cvat/server:v2.16.2
+    container_name: cvat_worker_import
+    restart: unless-stopped
+    command: run worker.import
+    environment:
+      CVAT_REDIS_INMEM_HOST: cvat_redis_inmem
+      CVAT_REDIS_INMEM_PORT: "6379"
+      CVAT_REDIS_ONDISK_HOST: cvat_redis_ondisk
+      CVAT_REDIS_ONDISK_PORT: "6379"
+      CVAT_POSTGRES_HOST: cvat_db
+      CVAT_POSTGRES_DBNAME: cvat
+      CVAT_POSTGRES_USER: root
+      CVAT_POSTGRES_PASSWORD: root
+      NUMPROCS: "1"
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/server/data:/home/django/data
+      - ${DATA_DIR:-../../.data}/cvat/server/keys:/home/django/keys
+      - ${DATA_DIR:-../../.data}/cvat/server/logs:/home/django/logs
+      - ${DATA_DIR:-../../.data}/cvat/server/models:/home/django/models
+    depends_on:
+      - cvat_server
+
+  cvat_worker_export:
+    image: cvat/server:v2.16.2
+    container_name: cvat_worker_export
+    restart: unless-stopped
+    command: run worker.export
+    environment:
+      CVAT_REDIS_INMEM_HOST: cvat_redis_inmem
+      CVAT_REDIS_INMEM_PORT: "6379"
+      CVAT_REDIS_ONDISK_HOST: cvat_redis_ondisk
+      CVAT_REDIS_ONDISK_PORT: "6379"
+      CVAT_POSTGRES_HOST: cvat_db
+      CVAT_POSTGRES_DBNAME: cvat
+      CVAT_POSTGRES_USER: root
+      CVAT_POSTGRES_PASSWORD: root
+      NUMPROCS: "1"
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/server/data:/home/django/data
+      - ${DATA_DIR:-../../.data}/cvat/server/keys:/home/django/keys
+      - ${DATA_DIR:-../../.data}/cvat/server/logs:/home/django/logs
+      - ${DATA_DIR:-../../.data}/cvat/server/models:/home/django/models
+    depends_on:
+      - cvat_server
+
+  cvat_worker_annotation:
+    image: cvat/server:v2.16.2
+    container_name: cvat_worker_annotation
+    restart: unless-stopped
+    command: run worker.annotation
+    environment:
+      CVAT_REDIS_INMEM_HOST: cvat_redis_inmem
+      CVAT_REDIS_INMEM_PORT: "6379"
+      CVAT_REDIS_ONDISK_HOST: cvat_redis_ondisk
+      CVAT_REDIS_ONDISK_PORT: "6379"
+      CVAT_POSTGRES_HOST: cvat_db
+      CVAT_POSTGRES_DBNAME: cvat
+      CVAT_POSTGRES_USER: root
+      CVAT_POSTGRES_PASSWORD: root
+      NUMPROCS: "1"
+    volumes:
+      - ${DATA_DIR:-../../.data}/cvat/server/data:/home/django/data
+      - ${DATA_DIR:-../../.data}/cvat/server/keys:/home/django/keys
+      - ${DATA_DIR:-../../.data}/cvat/server/logs:/home/django/logs
+      - ${DATA_DIR:-../../.data}/cvat/server/models:/home/django/models
+    depends_on:
+      - cvat_server
+
+  # Reverse proxy: routes /api/* /static/* /admin/* → cvat_server; /* → cvat_ui
+  # Accessible at http://localhost:8091
+  cvat_proxy:
+    image: nginx:1.25-alpine
+    container_name: cvat_proxy
+    restart: unless-stopped
+    volumes:
+      - ../../config/cvat/nginx.conf:/etc/nginx/nginx.conf:ro
+    ports:
+      - "8091:80"
+    depends_on:
+      - cvat_server
+      - cvat_ui

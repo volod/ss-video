@@ -1,0 +1,5 @@
+# Override snapshots_path to be inside the mounted storage volume.
+# Default ./snapshots is outside the mount and causes Permission denied when running as non-root.
+storage:
+  storage_path: ./storage
+  snapshots_path: ./storage/snapshots

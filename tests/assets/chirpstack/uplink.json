@@ -1,0 +1,32 @@
+{
+  "deduplicationId": "3ac7e3c4-4401-4b8d-9386-a5c902f9202d",
+  "time": "2026-09-19T07:59:58.412345Z",
+  "deviceInfo": {
+    "tenantId": "52f14cd4-c6f1-4fbd-8f87-4025e1d49242",
+    "applicationId": "a1b2c3d4-0000-4000-8000-000000000001",
+    "deviceName": "coop-north",
+    "devEui": "70b3d57ed0060001"
+  },
+  "devAddr": "01fd2c3a",
+  "fCnt": 4211,
+  "fPort": 2,
+  "data": "AQIDBAUGBwg=",
+  "object": {
+    "temperature": 21.4,
+    "humidity": 63.5,
+    "co2": 812,
+    "pressure": 1008.2,
+    "vbat": 3.61,
+    "pir": 1,
+    "latitude": 50.4501,
+    "longitude": 30.5234,
+    "altitude": 179.0
+  },
+  "rxInfo": [
+    {
+      "gatewayId": "0016c001ff10a235",
+      "rssi": -97,
+      "snr": 7.25
+    }
+  ]
+}

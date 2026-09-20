@@ -1,0 +1,21 @@
+{
+  "event_kind": "threat",
+  "event_time": "2026-09-19T08:00:00.500000Z",
+  "ingest_time": "2026-09-19T08:00:01.250000Z",
+  "node_id": "frigate:entrance",
+  "sensor_type": "camera",
+  "sector_id": "unknown",
+  "payload": {
+    "region": {
+      "x": 0.25,
+      "y": 0.125,
+      "width": 0.5,
+      "height": 0.75
+    },
+    "threat_type": "camera_detection",
+    "score": 0.8125,
+    "label": "person",
+    "camera": "entrance"
+  },
+  "freshness_sec": 0.0
+}

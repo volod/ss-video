@@ -1,0 +1,83 @@
+{
+  "mission_id": "vid_testsrc",
+  "created_at": "2026-09-19T08:00:00Z",
+  "time_base": "media",
+  "platform": {
+    "robot_id": "robot_0"
+  },
+  "origin": {
+    "lat": 50.4501,
+    "lon": 30.5234,
+    "alt": 179.0
+  },
+  "videos": [
+    {
+      "video_id": "vid_testsrc",
+      "path": "vid_testsrc.mp4",
+      "sha256": "cd2f6ffa",
+      "size_bytes": 13868,
+      "duration_sec": 2.0,
+      "fps": 10.0,
+      "width": 640,
+      "height": 360,
+      "gps_source": "srt"
+    }
+  ],
+  "sidecars": [
+    {
+      "video_id": "vid_testsrc",
+      "kind": "baro",
+      "format": "jsonl",
+      "path": "vid_testsrc.baro.jsonl",
+      "sha256": "ac17ed6d581b1780204cdf9e60410469dc89beba1266cd8a813fc68bd9a57918",
+      "size_bytes": 2687,
+      "row_count": 50,
+      "t_start_sec": 0.0,
+      "t_end_sec": 9.8
+    },
+    {
+      "video_id": "vid_testsrc",
+      "kind": "imu",
+      "format": "jsonl",
+      "path": "vid_testsrc.imu.jsonl",
+      "sha256": "1498cbf9b1cb80521c0f20af7438c29611e09d448e3679a6297aba1e07052d06",
+      "size_bytes": 358503,
+      "row_count": 2000,
+      "t_start_sec": 0.0,
+      "t_end_sec": 9.995
+    },
+    {
+      "video_id": "vid_testsrc",
+      "kind": "wind",
+      "format": "jsonl",
+      "path": "vid_testsrc.wind.jsonl",
+      "sha256": "e3b4b14d3ed3e6354ded686f6f82c8a93674e605a6782bc73424e62e3baafd4c",
+      "size_bytes": 639,
+      "row_count": 10,
+      "t_start_sec": 0.0,
+      "t_end_sec": 9.0
+    },
+    {
+      "video_id": "vid_testsrc",
+      "kind": "env",
+      "format": "jsonl",
+      "path": "sensors/vid_testsrc.env.jsonl",
+      "sha256": "7a8c1373d85b41c1009a5e30e3f2fedca7446cd54452257e919e94c61fda9c94",
+      "size_bytes": 42403,
+      "row_count": 300,
+      "t_start_sec": 0.0,
+      "t_end_sec": 299.0
+    },
+    {
+      "video_id": "vid_testsrc",
+      "kind": "gps",
+      "format": "srt",
+      "path": "vid_testsrc.srt",
+      "sha256": "c3fb4e2ce2a7c51b681308dcec2ace3857ea7983fda550a213dfcf47a0cb7453",
+      "size_bytes": 302,
+      "row_count": 2,
+      "t_start_sec": 0.0,
+      "t_end_sec": 1.0
+    }
+  ]
+}

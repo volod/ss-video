@@ -1,0 +1,11 @@
+logLevel: info
+api: yes
+apiAddress: :9997
+rtspTransports: [tcp]
+
+pathDefaults:
+  source: publisher
+  record: false
+
+paths:
+  all_others: {}

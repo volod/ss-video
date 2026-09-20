@@ -1,0 +1,37 @@
+# Optional services — GPU machines only.
+# Loaded automatically by `docker compose` when present alongside docker-compose.yml.
+#
+# Services:
+#   mapper      — 3DGS ICP fusion via Open3D (Phase 2 global map).
+#                 CPU-only (~1.5GB image). Accessible at http://localhost:8100.
+#
+# Usage:
+#   make up            — starts main stack; override services start automatically
+#   make mapper-logs   — stream mapper logs
+#
+# Note: nerfstudio (splatfacto training) is intentionally NOT in this file
+# until a validated nerfstudio FastAPI wrapper is available. Add it here when ready.
+
+services:
+  mapper:
+    build:
+      context: ../..
+      dockerfile: docker/core/Dockerfile.mapper
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    container_name: selfsuvis_mapper
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    environment:
+      - DATA_DIR=/app/data
+      - PORT=8000
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+    ports:
+      - "8100:8000"
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://localhost:8000/health')\""]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s   # open3d import is slow on first start

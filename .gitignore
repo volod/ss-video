@@ -1,0 +1,49 @@
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.swp
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.cache/
+.ipynb_checkpoints/
+
+# runtime data
+/.data/
+/data/
+docker/core/.data/
+
+# model weight files and compiled wheels (never commit; cache is $DATA_DIR)
+*.pt
+*.onnx
+*.rknn
+*.whl
+
+# OS
+.DS_Store
+Thumbs.db
+.gstack/
+
+# --- Secrets (NEVER commit any of these) ------------------------------------
+.env
+.env.local
+.env.*.local
+.env.secrets
+.env.secrets.*
+*.pem
+*.key
+*.crt
+*.p12
+*.pfx
+jwt_secret*
+*_secret.txt
+*_token.txt
+*credentials*.json
+*service_account*.json
+# ChirpStack / Mosquitto generated certs and passwords
+config/coop/mosquitto/certs/
+config/coop/chirpstack/certs/
+config/coop/*/passwords
+config/coop/*/.secrets

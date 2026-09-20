@@ -1,0 +1,62 @@
+# Realtime telemetry bridge runtimes.
+#
+# Start only the bridge service that matches your transport:
+#   docker compose -f docker/core/docker-compose.yml -f docker/realtime/docker-compose.realtime-bridge.yml up -d realtime-mavsdk-bridge
+#   docker compose -f docker/core/docker-compose.yml -f docker/realtime/docker-compose.realtime-bridge.yml up -d realtime-ros-bridge
+
+networks:
+  default:
+    name: selfsuvis-net
+
+services:
+  realtime-mavsdk-bridge:
+    build:
+      context: ../..
+      dockerfile: docker/realtime/Dockerfile.realtime_bridge
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    container_name: realtime-mavsdk-bridge
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/realtime/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis}
+      REALTIME_BRIDGE_ENABLED: "true"
+      REALTIME_BRIDGE_BACKEND: mavsdk
+      REALTIME_MAVSDK_SYSTEM_ADDRESS: ${REALTIME_MAVSDK_SYSTEM_ADDRESS:-udp://:14540}
+      DATA_DIR: /app/data
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  realtime-ros-bridge:
+    build:
+      context: ../..
+      dockerfile: docker/realtime/Dockerfile.realtime_bridge
+      args:
+        TORCH_CUDA_INDEX: ${TORCH_CUDA_INDEX:-cpu}
+    container_name: realtime-ros-bridge
+    restart: unless-stopped
+    user: "${UID:-1000}:${GID:-1000}"
+    env_file:
+      - path: ../../src/selfsuvis/realtime/env/prod.env
+        required: true
+      - path: ${DATA_DIR:-../../.data}/.env
+        required: false
+    environment:
+      DATABASE_URL: ${DATABASE_URL:-postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis}
+      REALTIME_BRIDGE_ENABLED: "true"
+      REALTIME_BRIDGE_BACKEND: ros
+      REALTIME_ROS_DOMAIN_ID: ${REALTIME_ROS_DOMAIN_ID:-}
+      DATA_DIR: /app/data
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+    depends_on:
+      postgres:
+        condition: service_healthy

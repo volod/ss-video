@@ -1,0 +1,137 @@
+services:
+  api:
+    user: "${UID}:${GID}"
+    env_file:
+      - ../../src/selfsuvis/env/test.env
+    environment:
+      - ALLOWED_INDEX_PATHS=/app/tests/assets
+      - BLUR_LAPL_VAR_MIN_FRAME=0
+      - DATA_DIR=/app/data
+      - MAX_UPLOAD_BYTES=150000
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - TORCH_HOME=/app/cache/torch
+      - OPENCLIP_CACHE_DIR=/app/cache/open_clip
+      - REDIS_URL=redis://redis:6379/0
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - YOLO_ENABLED=false
+      - SAM_ENABLED=false
+      - YOLO_SSG_ENABLED=false
+      - COOP_MQTT_HOST=mosquitto
+      - COOP_MQTT_PORT=1883
+      - COOP_MQTT_USER=
+      - COOP_MQTT_PASSWORD=
+      - COOP_MQTT_TLS=false
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ../../tests/assets:/app/tests/assets:ro
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    depends_on:
+      mosquitto:
+        condition: service_started
+  fusion-rt:
+    user: "${UID}:${GID}"
+    env_file:
+      - ../../src/selfsuvis/env/test.env
+    environment:
+      - ALLOWED_INDEX_PATHS=/app/tests/assets
+      - DATA_DIR=/app/data
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - REDIS_URL=redis://redis:6379/0
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - CORRELATOR_POLL_INTERVAL_S=1
+      - COOP_MQTT_HOST=mosquitto
+      - COOP_MQTT_PORT=1883
+      - COOP_MQTT_USER=
+      - COOP_MQTT_PASSWORD=
+      - COOP_MQTT_TLS=false
+      - COOP_SITE_ID=local
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ../../tests/assets:/app/tests/assets:ro
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      mosquitto:
+        condition: service_started
+  mosquitto:
+    image: eclipse-mosquitto:2
+    volumes:
+      # Relative paths resolve from docker/core/ (first -f file).
+      - ../test/mosquitto.conf:/mosquitto/config/mosquitto.conf:ro
+  worker:
+    user: "${UID}:${GID}"
+    env_file:
+      - ../../src/selfsuvis/env/test.env
+    environment:
+      - BLUR_LAPL_VAR_MIN_FRAME=0
+      - DATA_DIR=/app/data
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - TORCH_HOME=/app/cache/torch
+      - OPENCLIP_CACHE_DIR=/app/cache/open_clip
+      - REDIS_URL=redis://redis:6379/0
+      - FUSION_DATABASE_URL=postgresql://selfsuvis:selfsuvis@postgres:5432/selfsuvis_fusion
+      - CORRELATOR_REDIS_URL=redis://redis:6379/1
+      - WEBHOOK_REDIS_URL=redis://redis:6379/2
+      - HEALTH_REDIS_URL=redis://redis:6379/3
+      - YOLO_ENABLED=false
+      - SAM_ENABLED=false
+      - YOLO_SSG_ENABLED=false
+    volumes:
+      - ${DATA_DIR:-../../.data}:/app/data
+      - ../../tests/assets:/app/tests/assets:ro
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+  tests:
+    user: "${UID}:${GID}"
+    build:
+      context: ../..
+      dockerfile: docker/test/Dockerfile.tests
+    environment:
+      - API_URL=http://api:8000
+      - FUSION_RT_URL=http://fusion-rt:8000
+      - MQTT_HOST=mosquitto
+      - MQTT_PORT=1883
+      - COOP_SITE_ID=local
+      - ASSETS_DIR=/app/tests/assets
+      - INDEX_DIR_PATH=${INDEX_DIR_PATH}
+      - RUN_API_TESTS=1
+      - HOME=/app/cache
+      - XDG_CACHE_HOME=/app/cache
+      - TORCH_HOME=/app/cache/torch
+      - OPENCLIP_CACHE_DIR=/app/cache/open_clip
+      - PYTEST_CACHE_DIR=/tmp/.pytest_cache
+    volumes:
+      - ${CACHE_DIR:-${DATA_DIR:-../../.data}/.cache}:/app/cache
+    depends_on:
+      api:
+        condition: service_started
+      fusion-rt:
+        condition: service_healthy
+      worker:
+        condition: service_started
+      mosquitto:
+        condition: service_started
+  ui:
+    profiles: ["not-in-tests"]
+  nginx:
+    profiles: ["not-in-tests"]
+  mediamtx:
+    profiles: ["not-in-tests"]
+  postgres:
+    volumes:
+      - ${DATA_DIR:-../../.data}/postgres-test:/var/lib/postgresql/data
+  qdrant:
+    volumes:
+      - ${DATA_DIR:-../../.data}/qdrant-test:/qdrant/storage
+      - ../../config/qdrant/qdrant.yaml:/qdrant/config/config.yaml:ro

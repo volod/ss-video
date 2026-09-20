@@ -1,0 +1,5068 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "ss-video",
+    "version": "0.1.0"
+  },
+  "paths": {
+    "/site/cameras": {
+      "get": {
+        "tags": [
+          "site"
+        ],
+        "summary": "Site Cameras",
+        "operationId": "site_cameras_site_cameras_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Site Cameras Site Cameras Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/missions": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List missions with map status and splat paths",
+        "description": "Return up to 100 most recent missions with map status and discovered splat.ply paths.",
+        "operationId": "admin_missions_admin_missions_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Admin Missions Admin Missions Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/robots": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List distinct robot_ids contributing to the map",
+        "description": "Return all distinct robot_ids from the missions table.\n\nReturns an empty list if the robot_id column has not been added yet\n(migration not yet applied) or if DATABASE_URL is not configured.",
+        "operationId": "admin_robots_admin_robots_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "string"
+                  },
+                  "title": "Response Admin Robots Admin Robots Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/global-maps": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List all global map sites",
+        "description": "Return all global_map rows \u2014 one entry per geographic site.\n\nEach entry has: id, origin_lat, origin_lon, origin_alt, splat_path, created_at.\nReturns an empty list if DATABASE_URL is not configured or the table does not exist.",
+        "operationId": "admin_global_maps_admin_global_maps_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "additionalProperties": true
+                  },
+                  "title": "Response Admin Global Maps Admin Global Maps Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/export/map-cache": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Download NPZ map cache for onboard robot use",
+        "description": "Export all indexed frames as a compressed NPZ cache file.\n\nThe robot loads this file pre-flight for local nearest-neighbour search\nwithout a network round-trip.  NPZ layout:\n\n    clip_vectors : float32 (N, D)   CLIP embeddings\n    gps          : float32 (N, 3)   [lat, lon, alt], NaN if unavailable\n    enu          : float32 (N, 3)   [tx, ty, tz] metres, NaN if unavailable\n    t_sec        : float32 (N,)     frame timestamp in source video\n    meta_json    : uint8  (M,)      JSON bytes \u2192 list of N {mission_id, frame_path, robot_id}\n\nOptional query params to narrow the export:\n    mission_ids  \u2014 comma-separated list of mission IDs\n    lat_min / lat_max / lon_min / lon_max \u2014 GPS bbox (all four required for bbox filter)",
+        "operationId": "export_map_cache_admin_export_map_cache_get",
+        "parameters": [
+          {
+            "name": "mission_ids",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "Comma-separated mission IDs to include (all if omitted)",
+              "title": "Mission Ids"
+            },
+            "description": "Comma-separated mission IDs to include (all if omitted)"
+          },
+          {
+            "name": "lat_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "GPS bounding box \u2014 min latitude",
+              "title": "Lat Min"
+            },
+            "description": "GPS bounding box \u2014 min latitude"
+          },
+          {
+            "name": "lat_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "GPS bounding box \u2014 max latitude",
+              "title": "Lat Max"
+            },
+            "description": "GPS bounding box \u2014 max latitude"
+          },
+          {
+            "name": "lon_min",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "GPS bounding box \u2014 min longitude",
+              "title": "Lon Min"
+            },
+            "description": "GPS bounding box \u2014 min longitude"
+          },
+          {
+            "name": "lon_max",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "number"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "description": "GPS bounding box \u2014 max longitude",
+              "title": "Lon Max"
+            },
+            "description": "GPS bounding box \u2014 max longitude"
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response"
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/stats": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Queue depth, worker status, and al_tag distribution",
+        "description": "Return operational statistics for the admin dashboard.\n\nFields:\n    jobs:      {pending, running, finished, error} counts from the job queue.\n    al_tags:   {needs_annotation, novel, none} frame counts (PostgreSQL frames table).\n    worker_active: true if any jobs are currently in 'running' state.",
+        "operationId": "admin_stats_admin_stats_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Admin Stats Admin Stats Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/automation-roi": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Annotation frequency, finetune trigger rate, ops time saved",
+        "description": "Measure whether the auto-trigger pipeline is paying its maintenance cost.\n\nAll metrics are derived from the jobs and frames tables \u2014 no extra\ninstrumentation required.  Call this after 4+ weeks of production use.\n\nReturns:\n    total_annotated_frames:       frames with al_tag='annotated' (cumulative)\n    annotation_campaigns:         distinct months with at least one annotation\n    finetune_jobs_triggered:      supervised_finetune jobs ever enqueued\n    finetune_jobs_accepted:       checkpoints that passed the eval gate\n    finetune_acceptance_rate:     accepted / triggered (null if no jobs)\n    model_reloads:                accepted jobs (each triggers a hot-reload)\n    reembed_sweeps:               reembed jobs ever completed\n    estimated_ops_minutes_saved:  model_reloads \u00d7 3 min manual restart\n    first_annotation_at:          ISO timestamp of first annotation (null if none)\n    last_annotation_at:           ISO timestamp of most recent annotation (null)\n    days_observed:                calendar days since first annotation (null if none)\n    annotation_frequency_per_week: annotations per 7-day window (null if <7 days)\n    verdict:                      LOW_FREQUENCY | MODERATE_FREQUENCY |\n                                  HIGH_FREQUENCY | INSUFFICIENT_DATA\n    verdict_detail:               plain-English interpretation",
+        "operationId": "automation_roi_admin_automation_roi_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Automation Roi Admin Automation Roi Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/caption-eval": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Captioner health: null rate, confidence stats, model breakdown",
+        "description": "Captioner health metrics derived from the frames table.\n\nReturns:\n    caption_null_rate:    Fraction of captionable frames with caption IS NULL.\n                          Excludes frames with caption_skip_reason (intentional skips).\n                          0.0 = all frames captioned; 1.0 = none captioned.\n    mean_confidence:      Mean caption_confidence across all captioned frames (null if none).\n    p95_confidence:       95th-percentile caption_confidence (null if <20 frames).\n    total_frames:         Total indexed frames.\n    captioned_frames:     Frames with a non-null caption.\n    skipped_frames:       Frames with caption_skip_reason IS NOT NULL.\n    null_caption_frames:  Frames with caption IS NULL and no skip reason.\n    model_breakdown:      Dict of caption_model \u2192 frame count (top captioners).",
+        "operationId": "caption_eval_admin_caption_eval_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Caption Eval Admin Caption Eval Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reload-model": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Hot-swap DINOv3 backbone weights",
+        "description": "Load a DINOv3 backbone checkpoint and swap the live model reference.\n\nThe swap is GIL-atomic: in-flight inference calls hold their captured\ndino_model reference and complete normally with old weights. Only new\nrequests after the swap see the new weights.\n\n- 400: checkpoint path not found on disk.\n- 400: no checkpoint specified and active_checkpoint.txt is missing.\n- 409: another reload is already in progress (lock is held).\n- 500: checkpoint loaded but weights failed to parse (original model unchanged).",
+        "operationId": "reload_model_admin_reload_model_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReloadModelRequest",
+                "default": {}
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Reload Model Admin Reload Model Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reembed-all": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Enqueue full re-embedding sweep (dino vectors)",
+        "description": "Enqueue a background job to re-embed all indexed frames with the current DINOv3 model.\n\nReturns the job_id immediately. Monitor progress via GET /jobs/{job_id}.\nEach batch of 256 frames checkpoints last_offset so the sweep is resumable.\nReturns 409 if a reembed job is already pending or running.",
+        "operationId": "reembed_all_admin_reembed_all_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Reembed All Admin Reembed All Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/reembed-status": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Check whether a reembed sweep is active",
+        "description": "Return whether a re-embedding sweep is currently running.\n\nSearch uses this to suppress dino vector reranking during the sweep window,\nbecause Qdrant contains a mix of old-model and new-model dino vectors while\nthe sweep is in progress \u2014 cosine similarity between them is meaningless.\n\nReturns:\n    active: true if a reembed job has status='running'.\n    job_id: the running job's id, or null if none.\n    frames_reembedded: progress counter from the job payload, or null.",
+        "operationId": "reembed_status_admin_reembed_status_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Reembed Status Admin Reembed Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/cvat/frames": {
+      "get": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "List frames pending annotation (for building a CVAT task)",
+        "description": "Return frames that need annotation, ordered by al_score descending.\n\nal_tag: 'needs_annotation' | 'novel' | 'any' (both).\nlimit: max rows to return (1-5000, default 200).\n\nUse the returned frame_path list to create a CVAT task, then call\nPOST /admin/cvat/task to record the mapping for webhook resolution.",
+        "operationId": "cvat_annotation_frames_admin_cvat_frames_get",
+        "parameters": [
+          {
+            "name": "al_tag",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "needs_annotation",
+              "title": "Al Tag"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 200,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CvatFrameListResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/admin/cvat/task": {
+      "post": {
+        "tags": [
+          "admin"
+        ],
+        "summary": "Register a CVAT task \u2192 frame mapping (enables webhook resolution)",
+        "description": "Store the mapping from a CVAT task ID to selfsuvis frame IDs.\n\nCall this after creating a CVAT task with frames from GET /admin/cvat/frames.\nWhen CVAT fires a webhook for job completion, this mapping is used to find\nand annotate the corresponding selfsuvis frames.\n\nIdempotent \u2014 duplicate (task_id, frame_id) pairs are silently ignored.",
+        "operationId": "register_cvat_task_admin_cvat_task_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CvatTaskRegistration"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Register Cvat Task Admin Cvat Task Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/health": {
+      "get": {
+        "tags": [
+          "health"
+        ],
+        "summary": "Health",
+        "description": "Health check for the video API.",
+        "operationId": "health_health_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/video": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Index a video from upload or allowed path",
+        "description": "Accept video file upload or a path (within ALLOWED_INDEX_PATHS). Returns video_id and job_id.",
+        "operationId": "index_video_index_video_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_index_video_index_video_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/url": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Index a video from URL",
+        "operationId": "index_url_index_url_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_index_url_index_url_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/dir": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Index all videos in an allowed directory",
+        "operationId": "index_dir_index_dir_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_index_dir_index_dir_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "403": {
+            "description": "Forbidden",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/rtsp": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Index a live RTSP/RTMP stream",
+        "description": "Record a live RTSP or RTMP stream and queue it for indexing.\n\nThe worker records the stream to a local MP4 using ffmpeg, then indexes\nit through the standard pipeline.\n\n- stream_url:   rtsp:// or rtmp:// URL (credentials in URL not allowed)\n- mission_id:   Optional mission label; defaults to a generated video_id\n- duration_sec: Record at most this many seconds (capped at RTSP_MAX_DURATION_SEC)\n- enable_tiles: Whether to extract and index tiles (default true)",
+        "operationId": "index_rtsp_index_rtsp_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_index_rtsp_index_rtsp_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/precheck": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Precheck",
+        "operationId": "precheck_index_precheck_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_precheck_index_precheck_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/index/precheck_dir": {
+      "post": {
+        "tags": [
+          "index"
+        ],
+        "summary": "Precheck Dir",
+        "operationId": "precheck_dir_index_precheck_dir_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/x-www-form-urlencoded": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_precheck_dir_index_precheck_dir_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/jobs/{job_id}": {
+      "get": {
+        "tags": [
+          "jobs"
+        ],
+        "summary": "Get job status by id",
+        "description": "Return status, progress, started_at, finished_at, and error for a job.",
+        "operationId": "job_status_jobs__job_id__get",
+        "parameters": [
+          {
+            "name": "job_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Job Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "404": {
+            "description": "Not found",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query/image": {
+      "post": {
+        "tags": [
+          "query"
+        ],
+        "summary": "Search by image",
+        "operationId": "query_image_query_image_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "$ref": "#/components/schemas/Body_query_image_query_image_post"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "413": {
+            "description": "Payload too large",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query/text": {
+      "post": {
+        "tags": [
+          "query"
+        ],
+        "summary": "Search by text",
+        "operationId": "query_text_query_text_post",
+        "parameters": [
+          {
+            "name": "top_k",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "maximum": 100,
+              "minimum": 1,
+              "default": 20,
+              "title": "Top K"
+            }
+          },
+          {
+            "name": "search_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "both",
+              "title": "Search Type"
+            }
+          },
+          {
+            "name": "enable_rerank",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "boolean",
+              "default": true,
+              "title": "Enable Rerank"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TextQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/QueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/start": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Start Session",
+        "operationId": "start_session_realtime_session_start_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/streams": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Start Live Stream",
+        "operationId": "start_live_stream_realtime_streams_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveStreamStartRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStreamStartResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      },
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "List Live Streams",
+        "operationId": "list_live_streams_realtime_streams_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStreamsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/streams/{session_id}": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Live Stream",
+        "operationId": "get_live_stream_realtime_streams__session_id__get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStreamStatus"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/streams/{session_id}/stop": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Stop Live Stream",
+        "operationId": "stop_live_stream_realtime_streams__session_id__stop_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/LiveStreamStopRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LiveStreamStopResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/packet": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Ingest Packets",
+        "operationId": "ingest_packets_realtime_session__session_id__packet_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PacketIngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PacketIngestResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/state": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get State",
+        "operationId": "get_state_realtime_session__session_id__state_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealtimeStateResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/pose/latest": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Latest Pose",
+        "operationId": "get_latest_pose_realtime_session__session_id__pose_latest_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/pose/estimate": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Estimate Pose From Packets",
+        "operationId": "estimate_pose_from_packets_realtime_session__session_id__pose_estimate_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PacketIngestRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoseResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/map/tile": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Publish Tile",
+        "operationId": "publish_tile_realtime_session__session_id__map_tile_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MapTileIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapTilesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/frame/integrate": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Integrate Frame",
+        "operationId": "integrate_frame_realtime_session__session_id__frame_integrate_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/FrameIntegrationRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FrameIntegrationResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/map/latest": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Latest Map",
+        "operationId": "get_latest_map_realtime_session__session_id__map_latest_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "map_type",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Map Type"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MapTilesResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/semantic": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Publish Semantic",
+        "operationId": "publish_semantic_realtime_session__session_id__semantic_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SemanticObservationIn"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticObservationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/semantic-nearby": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Semantic Nearby",
+        "operationId": "get_semantic_nearby_realtime_session__session_id__semantic_nearby_get",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "class_name",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "null"
+                }
+              ],
+              "title": "Class Name"
+            }
+          },
+          {
+            "name": "limit",
+            "in": "query",
+            "required": false,
+            "schema": {
+              "type": "integer",
+              "default": 20,
+              "title": "Limit"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SemanticObservationsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/stop": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Stop Session",
+        "operationId": "stop_session_realtime_session__session_id__stop_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStopResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/session/{session_id}/finalize": {
+      "post": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Finalize Session",
+        "operationId": "finalize_session_realtime_session__session_id__finalize_post",
+        "parameters": [
+          {
+            "name": "session_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Session Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SessionFinalizeRequest"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SessionStopResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/stats": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Realtime Stats",
+        "operationId": "get_realtime_stats_realtime_stats_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealtimeStatsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/realtime/backends": {
+      "get": {
+        "tags": [
+          "realtime"
+        ],
+        "summary": "Get Realtime Backends",
+        "operationId": "get_realtime_backends_realtime_backends_get",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RealtimeBackendsResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query/pose": {
+      "post": {
+        "tags": [
+          "robot"
+        ],
+        "summary": "Robot advisory pose query \u2014 find nearest indexed frames by GPS or ENU position",
+        "description": "Find the top-K indexed frames nearest to the robot's position.\n\nSupports two query modes:\n- GPS (lat + lon): uses GPS bounding-box filter on indexed frame payloads.\n- ENU (tx + ty + tz): uses ENU bounding-box filter; requires Phase 2 global map.\n\nAuth: X-API-Key header required.",
+        "operationId": "query_pose_query_pose_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PoseQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PoseQueryResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/query/scene": {
+      "post": {
+        "tags": [
+          "scene"
+        ],
+        "summary": "Structured scene query \u2014 filter by vehicle count, road condition, GPS bbox, time range",
+        "description": "Query indexed frames by structured JSONB predicates.\n\nFilters are applied in PostgreSQL against ``frame_facts_json`` (produced by\nPhase 2 Gemma/Qwen scene extraction). An optional text query triggers CLIP\nembedding and re-ranks the filtered results by cosine similarity.\n\nAll filters are AND-combined. Omit a filter to leave it unconstrained.",
+        "operationId": "query_scene_query_scene_post",
+        "parameters": [
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SceneQuery"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SceneQueryResponse"
+                }
+              }
+            }
+          },
+          "400": {
+            "description": "Bad request",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Service unavailable",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ErrorResponse"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "/webhook/cvat": {
+      "post": {
+        "tags": [
+          "webhook"
+        ],
+        "summary": "Receive CVAT annotation webhook",
+        "description": "Handle CVAT webhook events and update frame annotation status.\n\nTriggered by CVAT when a job or task reaches state=completed.\nMarks all frames mapped to that task as al_tag='annotated'.\n\nSecurity: verifies HMAC-SHA256 signature in X-Hook-Secret.\nCVAT_WEBHOOK_SECRET must be set; requests with a missing or incorrect\nsignature are rejected with 400. Configure the same secret in CVAT:\nWebhooks \u2192 Secret \u2192 <your CVAT_WEBHOOK_SECRET value>.\n\nConfigure target URL in CVAT: http://<api_host>:8000/webhook/cvat",
+        "operationId": "cvat_webhook_webhook_cvat_post",
+        "parameters": [
+          {
+            "name": "x-hook-secret",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Hook-Secret"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Cvat Webhook Webhook Cvat Post"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "components": {
+    "schemas": {
+      "Body_index_dir_index_dir_post": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "dir_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dir Path"
+          },
+          "enable_tiles": {
+            "type": "boolean",
+            "title": "Enable Tiles",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "Body_index_dir_index_dir_post"
+      },
+      "Body_index_rtsp_index_rtsp_post": {
+        "properties": {
+          "stream_url": {
+            "type": "string",
+            "title": "Stream Url"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "duration_sec": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Duration Sec"
+          },
+          "enable_tiles": {
+            "type": "boolean",
+            "title": "Enable Tiles",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "stream_url"
+        ],
+        "title": "Body_index_rtsp_index_rtsp_post"
+      },
+      "Body_index_url_index_url_post": {
+        "properties": {
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          },
+          "stream_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Stream Url"
+          },
+          "enable_tiles": {
+            "type": "boolean",
+            "title": "Enable Tiles",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "Body_index_url_index_url_post"
+      },
+      "Body_index_video_index_video_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "enable_tiles": {
+            "type": "boolean",
+            "title": "Enable Tiles",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "Body_index_video_index_video_post"
+      },
+      "Body_precheck_dir_index_precheck_dir_post": {
+        "properties": {
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "dir_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Dir Path"
+          },
+          "enqueue": {
+            "type": "boolean",
+            "title": "Enqueue",
+            "default": false
+          },
+          "enable_tiles": {
+            "type": "boolean",
+            "title": "Enable Tiles",
+            "default": true
+          }
+        },
+        "type": "object",
+        "title": "Body_precheck_dir_index_precheck_dir_post"
+      },
+      "Body_precheck_index_precheck_post": {
+        "properties": {
+          "file": {
+            "anyOf": [
+              {
+                "type": "string",
+                "contentMediaType": "application/octet-stream"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File"
+          },
+          "path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Path"
+          },
+          "file_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "File Path"
+          },
+          "url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Url"
+          }
+        },
+        "type": "object",
+        "title": "Body_precheck_index_precheck_post"
+      },
+      "Body_query_image_query_image_post": {
+        "properties": {
+          "file": {
+            "type": "string",
+            "contentMediaType": "application/octet-stream",
+            "title": "File"
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "default": 20
+          },
+          "search_type": {
+            "type": "string",
+            "title": "Search Type",
+            "default": "both"
+          },
+          "vector_space": {
+            "type": "string",
+            "title": "Vector Space",
+            "default": "clip"
+          },
+          "enable_rerank": {
+            "type": "boolean",
+            "title": "Enable Rerank",
+            "default": true
+          }
+        },
+        "type": "object",
+        "required": [
+          "file"
+        ],
+        "title": "Body_query_image_query_image_post"
+      },
+      "CvatFrameItem": {
+        "properties": {
+          "frame_id": {
+            "type": "string",
+            "title": "Frame Id"
+          },
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "frame_path": {
+            "type": "string",
+            "title": "Frame Path"
+          },
+          "al_score": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Al Score"
+          },
+          "al_tag": {
+            "type": "string",
+            "title": "Al Tag"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frame_id",
+          "mission_id",
+          "frame_path",
+          "al_score",
+          "al_tag"
+        ],
+        "title": "CvatFrameItem"
+      },
+      "CvatFrameListResponse": {
+        "properties": {
+          "total": {
+            "type": "integer",
+            "title": "Total"
+          },
+          "frames": {
+            "items": {
+              "$ref": "#/components/schemas/CvatFrameItem"
+            },
+            "type": "array",
+            "title": "Frames"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "frames"
+        ],
+        "title": "CvatFrameListResponse"
+      },
+      "CvatTaskRegistration": {
+        "properties": {
+          "cvat_task_id": {
+            "type": "integer",
+            "title": "Cvat Task Id"
+          },
+          "frame_ids": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Frame Ids"
+          }
+        },
+        "type": "object",
+        "required": [
+          "cvat_task_id",
+          "frame_ids"
+        ],
+        "title": "CvatTaskRegistration"
+      },
+      "ErrorResponse": {
+        "properties": {
+          "error": {
+            "type": "string",
+            "title": "Error"
+          },
+          "detail": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "required": [
+          "error"
+        ],
+        "title": "ErrorResponse",
+        "description": "Standard error response shape."
+      },
+      "FrameIntegrationRequest": {
+        "properties": {
+          "frame_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Id"
+          },
+          "t_sec": {
+            "type": "number",
+            "title": "T Sec"
+          },
+          "image_path": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Image Path"
+          },
+          "packets": {
+            "items": {
+              "$ref": "#/components/schemas/SensorPacket"
+            },
+            "type": "array",
+            "title": "Packets"
+          },
+          "semantic_observations": {
+            "items": {
+              "$ref": "#/components/schemas/SemanticObservationIn"
+            },
+            "type": "array",
+            "title": "Semantic Observations"
+          },
+          "pose": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pose"
+          },
+          "depth_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Depth Path"
+          },
+          "map_type": {
+            "type": "string",
+            "title": "Map Type",
+            "default": "occupancy"
+          },
+          "tile_key": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tile Key"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats"
+          }
+        },
+        "type": "object",
+        "required": [
+          "t_sec",
+          "image_path"
+        ],
+        "title": "FrameIntegrationRequest"
+      },
+      "FrameIntegrationResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "pose_updated": {
+            "type": "boolean",
+            "title": "Pose Updated"
+          },
+          "tile": {
+            "$ref": "#/components/schemas/MapTileOut"
+          },
+          "semantic_count": {
+            "type": "integer",
+            "title": "Semantic Count"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "pose_updated",
+          "tile",
+          "semantic_count"
+        ],
+        "title": "FrameIntegrationResponse"
+      },
+      "GpsBbox": {
+        "properties": {
+          "min_lat": {
+            "type": "number",
+            "title": "Min Lat",
+            "description": "Minimum latitude (decimal degrees, WGS-84)"
+          },
+          "min_lon": {
+            "type": "number",
+            "title": "Min Lon",
+            "description": "Minimum longitude"
+          },
+          "max_lat": {
+            "type": "number",
+            "title": "Max Lat",
+            "description": "Maximum latitude"
+          },
+          "max_lon": {
+            "type": "number",
+            "title": "Max Lon",
+            "description": "Maximum longitude"
+          }
+        },
+        "type": "object",
+        "required": [
+          "min_lat",
+          "min_lon",
+          "max_lat",
+          "max_lon"
+        ],
+        "title": "GpsBbox",
+        "description": "Bounding box for GPS filtering."
+      },
+      "HTTPValidationError": {
+        "properties": {
+          "detail": {
+            "items": {
+              "$ref": "#/components/schemas/ValidationError"
+            },
+            "type": "array",
+            "title": "Detail"
+          }
+        },
+        "type": "object",
+        "title": "HTTPValidationError"
+      },
+      "LivePathInfo": {
+        "properties": {
+          "name": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Name"
+          },
+          "ready": {
+            "anyOf": [
+              {
+                "type": "boolean"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ready"
+          },
+          "source": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source"
+          },
+          "tracks": {
+            "anyOf": [
+              {
+                "items": {
+                  "additionalProperties": true,
+                  "type": "object"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tracks"
+          },
+          "bytes_received": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bytes Received"
+          },
+          "bytes_sent": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bytes Sent"
+          }
+        },
+        "type": "object",
+        "title": "LivePathInfo"
+      },
+      "LiveStreamStartRequest": {
+        "properties": {
+          "robot_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Robot Id",
+            "default": "robot_0"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "sensors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sensors"
+          },
+          "path_name": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Path Name"
+          },
+          "source_url": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Source Url"
+          },
+          "source_on_demand": {
+            "type": "boolean",
+            "title": "Source On Demand",
+            "default": false
+          },
+          "caption_fps": {
+            "anyOf": [
+              {
+                "type": "number",
+                "maximum": 4.0,
+                "exclusiveMinimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption Fps"
+          }
+        },
+        "type": "object",
+        "required": [
+          "path_name"
+        ],
+        "title": "LiveStreamStartRequest"
+      },
+      "LiveStreamStartResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "robot_id": {
+            "type": "string",
+            "title": "Robot Id"
+          },
+          "path_name": {
+            "type": "string",
+            "title": "Path Name"
+          },
+          "publish_url": {
+            "type": "string",
+            "title": "Publish Url"
+          },
+          "read_url": {
+            "type": "string",
+            "title": "Read Url"
+          },
+          "mediamtx_path_created": {
+            "type": "boolean",
+            "title": "Mediamtx Path Created"
+          },
+          "analysis": {
+            "$ref": "#/components/schemas/LiveStreamStatus"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "mission_id",
+          "robot_id",
+          "path_name",
+          "publish_url",
+          "read_url",
+          "mediamtx_path_created",
+          "analysis"
+        ],
+        "title": "LiveStreamStartResponse"
+      },
+      "LiveStreamStatus": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "robot_id": {
+            "type": "string",
+            "title": "Robot Id"
+          },
+          "path_name": {
+            "type": "string",
+            "title": "Path Name"
+          },
+          "rtsp_url": {
+            "type": "string",
+            "title": "Rtsp Url"
+          },
+          "caption_fps": {
+            "type": "number",
+            "title": "Caption Fps"
+          },
+          "started_at": {
+            "type": "string",
+            "title": "Started At"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "error": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Error"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "mission_id",
+          "robot_id",
+          "path_name",
+          "rtsp_url",
+          "caption_fps",
+          "started_at",
+          "status"
+        ],
+        "title": "LiveStreamStatus"
+      },
+      "LiveStreamStopRequest": {
+        "properties": {
+          "delete_path": {
+            "type": "boolean",
+            "title": "Delete Path",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "LiveStreamStopRequest"
+      },
+      "LiveStreamStopResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "path_name": {
+            "type": "string",
+            "title": "Path Name"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "deleted_path": {
+            "type": "boolean",
+            "title": "Deleted Path",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "path_name",
+          "status"
+        ],
+        "title": "LiveStreamStopResponse"
+      },
+      "LiveStreamsResponse": {
+        "properties": {
+          "streams": {
+            "items": {
+              "$ref": "#/components/schemas/LiveStreamStatus"
+            },
+            "type": "array",
+            "title": "Streams"
+          },
+          "mediamtx_paths": {
+            "items": {
+              "$ref": "#/components/schemas/LivePathInfo"
+            },
+            "type": "array",
+            "title": "Mediamtx Paths"
+          }
+        },
+        "type": "object",
+        "required": [
+          "streams",
+          "mediamtx_paths"
+        ],
+        "title": "LiveStreamsResponse"
+      },
+      "MapTileIn": {
+        "properties": {
+          "tile_key": {
+            "type": "string",
+            "title": "Tile Key"
+          },
+          "map_type": {
+            "type": "string",
+            "title": "Map Type",
+            "default": "occupancy"
+          },
+          "storage_path": {
+            "type": "string",
+            "title": "Storage Path"
+          },
+          "resolution_m": {
+            "type": "number",
+            "title": "Resolution M",
+            "default": 0.2
+          },
+          "bounds": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Bounds"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats"
+          },
+          "global_map_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Map Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tile_key",
+          "storage_path"
+        ],
+        "title": "MapTileIn"
+      },
+      "MapTileOut": {
+        "properties": {
+          "tile_key": {
+            "type": "string",
+            "title": "Tile Key"
+          },
+          "map_type": {
+            "type": "string",
+            "title": "Map Type"
+          },
+          "storage_path": {
+            "type": "string",
+            "title": "Storage Path"
+          },
+          "resolution_m": {
+            "type": "number",
+            "title": "Resolution M"
+          },
+          "bounds": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Bounds"
+          },
+          "stats": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Stats"
+          },
+          "global_map_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Map Id"
+          }
+        },
+        "type": "object",
+        "required": [
+          "tile_key",
+          "map_type",
+          "storage_path",
+          "resolution_m",
+          "bounds",
+          "stats",
+          "global_map_id"
+        ],
+        "title": "MapTileOut"
+      },
+      "MapTilesResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "tiles": {
+            "items": {
+              "$ref": "#/components/schemas/MapTileOut"
+            },
+            "type": "array",
+            "title": "Tiles"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "tiles"
+        ],
+        "title": "MapTilesResponse"
+      },
+      "Match": {
+        "properties": {
+          "id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "string"
+              }
+            ],
+            "title": "Id"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "tile",
+              "frame"
+            ],
+            "title": "Type"
+          },
+          "video_id": {
+            "type": "string",
+            "title": "Video Id"
+          },
+          "segment_id": {
+            "type": "integer",
+            "title": "Segment Id"
+          },
+          "t_sec": {
+            "type": "number",
+            "title": "T Sec"
+          },
+          "thumbnail_path": {
+            "type": "string",
+            "title": "Thumbnail Path"
+          },
+          "frame_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Path"
+          },
+          "tile_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tile Path"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "score",
+          "type",
+          "video_id",
+          "segment_id",
+          "t_sec",
+          "thumbnail_path",
+          "frame_path",
+          "tile_path",
+          "bbox"
+        ],
+        "title": "Match",
+        "description": "Single search result (frame or tile)."
+      },
+      "PacketIngestRequest": {
+        "properties": {
+          "packets": {
+            "items": {
+              "$ref": "#/components/schemas/SensorPacket"
+            },
+            "type": "array",
+            "title": "Packets"
+          }
+        },
+        "type": "object",
+        "required": [
+          "packets"
+        ],
+        "title": "PacketIngestRequest"
+      },
+      "PacketIngestResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "accepted_packets": {
+            "type": "integer",
+            "title": "Accepted Packets"
+          },
+          "packet_summary": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Packet Summary"
+          },
+          "pose_updated": {
+            "type": "boolean",
+            "title": "Pose Updated"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "accepted_packets",
+          "packet_summary",
+          "pose_updated"
+        ],
+        "title": "PacketIngestResponse"
+      },
+      "PoseMatch": {
+        "properties": {
+          "frame_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Id"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "t_sec": {
+            "type": "number",
+            "title": "T Sec"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "alt": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Alt"
+          },
+          "distance_m": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Distance M"
+          },
+          "frame_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Path"
+          },
+          "global_pose_json": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Pose Json"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frame_id",
+          "mission_id",
+          "score",
+          "t_sec",
+          "lat",
+          "lon",
+          "alt",
+          "distance_m",
+          "frame_path",
+          "global_pose_json"
+        ],
+        "title": "PoseMatch",
+        "description": "Single frame match in a pose query response."
+      },
+      "PoseQuery": {
+        "properties": {
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat",
+            "description": "Latitude (decimal degrees, WGS-84)"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon",
+            "description": "Longitude (decimal degrees, WGS-84)"
+          },
+          "alt": {
+            "type": "number",
+            "title": "Alt",
+            "description": "Altitude in metres (optional)",
+            "default": 0.0
+          },
+          "heading_deg": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Heading Deg",
+            "description": "Robot heading in degrees (0=North, 90=East)"
+          },
+          "radius_m": {
+            "type": "number",
+            "maximum": 5000.0,
+            "minimum": 1.0,
+            "title": "Radius M",
+            "description": "Search radius in metres (GPS bbox or ENU sphere)",
+            "default": 50.0
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 50.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "description": "Maximum number of results to return",
+            "default": 5
+          },
+          "tx": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tx",
+            "description": "ENU East (m)"
+          },
+          "ty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Ty",
+            "description": "ENU North (m)"
+          },
+          "tz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Tz",
+            "description": "ENU Up (m)"
+          },
+          "robot_ids": {
+            "anyOf": [
+              {
+                "items": {
+                  "type": "string"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Robot Ids",
+            "description": "Filter results to frames contributed by these robot IDs (all robots if omitted)"
+          },
+          "global_map_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Map Id",
+            "description": "Restrict search to frames from a specific site (global_map id). Required for ENU queries to be meaningful across multiple sites."
+          }
+        },
+        "type": "object",
+        "title": "PoseQuery",
+        "description": "Robot pose query request.\n\nRequires either GPS (lat + lon) or metric ENU (tx + ty + tz)."
+      },
+      "PoseQueryResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/PoseMatch"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "query_lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Lat"
+          },
+          "query_lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Lon"
+          },
+          "query_tx": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Tx"
+          },
+          "query_ty": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Ty"
+          },
+          "query_tz": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Query Tz"
+          },
+          "radius_m": {
+            "type": "number",
+            "title": "Radius M"
+          },
+          "filter_strategy": {
+            "type": "string",
+            "title": "Filter Strategy"
+          },
+          "global_map_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Map Id"
+          },
+          "last_visits": {
+            "anyOf": [
+              {
+                "items": {
+                  "$ref": "#/components/schemas/TimelineVisit"
+                },
+                "type": "array"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Last Visits"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "query_lat",
+          "query_lon",
+          "query_tx",
+          "query_ty",
+          "query_tz",
+          "radius_m",
+          "filter_strategy",
+          "global_map_id"
+        ],
+        "title": "PoseQueryResponse"
+      },
+      "PoseResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "source": {
+            "type": "string",
+            "title": "Source"
+          },
+          "t_sec": {
+            "type": "number",
+            "title": "T Sec"
+          },
+          "position_enu": {
+            "additionalProperties": {
+              "type": "number"
+            },
+            "type": "object",
+            "title": "Position Enu"
+          },
+          "orientation_quat": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Orientation Quat"
+          },
+          "velocity_enu": {
+            "anyOf": [
+              {
+                "additionalProperties": {
+                  "type": "number"
+                },
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Velocity Enu"
+          },
+          "tracking_status": {
+            "type": "string",
+            "title": "Tracking Status"
+          },
+          "global_map_id": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Global Map Id"
+          },
+          "freshness_ms": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Freshness Ms"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "source",
+          "t_sec",
+          "position_enu",
+          "orientation_quat",
+          "velocity_enu",
+          "tracking_status",
+          "global_map_id",
+          "freshness_ms"
+        ],
+        "title": "PoseResponse"
+      },
+      "QueryResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/Match"
+            },
+            "type": "array",
+            "title": "Results"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results"
+        ],
+        "title": "QueryResponse"
+      },
+      "RealtimeBackendsResponse": {
+        "properties": {
+          "selected": {
+            "additionalProperties": {
+              "type": "string"
+            },
+            "type": "object",
+            "title": "Selected"
+          },
+          "pose_backends": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Pose Backends"
+          },
+          "occupancy_backends": {
+            "additionalProperties": {
+              "additionalProperties": true,
+              "type": "object"
+            },
+            "type": "object",
+            "title": "Occupancy Backends"
+          }
+        },
+        "type": "object",
+        "required": [
+          "selected",
+          "pose_backends",
+          "occupancy_backends"
+        ],
+        "title": "RealtimeBackendsResponse"
+      },
+      "RealtimeStateResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "robot_id": {
+            "type": "string",
+            "title": "Robot Id"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "packet_counts": {
+            "additionalProperties": {
+              "type": "integer"
+            },
+            "type": "object",
+            "title": "Packet Counts"
+          },
+          "latest_pose": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/PoseResponse"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "robot_id",
+          "mission_id",
+          "status",
+          "packet_counts",
+          "latest_pose"
+        ],
+        "title": "RealtimeStateResponse"
+      },
+      "RealtimeStatsResponse": {
+        "properties": {
+          "pose_backend": {
+            "type": "string",
+            "title": "Pose Backend"
+          },
+          "occupancy_backend": {
+            "type": "string",
+            "title": "Occupancy Backend"
+          },
+          "pose": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Pose"
+          },
+          "occupancy": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Occupancy"
+          }
+        },
+        "type": "object",
+        "required": [
+          "pose_backend",
+          "occupancy_backend"
+        ],
+        "title": "RealtimeStatsResponse"
+      },
+      "ReloadModelRequest": {
+        "properties": {
+          "checkpoint": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Checkpoint"
+          }
+        },
+        "type": "object",
+        "title": "ReloadModelRequest"
+      },
+      "SceneMatch": {
+        "properties": {
+          "frame_id": {
+            "type": "string",
+            "title": "Frame Id"
+          },
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "score": {
+            "type": "number",
+            "title": "Score"
+          },
+          "t_sec": {
+            "type": "number",
+            "title": "T Sec"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "vehicle_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Count"
+          },
+          "road_condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Condition"
+          },
+          "road_surface": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Surface"
+          },
+          "scene_summary": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Scene Summary"
+          },
+          "frame_path": {
+            "type": "string",
+            "title": "Frame Path"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frame_id",
+          "mission_id",
+          "score",
+          "t_sec",
+          "lat",
+          "lon",
+          "caption",
+          "vehicle_count",
+          "road_condition",
+          "road_surface",
+          "scene_summary",
+          "frame_path"
+        ],
+        "title": "SceneMatch",
+        "description": "Single frame result from a scene query."
+      },
+      "SceneQuery": {
+        "properties": {
+          "text": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 1000
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Text",
+            "description": "Optional text query \u2014 results re-ranked by CLIP similarity when provided"
+          },
+          "vehicle_count_min": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Count Min",
+            "description": "Minimum total vehicle count across all vehicle_groups"
+          },
+          "vehicle_count_max": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0.0
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Count Max",
+            "description": "Maximum total vehicle count across all vehicle_groups"
+          },
+          "road_condition": {
+            "anyOf": [
+              {
+                "type": "string",
+                "maxLength": 50
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Condition",
+            "description": "Exact road_condition keyword (e.g. clear, wet, snow, ice, debris, unknown)"
+          },
+          "gps_bbox": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/GpsBbox"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "GPS bounding box filter"
+          },
+          "time_range": {
+            "anyOf": [
+              {
+                "$ref": "#/components/schemas/TimeRange"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "description": "Frame timestamp range within missions"
+          },
+          "top_k": {
+            "type": "integer",
+            "maximum": 100.0,
+            "minimum": 1.0,
+            "title": "Top K",
+            "description": "Maximum number of results to return",
+            "default": 20
+          }
+        },
+        "type": "object",
+        "title": "SceneQuery",
+        "description": "POST /query/scene request body."
+      },
+      "SceneQueryResponse": {
+        "properties": {
+          "results": {
+            "items": {
+              "$ref": "#/components/schemas/SceneMatch"
+            },
+            "type": "array",
+            "title": "Results"
+          },
+          "total_matched": {
+            "type": "integer",
+            "title": "Total Matched"
+          },
+          "filters_applied": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Filters Applied"
+          }
+        },
+        "type": "object",
+        "required": [
+          "results",
+          "total_matched",
+          "filters_applied"
+        ],
+        "title": "SceneQueryResponse"
+      },
+      "SemanticObservationIn": {
+        "properties": {
+          "frame_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Id"
+          },
+          "class_name": {
+            "type": "string",
+            "title": "Class Name"
+          },
+          "confidence": {
+            "type": "number",
+            "maximum": 1.0,
+            "minimum": 0.0,
+            "title": "Confidence"
+          },
+          "position_enu": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Enu"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          },
+          "mask_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mask Ref"
+          },
+          "track_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track Id"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Facts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "class_name",
+          "confidence"
+        ],
+        "title": "SemanticObservationIn"
+      },
+      "SemanticObservationOut": {
+        "properties": {
+          "frame_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Frame Id"
+          },
+          "class_name": {
+            "type": "string",
+            "title": "Class Name"
+          },
+          "confidence": {
+            "type": "number",
+            "title": "Confidence"
+          },
+          "position_enu": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Position Enu"
+          },
+          "bbox": {
+            "anyOf": [
+              {
+                "additionalProperties": true,
+                "type": "object"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Bbox"
+          },
+          "mask_ref": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mask Ref"
+          },
+          "track_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Track Id"
+          },
+          "facts": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Facts"
+          }
+        },
+        "type": "object",
+        "required": [
+          "frame_id",
+          "class_name",
+          "confidence",
+          "position_enu",
+          "bbox",
+          "mask_ref",
+          "track_id",
+          "facts"
+        ],
+        "title": "SemanticObservationOut"
+      },
+      "SemanticObservationsResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "observations": {
+            "items": {
+              "$ref": "#/components/schemas/SemanticObservationOut"
+            },
+            "type": "array",
+            "title": "Observations"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "observations"
+        ],
+        "title": "SemanticObservationsResponse"
+      },
+      "SensorPacket": {
+        "properties": {
+          "sensor_type": {
+            "type": "string",
+            "title": "Sensor Type"
+          },
+          "t_device": {
+            "type": "number",
+            "title": "T Device"
+          },
+          "seq": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Seq"
+          },
+          "payload": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Payload"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sensor_type",
+          "t_device"
+        ],
+        "title": "SensorPacket"
+      },
+      "SessionFinalizeRequest": {
+        "properties": {
+          "recording_path": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Recording Path"
+          },
+          "enqueue_index_job": {
+            "type": "boolean",
+            "title": "Enqueue Index Job",
+            "default": false
+          }
+        },
+        "type": "object",
+        "title": "SessionFinalizeRequest"
+      },
+      "SessionStartRequest": {
+        "properties": {
+          "robot_id": {
+            "type": "string",
+            "minLength": 1,
+            "title": "Robot Id",
+            "default": "robot_0"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "sensors": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "title": "Sensors"
+          }
+        },
+        "type": "object",
+        "title": "SessionStartRequest"
+      },
+      "SessionStartResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "robot_id": {
+            "type": "string",
+            "title": "Robot Id"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "sensor_profile": {
+            "additionalProperties": true,
+            "type": "object",
+            "title": "Sensor Profile"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "robot_id",
+          "mission_id",
+          "sensor_profile",
+          "status"
+        ],
+        "title": "SessionStartResponse"
+      },
+      "SessionStopResponse": {
+        "properties": {
+          "session_id": {
+            "type": "string",
+            "title": "Session Id"
+          },
+          "status": {
+            "type": "string",
+            "title": "Status"
+          },
+          "mission_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Mission Id"
+          },
+          "job_id": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Job Id"
+          },
+          "enqueued_index_job": {
+            "type": "boolean",
+            "title": "Enqueued Index Job",
+            "default": false
+          }
+        },
+        "type": "object",
+        "required": [
+          "session_id",
+          "status"
+        ],
+        "title": "SessionStopResponse"
+      },
+      "TextQuery": {
+        "properties": {
+          "text": {
+            "type": "string",
+            "maxLength": 1000,
+            "minLength": 1,
+            "title": "Text"
+          }
+        },
+        "type": "object",
+        "required": [
+          "text"
+        ],
+        "title": "TextQuery"
+      },
+      "TimeRange": {
+        "properties": {
+          "start_sec": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "Start Sec",
+            "description": "Earliest frame timestamp (seconds from mission start)"
+          },
+          "end_sec": {
+            "type": "number",
+            "minimum": 0.0,
+            "title": "End Sec",
+            "description": "Latest frame timestamp (seconds from mission start)"
+          }
+        },
+        "type": "object",
+        "required": [
+          "start_sec",
+          "end_sec"
+        ],
+        "title": "TimeRange",
+        "description": "Frame timestamp range within a mission."
+      },
+      "TimelineVisit": {
+        "properties": {
+          "mission_id": {
+            "type": "string",
+            "title": "Mission Id"
+          },
+          "frame_id": {
+            "type": "string",
+            "title": "Frame Id"
+          },
+          "t_sec": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "T Sec"
+          },
+          "lat": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lat"
+          },
+          "lon": {
+            "anyOf": [
+              {
+                "type": "number"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Lon"
+          },
+          "caption": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Caption"
+          },
+          "road_condition": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Road Condition"
+          },
+          "vehicle_count": {
+            "anyOf": [
+              {
+                "type": "integer"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Vehicle Count"
+          },
+          "created_at": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Created At"
+          }
+        },
+        "type": "object",
+        "required": [
+          "mission_id",
+          "frame_id",
+          "t_sec",
+          "lat",
+          "lon",
+          "caption",
+          "road_condition",
+          "vehicle_count",
+          "created_at"
+        ],
+        "title": "TimelineVisit",
+        "description": "One historical visit entry from the scene_timeline table."
+      },
+      "ValidationError": {
+        "properties": {
+          "loc": {
+            "items": {
+              "anyOf": [
+                {
+                  "type": "string"
+                },
+                {
+                  "type": "integer"
+                }
+              ]
+            },
+            "type": "array",
+            "title": "Location"
+          },
+          "msg": {
+            "type": "string",
+            "title": "Message"
+          },
+          "type": {
+            "type": "string",
+            "title": "Error Type"
+          },
+          "input": {
+            "title": "Input"
+          },
+          "ctx": {
+            "type": "object",
+            "title": "Context"
+          }
+        },
+        "type": "object",
+        "required": [
+          "loc",
+          "msg",
+          "type"
+        ],
+        "title": "ValidationError"
+      }
+    }
+  }
+}

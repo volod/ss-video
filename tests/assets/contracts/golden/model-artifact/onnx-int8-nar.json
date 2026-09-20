@@ -1,0 +1,18 @@
+{
+  "artifact_id": "dino_edge_int8",
+  "format": "onnx",
+  "path": "dino_edge_int8.onnx",
+  "sha256": "ececffd618f10a8dde75199627da5eddbbc36552bd320d5d089a0fcf822da27d",
+  "size_bytes": 90421349,
+  "base_model": "dinov2_vitb14_reg",
+  "producer": "ssv_vdp.scripts.export_onnx",
+  "created_at": "2026-09-19T04:55:19.702937Z",
+  "derived_from": {
+    "path": "dino_edge.onnx",
+    "sha256": "ec8106c23c04bba141b433b32edeb7d97048cd5ca2676ac5f0cd30bdd75c8d7c"
+  },
+  "metrics": [],
+  "image_size": 224,
+  "opset": 18,
+  "quantization": "int8_static"
+}

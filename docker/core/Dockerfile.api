@@ -1,0 +1,31 @@
+# syntax=docker/dockerfile:1
+# Host wheel cache is $DATA_DIR/wheels (compose additional_contexts.wheels).
+# The empty `wheels` stage is the default when that context is omitted.
+FROM scratch AS wheels
+
+FROM python:3.11-slim AS builder
+ARG TORCH_CUDA_INDEX=cpu
+ENV TORCH_CUDA_INDEX=$TORCH_CUDA_INDEX
+
+WORKDIR /app
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN python -m venv "$VIRTUAL_ENV"
+COPY pyproject.toml README.md ./
+COPY src/ ./src/
+COPY docker/install-python.sh /tmp/install-python.sh
+RUN --mount=type=cache,target=/root/.cache/pip \
+    --mount=type=bind,from=wheels,target=/tmp/wheels,readonly \
+    sh /tmp/install-python.sh ".[vision]"
+
+FROM python:3.11-slim
+
+WORKDIR /app
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY --from=builder /opt/venv /opt/venv
+CMD ["uvicorn", "selfsuvis.app.main:app", "--host", "0.0.0.0", "--port", "8000"]

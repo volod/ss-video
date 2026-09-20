@@ -1,0 +1,22 @@
+{
+  "artifact_id": "dino_edge",
+  "format": "onnx",
+  "path": "dino_edge.onnx",
+  "sha256": "ec8106c23c04bba141b433b32edeb7d97048cd5ca2676ac5f0cd30bdd75c8d7c",
+  "size_bytes": 346484535,
+  "base_model": "dinov2_vitb14_reg",
+  "producer": "ssv_vdp.scripts.export_onnx",
+  "created_at": "2026-09-19T04:55:04.575755Z",
+  "derived_from": {
+    "path": "../checkpoints/dino_ssl_best.pt",
+    "sha256": "6364949d172de16b159675a8c14e4b1eaed7ab269e4adeee308ec253efefba94"
+  },
+  "metrics": [
+    {
+      "name": "onnx_max_abs_diff",
+      "value": 7.271766662597656e-06
+    }
+  ],
+  "image_size": 224,
+  "opset": 18
+}

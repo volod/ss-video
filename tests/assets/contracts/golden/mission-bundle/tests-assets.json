@@ -1,0 +1,41 @@
+{
+  "mission_id": "vid_testsrc",
+  "created_at": "2026-09-19T08:00:00Z",
+  "time_base": "media",
+  "platform": {
+    "robot_id": "robot_0"
+  },
+  "videos": [
+    {
+      "video_id": "vid_testsrc",
+      "path": "vid_testsrc.mp4",
+      "sha256": "cd2f6ffaaa5ace382a37331dd6fca0712e564901697d8db5a43d1f7989cad489",
+      "size_bytes": 13868,
+      "duration_sec": 2.0,
+      "fps": 10.0,
+      "width": 640,
+      "height": 360
+    },
+    {
+      "video_id": "vid_testsrc2",
+      "path": "vid_testsrc2.mp4",
+      "sha256": "108eee12e103b8e4bc4507de3580021eb24860f6e112d153a36a40db3213a372",
+      "size_bytes": 105432,
+      "duration_sec": 2.0,
+      "fps": 10.0,
+      "width": 640,
+      "height": 360
+    },
+    {
+      "video_id": "vid_green",
+      "path": "vid_green.mp4",
+      "sha256": "8b4756378c4a3a975ff571ac91b61692cf20bac96c559827dcc20614199e5e9c",
+      "size_bytes": 2305,
+      "duration_sec": 2.0,
+      "fps": 10.0,
+      "width": 640,
+      "height": 360
+    }
+  ],
+  "sidecars": []
+}

@@ -1,0 +1,43 @@
+# syntax=docker/dockerfile:1
+# Mapper service: 3DGS ICP fusion via Open3D.
+# Separate from Dockerfile.worker to avoid bloating the worker image with
+# open3d's 427MB wheel + ~700MB visualization dependencies (dash, flask,
+# ipython, matplotlib, pandas) that are never used in the worker.
+#
+# Image size: ~1.5GB (open3d + deps, no GPU required for ICP)
+# GPU: not required — Open3D ICP runs on CPU.
+
+FROM python:3.11-slim AS builder
+ARG TORCH_CUDA_INDEX=cpu
+ENV TORCH_CUDA_INDEX=$TORCH_CUDA_INDEX
+
+WORKDIR /app
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+RUN apt-get update && apt-get install -y --no-install-recommends git ca-certificates \
+    && rm -rf /var/lib/apt/lists/*
+RUN python -m venv "$VIRTUAL_ENV"
+COPY pyproject.toml README.md ./
+# open3d installs cleanly; visualization deps (dash, flask, ipython) are
+# pulled in automatically and unused -- no way to exclude them via pip.
+COPY src/ ./src/
+COPY docker/install-python.sh /tmp/install-python.sh
+RUN --mount=type=cache,target=/root/.cache/pip \
+    sh /tmp/install-python.sh ".[mapper]"
+
+FROM python:3.11-slim
+
+WORKDIR /app
+
+# libGL + libgomp required by open3d headless mode
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    libgl1 \
+    libgomp1 \
+    && rm -rf /var/lib/apt/lists/*
+
+ENV VIRTUAL_ENV=/opt/venv
+ENV PATH="$VIRTUAL_ENV/bin:$PATH"
+
+COPY --from=builder /opt/venv /opt/venv
+CMD ["python", "-m", "selfsuvis.mapper"]

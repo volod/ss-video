@@ -1,0 +1,4 @@
+{"message_type":"GLOBAL_POSITION_INT","timestamp":1700000000000000,"seq":1,"east":12.0,"north":3.5,"up":40.0,"vx":220.0,"vy":-40.0,"vz":0.0,"global_map_id":11}
+{"message_type":"ATTITUDE","timestamp":1700000000020000,"seq":2,"roll":0.01,"pitch":-0.02,"yaw":0.25,"rollspeed":0.01,"pitchspeed":0.02,"yawspeed":0.03,"xacc":0.1,"yacc":0.0,"zacc":9.8,"global_map_id":11}
+{"message_type":"SCALED_PRESSURE","timestamp":1700000000040000,"seq":3,"altitude":41.5,"global_map_id":11}
+{"message_type":"VFR_HUD","timestamp":1700000000050000,"seq":4,"heading":0.24,"global_map_id":11}

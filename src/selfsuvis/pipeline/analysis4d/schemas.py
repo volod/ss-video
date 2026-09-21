@@ -19,6 +19,7 @@ SCHEMA_GEOMETRY = "ss-video.geometry-sample.v1"
 SCHEMA_GAP = "ss-video.gap.v1"
 SCHEMA_TRUTH = "ss-video.analysis4d-truth.v1"
 SCHEMA_BENCHMARK = "ss-video.analysis4d-benchmark.v1"
+SCHEMA_TRACK_AUDIT = "ss-video.track-audit.v1"
 
 MetricScale = Literal["metric", "relative", "unavailable"]
 ProfileName = Literal["fast", "deep"]
@@ -671,6 +672,48 @@ class CaseResult(ContractModel):
     conditions: list[str]
     metrics: MetricReport
     failures: list[str] = Field(default_factory=list)
+
+
+class KeyframeNote(ContractModel):
+    """One selected keyframe and why it was kept."""
+
+    t_sec: float = Field(ge=0)
+    reasons: list[str] = Field(min_length=1)
+    forced: bool
+    profile: ProfileName
+
+
+class MemoryResetNote(ContractModel):
+    """SAM-style memory reset. Scoped by mission, camera, and track epoch."""
+
+    t_sec: float = Field(ge=0)
+    reason: str = Field(min_length=1)
+    scope: str = Field(min_length=1)
+
+
+class CountDisagreementNote(ContractModel):
+    """Count-expert total versus unique tracks. Does not create identities."""
+
+    t_sec: float = Field(ge=0)
+    prompt_id: str = Field(pattern=_ID)
+    label_normalized: str = Field(min_length=1)
+    track_count: int = Field(ge=0)
+    provider_count: int = Field(ge=0)
+
+
+class TrackAudit(ContractModel):
+    """Keyframe reasons, memory resets, and count disagreements for one run."""
+
+    schema_version: Literal["ss-video.track-audit.v1"]
+    mission_id: str = Field(pattern=_ID)
+    profile: ProfileName
+    seed: int = Field(ge=0)
+    grounding_provider: str = Field(min_length=1)
+    mask_provider: str = Field(min_length=1)
+    count_provider: str = ""
+    keyframes: list[KeyframeNote] = Field(default_factory=list)
+    memory_resets: list[MemoryResetNote] = Field(default_factory=list)
+    count_disagreements: list[CountDisagreementNote] = Field(default_factory=list)
 
 
 class BenchmarkReport(ContractModel):

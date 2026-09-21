@@ -73,6 +73,10 @@ Same as `make test`; `INDEX_DIR_PATH` is set for dir tests.
 ./tests/assets/analysis4d/ # pinned 4D contract corpus (analysis4d-v1)
 ```
 
+The contract benchmark is `python -m selfsuvis.pipeline.analysis4d.benchmark`.
+The keyframe and track benchmark is `python -m selfsuvis.pipeline.analysis4d.track_benchmark`
+([4D model runbook](../runbooks/four-d-models.md)).
+
 ## Integration test coverage
 - Health, index (video/url/dir), precheck, precheck_dir, jobs, query (image/text)
 - Validation, errors (400, 403, 404, 413), job_id validation

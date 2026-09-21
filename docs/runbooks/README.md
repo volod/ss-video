@@ -13,6 +13,7 @@ Operations runbooks for models used by the video indexer and for realtime pose s
 | [depth.md](depth.md) | Monocular depth |
 | [detection-hf.md](detection-hf.md) | HF object detection |
 | [yolo-sam.md](yolo-sam.md) | YOLO11 + SAM2/3 |
+| [four-d-models.md](four-d-models.md) | 4D keyframes, Grounding DINO, and track propagation |
 
 Research-pipeline models (Gemma, Qwen, UniDrive, world-model, RF-DETR tracking) live in
 [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.

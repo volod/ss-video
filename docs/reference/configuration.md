@@ -162,6 +162,28 @@ python -m selfsuvis.scripts.migrate_postgres --owner fusion
 | `MAX_DIR_BYTES` | `50 GiB` | Directory scan byte limit |
 | `MAX_DIR_DEPTH` | `10` | Directory recursion limit |
 
+## 4D keyframes and tracks
+
+These overrides apply to `workflows/analysis4d_tracks.py`. They are not `KitSettings`.
+The pinned providers and the measured gate are in the
+[4D model runbook](../runbooks/four-d-models.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_GROUNDING_PROVIDER` | `grounding_dino` | Grounding provider. `scripted` and `unavailable` are test stand-ins. |
+| `ANALYSIS4D_MASK_PROVIDER` | `kinematic` | Mask propagator. The shipped path is kinematic box motion. |
+| `ANALYSIS4D_COUNT_PROVIDER` | empty | Count expert. Empty or `off` leaves counting disabled. |
+| `ANALYSIS4D_SEED` | `0` | Tie-break seed for keyframe selection and track ids. |
+| `ANALYSIS4D_VRAM_BUDGET_BYTES` | `8589934592` | Provider pin rejects a probe above this peak allocation (8 GiB). |
+| `ANALYSIS4D_KEYFRAME_LATENCY_SEC` | `1.0` | Provider pin rejects a probe slower than this per keyframe after warmup. |
+| `ANALYSIS4D_MAX_GAP_SEC` | `10` | Insert a forced keyframe when the last selection is older than this. |
+| `ANALYSIS4D_CHUNK_SEC` | `4` | Fast-pass chunk length. The deep pass budgets across the whole span. |
+| `ANALYSIS4D_KEYFRAME_BUDGET` | `2` | MaxInfo selections per chunk. Forced triggers may exceed it. |
+| `ANALYSIS4D_MIN_SPACING_SEC` | `0.25` | Drop a non-forced keyframe closer than this to the previous one. |
+
+Histogram, SSIM, and embedding-drift thresholds stay at the indexer defaults (`0.25`,
+`0.25`, `0.15`) inside `SelectorConfig`. They are not separate environment variables.
+
 ## Notes
 
 - If `ALLOWED_INDEX_PATHS` is empty, path-based indexing endpoints are disabled by design.

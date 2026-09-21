@@ -16,6 +16,7 @@ from selfsuvis.pipeline.analysis4d.schemas import (
     SCHEMA_QA,
     SCHEMA_TIMELINE,
     SCHEMA_TRACK,
+    SCHEMA_TRACK_AUDIT,
     AnalysisManifest,
     GapRecord,
     GeometrySample,
@@ -44,6 +45,7 @@ _SCHEMA_BY_KIND = {
     "gaps": SCHEMA_GAP,
     "geometry": SCHEMA_GEOMETRY,
     "masks": SCHEMA_MASK,
+    "track_audit": SCHEMA_TRACK_AUDIT,
 }
 _METRIC_PREDICATES = frozenset({"distance_band", "supports", "contacts"})
 _ISSUE_CODES = ("unversioned", "invalid_interval", "mixed_coordinate_frame", "dangling_id")

@@ -15,22 +15,6 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
 
-#### four-d-keyframes-and-tracks
-
-Current adaptive sampling is pairwise and current SAM use refines sampled-frame boxes; it cannot
-preserve promptable instance identities through long occlusion while bounding heavy-model cost.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#dynamic-keyframes-and-2d-perception)
-- Agent status: RUN NEEDED
-- Research: yes
-- Dependencies: `four-d-contracts-and-benchmark`. Blocks: `four-d-spatial-reconstruction`, `four-d-profile-orchestration`.
-- User-visible outcome: A mission produces auditable 2D tracks for text- or exemplar-prompted objects, with heavy grounding limited to narrative-changing keyframes and lightweight propagation between them.
-- Scope boundary: Implement the bounded MaxInfo-style selector, trigger policy, provider interfaces, track lifecycle, mask references, and Grounding DINO/CountGD plus SAM 2 or SAM 3 integration through a pinned ss-perception release or sidecar; do not train models in this repository, claim CountGD detections as persistent identities, or run all candidate providers in production.
-- Data and artifact paths: `src/selfsuvis/pipeline/workflows/`, `src/selfsuvis/pipeline/analysis4d/`, `tests/assets/analysis4d/`, `$DATA_DIR/analysis/<mission_id>/4d/tracks.jsonl`, and `$DATA_DIR/analysis/<mission_id>/4d/masks/`.
-- Execution path: Benchmark candidate provider combinations against the existing YOLO+SAM and RF-DETR path, pin the selected artifact/config, run the fast causal pass and the deep forward/backward pass, and record forced-keyframe reasons, memory resets, gaps, and count-vs-track disagreement.
-- Acceptance gates: `make test-unit`, `make test-ci`, and the declared GPU benchmark pass; selected keyframes cover every annotated event boundary in the fixture corpus, track output is timestamp-monotonic and deterministic under a fixed seed, occlusion/cut fixtures do not silently reuse ids, and a documented no-go is valid if no provider meets license, memory, quality, and latency gates and dependent tasks are re-scoped or removed before this task closes.
-- Documentation target: [Production server](current/production-server.md), [Configuration](../reference/configuration.md), and a new 4D model runbook.
-
 #### four-d-spatial-reconstruction
 
 Current depth summaries and frame-level DINO vectors cannot back-project masks, maintain

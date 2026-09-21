@@ -128,9 +128,12 @@ Canonical seed YAML is package data at
 Versioned 4D outputs are separate from the ss-common `mission-bundle` and `model-artifact`
 manifests. Schema `ss-video.analysis4d-manifest.v1` is internal to ss-video.
 `pipeline/storage/analysis4d.py` materializes query rows; the files remain the audit copy.
-Layout and the benchmark command are in
-[production-server.md](production-server.md#four-dimensional-analysis-contracts). Record:
-[0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md).
+Layout and the benchmark commands are in
+[production-server.md](production-server.md#four-dimensional-analysis-contracts).
+Keyframe selection and the pinned grounding model are in the
+[4D model runbook](../../runbooks/four-d-models.md). Records:
+[0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md),
+[0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md).
 
 ```text
 $DATA_DIR/analysis/<mission_id>/4d/
@@ -141,10 +144,13 @@ $DATA_DIR/analysis/<mission_id>/4d/
   timeline.json
   qa.jsonl
   gaps.jsonl          optional; required when a stage skips frames
+  track-audit.json    keyframe reasons, memory resets, count disagreements
   geometry/           geometry samples referenced by events and edges
   masks/              mask artifacts referenced by evidence
   history/            previous timeline or manifest, named by digest prefix
 $DATA_DIR/analysis/_benchmark/report.json
+$DATA_DIR/analysis/_benchmark/tracks-report.json
+$DATA_DIR/hf-cache/   Grounding DINO weights (HF_HOME for this path)
 ```
 
 `truth.json` is evaluation-only and is not listed in the runtime manifest. The pinned

@@ -20,7 +20,8 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D track, graph, timeline, and QA contracts plus the fixture benchmark |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframe selector, prompted tracks, and fixture benchmarks |
+| `src/selfsuvis/pipeline/workflows/analysis4d_tracks.py` | Fast causal and deep forward/backward 4D track passes |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -148,6 +149,38 @@ single-threshold HOTA and majority-vote IDF1 on the fixtures, not a TrackEval ru
 report's real-time factor and peak VRAM describe this contract runner; the 15-minute
 fast-profile gate belongs to a later task. Record:
 [0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md).
+
+## Four-dimensional keyframes and tracks
+
+`workflows/analysis4d_tracks.py` `run_mission_tracks` writes one mission directory. It is
+not yet a worker job; profile admission and the indexer DAG are a later task. The call
+runs a fast causal pass and a deep forward/backward pass into the same artifact set.
+Heavy grounding runs only on selected keyframes. Between keyframes the tracker
+propagates boxes. The pinned mask propagator is kinematic (box motion, no neural
+weights). Production loads that one grounding provider and that one mask propagator.
+
+The pinned grounding model is `IDEA-Research/grounding-dino-tiny` at revision
+`a2bb814dd30d776dcf7e30523b00659f4f141c71`, weights
+`sha256:1a2412ef99bd74bcd3c2a246fa1e48581f8889a1300c9051974741314fc042f3`. CountGD is
+not loaded. A count, when a caller supplies one, is an audit signal and never a track
+id. YOLO+SAM, RF-DETR, SAM 2, and SAM 3 stay off this path on the reference host.
+
+`track-audit.json` (`ss-video.track-audit.v1`) records keyframe reasons, memory resets,
+and count-vs-track disagreements. The fast pass does not link identities. The deep pass
+may set `identity_link` on a new track after occlusion or a camera cut; it does not
+rewrite the earlier observation. A long gap or a cut ends the live id.
+
+Keyframe and track gate:
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.track_benchmark
+```
+
+The report is `$DATA_DIR/analysis/_benchmark/tracks-report.json`
+(`ss-video.track-benchmark.v1`). `--skip-gpu` checks the fixture corpus without loading
+weights. Model choice, budgets, and cache layout:
+[4D model runbook](../../runbooks/four-d-models.md). Record:
+[0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md).
 
 ## Design decisions
 

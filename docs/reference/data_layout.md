@@ -52,11 +52,15 @@ video database (`analysis4d_runs`, `analysis4d_events`, `analysis4d_edges`,
 ```text
 .data/analysis/<mission_id>/4d/manifest.json
 .data/analysis/<mission_id>/4d/tracks.jsonl
+.data/analysis/<mission_id>/4d/track-audit.json
 .data/analysis/<mission_id>/4d/graph-deltas.jsonl
 .data/analysis/<mission_id>/4d/proposals.jsonl
 .data/analysis/<mission_id>/4d/timeline.json
 .data/analysis/<mission_id>/4d/qa.jsonl
+.data/analysis/<mission_id>/4d/masks/
 .data/analysis/_benchmark/report.json
+.data/analysis/_benchmark/tracks-report.json
+.data/hf-cache/
 ```
 
 See [Four-dimensional analysis artifacts](../impl/current/data-config.md#four-dimensional-analysis-artifacts).

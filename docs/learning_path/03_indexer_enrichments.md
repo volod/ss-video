@@ -74,6 +74,12 @@ Optional later stages (Gemma-directed tracking, Qwen VLM, UniDriveVLA) are
 ss-fusion models invoked from the worker when extras are on. Their study docs
 stay in ss-fusion ([siblings.md](siblings.md)).
 
+These stages currently enrich sampled frames or produce a mission-level semantic graph; they are not
+yet a verified temporal 3D scene graph. The planned
+[4D scene-analysis capability](../design/spec.md#four-dimensional-video-scene-analysis) adds
+persistent mask tracks, uncertainty-aware geometry, graph deltas, strict verification, and
+evidence-derived Video-QA without changing this current behavior until its plan tasks ship.
+
 ## Degradation rule
 
 A missing extra skips that enricher and continues. Confirm in job logs which

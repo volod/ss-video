@@ -76,6 +76,27 @@ spatial exceedance probability.
 
 **Candidate id:** `environmental-field-models` (ss-fusion / ss-sens).
 
+## 8. Time-varying 3D scene understanding
+
+**Gap.** The indexer can keep diverse frames, estimate depth, refine detections with SAM, run
+directed tracking, and build a semantic environment graph. Those outputs are not yet one persistent,
+uncertainty-aware graph: object identities do not have a shared temporal contract, monocular depth
+summaries are not masked 3D geometry, graph edges do not carry validity intervals, and VLM claims do
+not pass a deterministic geometric verifier before becoming narrative output.
+
+**Why it matters.** An operator asking "what changed, where, and which evidence proves it?" needs
+track continuity, coordinate-frame discipline, graph edits, and evidence-linked events. Independent
+frame captions cannot reliably answer that question, especially through occlusion or a camera cut.
+
+**Scheduled capability:** `four-d-scene-analysis`. Read the
+[specification](../design/spec.md#four-dimensional-video-scene-analysis) and the
+[implementation plan](../impl/plan.md#near-real-time-4d-scene-analysis----four-d-scene-analysis).
+
+**Study first:** distinguish relative from metric depth; camera calibration from surface-normal
+estimation; a VLM proposal from a verified graph edge; and online bounded keyframe selection from a
+global postflight selection. The capability deliberately keeps learned perception and training in
+ss-fusion while ss-video owns scheduling, evidence persistence, query, and operator-visible quality.
+
 ## Pre-extension checklist
 
 Before adding runtime behavior:

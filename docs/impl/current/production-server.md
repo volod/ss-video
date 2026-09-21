@@ -20,8 +20,9 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframe selector, prompted tracks, and fixture benchmarks |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, and appearance |
 | `src/selfsuvis/pipeline/workflows/analysis4d_tracks.py` | Fast causal and deep forward/backward 4D track passes |
+| `src/selfsuvis/pipeline/workflows/analysis4d_geometry.py` | Back-projected geometry samples and masked appearance prototypes |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -181,6 +182,46 @@ The report is `$DATA_DIR/analysis/_benchmark/tracks-report.json`
 weights. Model choice, budgets, and cache layout:
 [4D model runbook](../../runbooks/four-d-models.md). Record:
 [0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md).
+
+## Four-dimensional geometry
+
+`workflows/analysis4d_geometry.py` `run_mission_geometry` reads an existing
+`tracks.jsonl` and writes geometry samples plus masked appearance prototypes. It
+does not rewrite the track file. A depth provider that fails to load, or that
+returns no map, records `provider_unavailable` and leaves the 2D tracks in place.
+The worker does not call this pass yet.
+
+Each sample is `ss-video.geometry-sample.v1`. `metric_scale` is `metric` only when
+the depth provider claims meters and the camera has a `calibration_id`. Relative
+depth stays `relative` even when the pose is metric. A missing pose or missing
+intrinsics is `unavailable`. Perspective Fields, when present, fills roll, pitch,
+and field of view. It does not invent metric scale or normals. The
+`perspective_fields` package is not installed on the reference host.
+
+Boxes are gravity-aligned in the mission ENU frame (gravity +Z). Dynamic tracks,
+those whose image speed exceeds 0.15 normalized units per second, are fused over
+a one-second window and are not inserted into the static cloud. Normals come from
+depth gradients and are rotated by the camera pose. Metric3D is not installed in
+ss-perception `v0.2.0`.
+
+Appearance prototypes are `ss-video.track-embedding.v1`. Association requires the
+same model id, weights digest, dimension, and preprocessing
+`analysis4d-masked-dino-v1`. A mismatch raises `IncompatibleEmbedding`.
+
+The pinned depth pair is Depth Anything V2 Small (relative) and Depth Anything V2
+Metric Outdoor Small. ZoeDepth NYU+KITTI also meets the memory and latency gate
+and stays an evaluated candidate. Gated Hugging Face repositories use `HF_TOKEN`
+from `.env`. A missing or rejected token fails the geometry benchmark with a
+detail that names `HF_TOKEN`. The token value is not logged.
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.geometry_benchmark
+```
+
+The report is `$DATA_DIR/analysis/_benchmark/geometry-report.json`
+(`ss-video.geometry-benchmark.v1`). Pins, the synthetic camera, and the cache:
+[4D geometry runbook](../../runbooks/four-d-geometry.md). Record:
+[0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md).
 
 ## Design decisions
 

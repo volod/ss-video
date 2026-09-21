@@ -16,6 +16,7 @@ SCHEMA_QA = "ss-video.qa.v1"
 SCHEMA_MANIFEST = "ss-video.analysis4d-manifest.v1"
 SCHEMA_MASK = "ss-video.mask.v1"
 SCHEMA_GEOMETRY = "ss-video.geometry-sample.v1"
+SCHEMA_EMBEDDING = "ss-video.track-embedding.v1"
 SCHEMA_GAP = "ss-video.gap.v1"
 SCHEMA_TRUTH = "ss-video.analysis4d-truth.v1"
 SCHEMA_BENCHMARK = "ss-video.analysis4d-benchmark.v1"
@@ -485,7 +486,11 @@ class MaskArtifact(ContractModel):
 
 
 class GeometrySample(ContractModel):
-    """One oriented box and optional depth sample in the mission frame."""
+    """One oriented box and optional depth sample in the mission frame.
+
+    ``metric_scale`` is explicit. A metric box requires ``calibration_id``.
+    Relative depth is never promoted by omitting that field.
+    """
 
     schema_version: Literal["ss-video.geometry-sample.v1"]
     mission_id: str = Field(pattern=_ID)
@@ -498,6 +503,14 @@ class GeometrySample(ContractModel):
     quaternion_xyzw: list[float] = Field(min_length=4, max_length=4)
     depth_m: float | None = None
     pose_position_m: list[float] | None = None
+    metric_scale: MetricScale = "unavailable"
+    calibration_id: str | None = None
+    covariance_diag: list[float] | None = None
+    residual_m: float | None = Field(default=None, ge=0)
+    observation_count: int = Field(default=1, ge=1)
+    scale_confidence: float = Field(default=0.0, ge=0, le=1)
+    dynamic: bool = False
+    embedding_ref: str | None = None
 
     @model_validator(mode="after")
     def _shape(self) -> "GeometrySample":
@@ -508,6 +521,33 @@ class GeometrySample(ContractModel):
         norm = sum(value * value for value in self.quaternion_xyzw)
         if abs(norm - 1.0) > 1e-3:
             raise ValueError("quaternion_xyzw must be a unit quaternion")
+        if self.metric_scale == "metric" and not self.calibration_id:
+            raise ValueError("metric_scale metric requires calibration_id")
+        if self.covariance_diag is not None and (
+            len(self.covariance_diag) != 3 or any(value < 0 for value in self.covariance_diag)
+        ):
+            raise ValueError("covariance_diag must be three non-negative values")
+        return self
+
+
+class TrackEmbedding(ContractModel):
+    """One masked appearance vector. Association requires the same space."""
+
+    schema_version: Literal["ss-video.track-embedding.v1"]
+    mission_id: str = Field(pattern=_ID)
+    track_id: str = Field(pattern=_ID)
+    t_sec: float = Field(ge=0)
+    kind: Literal["observation", "prototype"]
+    model_id: str = Field(min_length=1)
+    revision: str = Field(min_length=1)
+    preprocessing_version: str = Field(min_length=1)
+    dim: int = Field(ge=1)
+    vector: list[float] = Field(min_length=1)
+
+    @model_validator(mode="after")
+    def _dim(self) -> "TrackEmbedding":
+        if len(self.vector) != self.dim:
+            raise ValueError("vector length must equal dim")
         return self
 
 

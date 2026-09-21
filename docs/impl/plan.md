@@ -15,22 +15,6 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
 
-#### four-d-spatial-reconstruction
-
-Current depth summaries and frame-level DINO vectors cannot back-project masks, maintain
-instance-level appearance, or express uncertainty-aware 3D boxes in a mission frame.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#3d-reconstruction-and-persistent-features)
-- Agent status: RUN NEEDED
-- Research: yes
-- Dependencies: `four-d-keyframes-and-tracks`. Blocks: `four-d-scene-graph`.
-- User-visible outcome: Each eligible track has relative or metric 3D observations, persistent appearance descriptors, oriented boxes, and explicit calibration/scale confidence instead of implied precision.
-- Scope boundary: Integrate depth/normal and masked DINOv3 provider outputs with ss-mapping transforms, Perspective Fields calibration fallback, robust point filtering, motion-aware box fitting, and uncertainty propagation; do not infer metric scale from relative depth alone or merge dynamic objects into a static map.
-- Data and artifact paths: `src/selfsuvis/pipeline/analysis4d/`, pinned `ss-perception`/`ss-mapping` packages, `tests/assets/analysis4d/`, `$DATA_DIR/analysis/<mission_id>/4d/geometry/`, and `$DATA_DIR/analysis/<mission_id>/4d/embeddings/`.
-- Execution path: Evaluate Depth Anything-style relative depth and Metric3D-style metric depth/normals behind one contract, validate camera/pose transforms and reprojection, pool masked DINO features into versioned track prototypes, and fit gravity-aligned boxes with covariance and residuals.
-- Acceptance gates: `make test-unit`, `make test-ci`, and the declared GPU geometry benchmark pass; synthetic-camera fixtures meet pinned reprojection and box-error tolerances, incompatible embedding versions cannot associate, missing calibration yields `relative` or `unavailable` rather than metric output, and provider failure preserves the 2D track graph.
-- Documentation target: [Production server](current/production-server.md), [Data/config](current/data-config.md), [Depth runbook](../runbooks/depth.md), and a new 4D geometry runbook.
-
 #### four-d-scene-graph
 
 The current semantic environment graph is a mission summary; it does not preserve temporal edge

@@ -184,6 +184,18 @@ The pinned providers and the measured gate are in the
 Histogram, SSIM, and embedding-drift thresholds stay at the indexer defaults (`0.25`,
 `0.25`, `0.15`) inside `SelectorConfig`. They are not separate environment variables.
 
+## 4D geometry
+
+Depth and appearance pins, and the synthetic-camera tolerances, are in the
+[4D geometry runbook](../runbooks/four-d-geometry.md). The same VRAM and latency
+budgets above apply to those probes.
+
+`HF_TOKEN` in `.env` is sent on Hugging Face downloads. See
+[secrets management](secrets-management.md). A gated or invisible repository with
+an empty or rejected token fails
+`python -m selfsuvis.pipeline.analysis4d.geometry_benchmark`. The failure detail
+names `HF_TOKEN`. The token value is not written to logs or to the report.
+
 ## Notes
 
 - If `ALLOWED_INDEX_PATHS` is empty, path-based indexing endpoints are disabled by design.

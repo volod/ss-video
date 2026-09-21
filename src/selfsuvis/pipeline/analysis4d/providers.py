@@ -8,6 +8,7 @@ Production instantiates the pinned pair, not every candidate.
 
 import hashlib
 import importlib
+import re
 from dataclasses import dataclass
 from typing import Protocol
 
@@ -17,6 +18,7 @@ from selfsuvis.pipeline.analysis4d.tracks import Detection
 
 _PREPROCESS = "analysis4d-providers-v1"
 GROUNDING_DINO_ID = "IDEA-Research/grounding-dino-tiny"
+_HF_TOKEN_RE = re.compile(r"hf_[A-Za-z0-9]{8,}")
 
 
 @dataclass(frozen=True)
@@ -286,16 +288,100 @@ def _probe_grounding_dino() -> ProviderProbe:
             torch.cuda.empty_cache()
 
 
+def huggingface_token() -> str | None:
+    """Return the deployment token from settings, never a logged value."""
+    from selfsuvis.pipeline.core import settings
+
+    token = str(getattr(settings, "HF_TOKEN", "") or "").strip()
+    return token or None
+
+
+def apply_huggingface_auth() -> str | None:
+    """Publish ``HF_TOKEN`` for the hub client when ``.env`` set it and the shell did not."""
+    import os
+
+    token = huggingface_token()
+    if not token:
+        return None
+    os.environ.setdefault("HF_TOKEN", token)
+    os.environ.setdefault("HUGGING_FACE_HUB_TOKEN", token)
+    return token
+
+
+def explain_hub_failure(
+    model_id: str,
+    exc: BaseException,
+    *,
+    token_present: bool | None = None,
+) -> str:
+    """Describe a hub load failure without embedding the token.
+
+    A gated repository with a missing or rejected token is named as such.
+    Other failures keep the exception type and a redacted message.
+    """
+    raw = _HF_TOKEN_RE.sub("hf_[redacted]", f"{type(exc).__name__}: {exc}")
+    lowered = raw.lower()
+    name = type(exc).__name__.lower()
+    gated = (
+        "gated" in name
+        or "gated" in lowered
+        or "401" in raw
+        or "403" in raw
+        or "unauthorized" in lowered
+        or "forbidden" in lowered
+        or "restricted" in lowered
+        or "private repository" in lowered
+        or "pass a token" in lowered
+        or "not a valid model identifier" in lowered
+        or "repository not found" in lowered
+    )
+    present = huggingface_token() is not None if token_present is None else token_present
+    if gated and not present:
+        return (
+            f"{model_id} is gated and HF_TOKEN is empty. "
+            "Set HF_TOKEN in .env and accept the model license before caching weights."
+        )
+    if gated and present:
+        return (
+            f"{model_id} is not visible with the configured HF_TOKEN. "
+            "Accept the model license or confirm the repository id. "
+            "The token value is not logged."
+        )
+    return f"load failed: {raw}"[:400]
+
+
 def _prepare_hf_cache() -> None:
     import os
+    import sys
     from pathlib import Path
 
     from selfsuvis.pipeline.core import settings
 
     root = Path(settings.data_dir()) / "hf-cache"
+    hub = root / "hub"
     root.mkdir(parents=True, exist_ok=True)
-    os.environ.setdefault("HF_HOME", str(root))
-    os.environ.setdefault("HUGGINGFACE_HUB_CACHE", str(root / "hub"))
+    hub.mkdir(parents=True, exist_ok=True)
+    # Honor an operator-set cache. Otherwise pin downloads under DATA_DIR and
+    # retarget hub constants that were frozen at import time.
+    if not os.environ.get("HF_HOME") and not os.environ.get("HUGGINGFACE_HUB_CACHE"):
+        os.environ["HF_HOME"] = str(root)
+        os.environ["HUGGINGFACE_HUB_CACHE"] = str(hub)
+        os.environ["HF_HUB_CACHE"] = str(hub)
+        for module_name in (
+            "huggingface_hub.constants",
+            "huggingface_hub.file_download",
+            "huggingface_hub._snapshot_download",
+        ):
+            module = sys.modules.get(module_name)
+            if module is None:
+                continue
+            if hasattr(module, "HF_HOME"):
+                module.HF_HOME = str(root)
+            if hasattr(module, "HF_HUB_CACHE"):
+                module.HF_HUB_CACHE = str(hub)
+            if hasattr(module, "HUGGINGFACE_HUB_CACHE"):
+                module.HUGGINGFACE_HUB_CACHE = str(hub)
+    apply_huggingface_auth()
 
 
 class GroundingDinoProvider:
@@ -346,8 +432,12 @@ def _load_grounding_dino():
     _prepare_hf_cache()
     device = "cuda" if torch.cuda.is_available() else "cpu"
     dtype = torch.float16 if device == "cuda" else torch.float32
-    processor = AutoProcessor.from_pretrained(GROUNDING_DINO_ID)
-    model = AutoModelForZeroShotObjectDetection.from_pretrained(GROUNDING_DINO_ID, dtype=dtype)
+    token = huggingface_token()
+    auth = {"token": token} if token else {}
+    processor = AutoProcessor.from_pretrained(GROUNDING_DINO_ID, **auth)
+    model = AutoModelForZeroShotObjectDetection.from_pretrained(
+        GROUNDING_DINO_ID, dtype=dtype, **auth
+    )
     model = model.to(device)
     model.eval()
     return processor, model, device, dtype

@@ -133,7 +133,8 @@ Layout and the benchmark commands are in
 Keyframe selection and the pinned grounding model are in the
 [4D model runbook](../../runbooks/four-d-models.md). Records:
 [0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md),
-[0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md).
+[0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md),
+[0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md).
 
 ```text
 $DATA_DIR/analysis/<mission_id>/4d/
@@ -145,12 +146,14 @@ $DATA_DIR/analysis/<mission_id>/4d/
   qa.jsonl
   gaps.jsonl          optional; required when a stage skips frames
   track-audit.json    keyframe reasons, memory resets, count disagreements
-  geometry/           geometry samples referenced by events and edges
+  geometry/           one JSON sample per track and timestamp
+  embeddings/         masked appearance prototypes, one directory per track
   masks/              mask artifacts referenced by evidence
   history/            previous timeline or manifest, named by digest prefix
 $DATA_DIR/analysis/_benchmark/report.json
 $DATA_DIR/analysis/_benchmark/tracks-report.json
-$DATA_DIR/hf-cache/   Grounding DINO weights (HF_HOME for this path)
+$DATA_DIR/analysis/_benchmark/geometry-report.json
+$DATA_DIR/hf-cache/   Hugging Face weights when HF_HOME is unset
 ```
 
 `truth.json` is evaluation-only and is not listed in the runtime manifest. The pinned

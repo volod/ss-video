@@ -9,6 +9,7 @@ from selfsuvis.pipeline.analysis4d.geometry import relation_holds, velocity_feas
 from selfsuvis.pipeline.analysis4d.io import read_model, sha256_bytes
 from selfsuvis.pipeline.analysis4d.schemas import (
     SCHEMA_DELTA,
+    SCHEMA_EMBEDDING,
     SCHEMA_GAP,
     SCHEMA_GEOMETRY,
     SCHEMA_MASK,
@@ -44,6 +45,7 @@ _SCHEMA_BY_KIND = {
     "qa": SCHEMA_QA,
     "gaps": SCHEMA_GAP,
     "geometry": SCHEMA_GEOMETRY,
+    "embeddings": SCHEMA_EMBEDDING,
     "masks": SCHEMA_MASK,
     "track_audit": SCHEMA_TRACK_AUDIT,
 }

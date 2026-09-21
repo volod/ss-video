@@ -1,17 +1,23 @@
 {
+  "calibration_id": "cal-1",
   "center_m": [
     0.0,
     0.0,
     0.0
   ],
+  "covariance_diag": null,
   "depth_m": null,
+  "dynamic": false,
+  "embedding_ref": null,
   "extent_m": [
     10.0,
     10.0,
     4.0
   ],
   "frame": "mission_enu",
+  "metric_scale": "metric",
   "mission_id": "mission-nominal",
+  "observation_count": 1,
   "pose_position_m": null,
   "quaternion_xyzw": [
     0.0,
@@ -19,7 +25,9 @@
     0.0,
     1.0
   ],
+  "residual_m": null,
   "sample_id": "g-zone-4",
+  "scale_confidence": 0.0,
   "schema_version": "ss-video.geometry-sample.v1",
   "subject_id": "n-zone",
   "t_sec": 4.0

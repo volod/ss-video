@@ -36,32 +36,32 @@
       "sha256": "sha256:22e7e31c65c53b2d9633c4da844675860cbdbf764664de6993926bb131acc15e"
     },
     {
-      "bytes": 389,
+      "bytes": 593,
       "kind": "geometry",
       "path": "geometry/n-zone/4.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:3121c308ec5908fe762dbea2abbd106743b3b4b942c3a183a82f21207bb74733"
+      "sha256": "sha256:636b028dc02bcbc919ea532cebcd9314630c02dd286d7fb55532efcd51d3e503"
     },
     {
-      "bytes": 417,
+      "bytes": 621,
       "kind": "geometry",
       "path": "geometry/n-track-1/0.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:7dbfc4aa4b1f7c493338190280d1aeac2b92236762fd950cb96ed033072ea2c9"
+      "sha256": "sha256:3345be3df1e3cd0af80e3654efbef4580af3d877ee22984e9130ba7651d51ec1"
     },
     {
-      "bytes": 417,
+      "bytes": 621,
       "kind": "geometry",
       "path": "geometry/n-track-1/4.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:75e1a88cb4adf9707003c6746b6caef199f373b33849f77b00ce6d3a25fde613"
+      "sha256": "sha256:2ff8c544f805f04b9b87321636aa6164ae61c13a05377719fe0206d4551f793e"
     },
     {
-      "bytes": 417,
+      "bytes": 621,
       "kind": "geometry",
       "path": "geometry/n-track-3/8.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:dd81a770eee04b25faf5792283a76a84770f8832d9dff18ed51a83e527cd6f7a"
+      "sha256": "sha256:e2ea03c7ce86ac190ab81bcae8c00e5f48e3ec7e054c4dac85b7906ff801543c"
     },
     {
       "bytes": 226,

@@ -36,18 +36,18 @@
       "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "bytes": 385,
+      "bytes": 588,
       "kind": "geometry",
       "path": "geometry/n-track-1/0.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:08f8f5e8f606b32d44bf05215ecda51cf217f9030b9cf0bf9129b522904168dd"
+      "sha256": "sha256:e532bbe7778da28a9d6749d2c6f5992b883a4f02b0063750cac7b416a484aa30"
     },
     {
-      "bytes": 385,
+      "bytes": 588,
       "kind": "geometry",
       "path": "geometry/n-track-1/2.json",
       "schema_version": "ss-video.geometry-sample.v1",
-      "sha256": "sha256:02f5f97de2a0f39e6a18a719ccef91ecd2da46d57d79f284e6ab9a3cee49f019"
+      "sha256": "sha256:f6c9877bc041ecb0fef8ad5cf4e2501a6cc6b1c75b28a2028aebde1ca237ab69"
     }
   ],
   "coordinate_frame": {

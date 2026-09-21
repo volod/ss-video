@@ -356,7 +356,13 @@ def _seal(
     if gaps:
         add("gaps.jsonl", "gaps", SCHEMA_GAP, b"".join(canonical_line(row) for row in gaps))
     for path, sample in geometry:
-        add(path, "geometry", SCHEMA_GEOMETRY, canonical_bytes(sample))
+        stamped = sample.model_copy(
+            update={
+                "metric_scale": frame.metric_scale,
+                "calibration_id": frame.calibration_id if frame.metric_scale == "metric" else None,
+            }
+        )
+        add(path, "geometry", SCHEMA_GEOMETRY, canonical_bytes(stamped))
     for path, mask in masks:
         add(path, "masks", SCHEMA_MASK, canonical_bytes(mask))
     write_bytes(dest / "truth.json", canonical_bytes(truth))

@@ -4,7 +4,7 @@ Each case builds a message through the current code path (decoders, aggregator, 
 conversions, API schema, captioner row), serializes it the way a publisher does, and asserts
 that the result validates against the ODCS-generated model, emits no field outside the
 contract, and equals the committed golden fixture under `tests/assets/contracts/golden/`
-(snapshot of ss-common tag `v0.1.0`). The reverse direction rebuilds today's class from the
+(snapshot of ss-common tag `v0.2.1`). The reverse direction rebuilds today's class from the
 fixture. `SS_UPDATE_GOLDEN=1` rewrites the fixtures from the current code.
 """
 

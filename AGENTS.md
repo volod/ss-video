@@ -29,13 +29,14 @@ Compiled wheels MUST be cached under `.data/wheels/<package-name>_<key>/`.
 - Worker: `src/selfsuvis/worker/`
 - UI: `src/selfsuvis/ui/`
 - Video remainder of `pipeline/` (realtime, workflows, ICP mapper, video media/storage)
-- Perception and mapping: [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`
+- Perception and mapping: [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`
+- Contracts and `ss_kit`: [volod/ss-common](https://github.com/volod/ss-common) tag `v0.2.1`
 - Runtime config: `selfsuvis.pipeline.core.config` (ss-perception package)
 - Docker and shell ops: `docker/`, `scripts/`
 
 ## Usual commands
 
-- `make venv` — installs selfsuvis plus ss-fusion packages from git tag `v0.1.0`
+- `make venv` — installs selfsuvis plus ss-fusion packages from git tag `v0.2.0`
 - `make test-unit`, `make test-ci`, `make lint`
 - `make ci` — lint plus test-unit; `make ci-github` — lint plus test-ci
 - `make plan-status` — next eligible task per plan lane

@@ -7,10 +7,10 @@ video, stores frame metadata and embeddings, and answers text, image, scene, and
 queries. Import package `selfsuvis`.
 
 Perception, mapping, and the research pipeline live in
-[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`. Site sensors live in
+[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`. Site sensors live in
 [volod/ss-sens](https://github.com/volod/ss-sens). Ingress and SSO live in
 [volod/ss-control](https://github.com/volod/ss-control). Shared contracts live in
-[volod/ss-common](https://github.com/volod/ss-common).
+[volod/ss-common](https://github.com/volod/ss-common) tag `v0.2.1`.
 
 This document owns product behavior, boundaries, evaluations, and the
 [capability registry](#capability-registry). The [forward plan](../impl/plan.md) owns work that

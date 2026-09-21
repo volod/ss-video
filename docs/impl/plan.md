@@ -8,8 +8,8 @@ Every task serves a capability from the [capability registry](../design/spec.md#
 Task fields are defined in the [planning workflow](../guide/planning-workflow.md).
 
 This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`, and
-`fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`, and
-`ss-common` from [volod/ss-common](https://github.com/volod/ss-common) tag `v0.1.0`.
+`fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`, and
+`ss-common` from [volod/ss-common](https://github.com/volod/ss-common) tag `v0.2.1`.
 
 ## Agent Implementation Tasks
 
@@ -127,13 +127,8 @@ has a matching capability row. Study notes:
 - `mission-bundle-ingest` -- operator UX for `mission-bundle` manifests
 - `global-map-multi-site` -- persist ICP global maps without mixing ENU origins
 
-### Research pipeline ([ss-fusion plan](https://github.com/volod/ss-fusion/blob/v0.1.0/docs/impl/plan.md))
+### Research pipeline ([ss-fusion plan](https://github.com/volod/ss-fusion/blob/v0.2.0/docs/impl/plan.md))
 
-- `cross-modal-temporal-ssl` -- GPS/IMU/acoustic positive pairs beyond visual tracks
-- `environmental-field-models` -- GP field estimates for RF, gas, acoustic pressure
-- `calibration-contradiction-handling` -- clock offset, boresight, chi-squared gating
-- `global-threat-persistence` -- sector threat history across missions (days/weeks)
-- `hab-mission-pipeline`, `hab-landing-prediction` (tawhiri), `ss-fusion-standalone-build`
 - kernel follow-ups: `kernel-streaming-mode`, `kernel-video-index-spec`, `kernel-benchmark-harness`, `kernel-native-edge`, `ss-kernel-extraction`
 
 ### Sensor mesh ([ss-sens plan](https://github.com/volod/ss-sens/blob/v0.1.0/docs/impl/plan.md))

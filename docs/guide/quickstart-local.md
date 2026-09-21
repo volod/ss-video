@@ -3,7 +3,7 @@
 Set up the ss-video API, worker, and UI for local development with hot-reload. This covers the Docker-backed service stack only.
 
 The research pipeline (`ssv --mode local`) lives in
-[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`.
+[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.
 
 ---
 

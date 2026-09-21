@@ -4,7 +4,7 @@
 
 - `make venv` -- `uv venv .venv` + `scripts/install/install_requirements.sh vision,dev .venv`;
   installs `selfsuvis` and pins ss-fusion packages (`ss-perception`, `ss-mapping`, `ss-fusion`,
-  `fusion-rt`) plus `ss-common` at git tag `v0.1.0`. Prompts recreate/update when
+  `fusion-rt`) at git tag `v0.2.0` plus `ss-common` at git tag `v0.2.1`. Prompts recreate/update when
   `.venv` exists. `make venv-cuda` forces CUDA wheels when `nvidia-smi` is absent.
 - Torch is intentionally **not** a pyproject dependency: `install_requirements.sh`
   selects the CUDA/CPU wheel index against detected host hardware (AGENTS.md rule).
@@ -35,7 +35,7 @@
 | [ss-sens compose](https://github.com/volod/ss-sens/blob/v0.1.0/docker/ss-sens/docker-compose.ss-sens.yml) | IoT edge stack (profiles: lorawan, edge; metrics moved to ss-control) |
 | `docker/realtime/*.yml` | MediaMTX, SLAM engines, bridge runtimes |
 | `docker/cvat/docker-compose.cvat.yml` | Annotation service |
-| [ss-fusion vLLM compose](https://github.com/volod/ss-fusion/blob/v0.1.0/docker/vllm/docker-compose.vllm.yml) | Reasoning/vision sidecar |
+| [ss-fusion vLLM compose](https://github.com/volod/ss-fusion/blob/v0.2.0/docker/vllm/docker-compose.vllm.yml) | Reasoning/vision sidecar |
 | `docker/test/docker-compose.test.yml` | Integration test harness (`Dockerfile.tests`) |
 
 Docker images select GPU/CUDA targets from the build host configuration
@@ -43,7 +43,7 @@ Docker images select GPU/CUDA targets from the build host configuration
 Images that `pip install` this project use `python:3.11-slim` and install `git` plus
 `ca-certificates` in the builder so `pip` can fetch ss-common and ss-fusion from git tags
 (ss-common requires Python 3.11). `docker/install-python.sh` installs ss-fusion packages
-from `git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=` (pip cannot parse
+from `git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=` (pip cannot parse
 uv `file:` path pins). The same
 script sets `MAX_JOBS` from `python -m ss_kit max-jobs` (`CMAKE_BUILD_PARALLEL_LEVEL`
 and `NINJAFLAGS` match) so ninja/cmake/CUDA compiles are not single-threaded. Vision
@@ -105,7 +105,7 @@ The OpenAPI job installs the package with `--no-deps` so it does not pull torch 
 transformers, then the lean third-party set needed to import `selfsuvis.app.main` and
 `selfsuvis.fusion_rt.app` (FastAPI, pydantic, sse-starlette, asyncpg, python-multipart,
 httpx, numpy, pillow, requests, scipy, pyyaml) plus
-`ss-common[web,mqtt] @ git+https://github.com/volod/ss-common.git@v0.1.0`
+`ss-common[web,mqtt] @ git+https://github.com/volod/ss-common.git@v0.2.1`
 (the same tag as the lint job). A missing `ss_kit` import is a failed install, not a
 spec drift.
 | `.github/workflows/claude-code-review.yml` | PR open/sync | Automated review |

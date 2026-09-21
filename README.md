@@ -2,9 +2,9 @@
 
 Video ingest and search for outdoor autonomy. Import package `selfsuvis`.
 
-Pins [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0` (`ss-perception`,
+Pins [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` (`ss-perception`,
 `ss-mapping`, `ss-fusion`, `fusion-rt`) and [volod/ss-common](https://github.com/volod/ss-common)
-tag `v0.1.0`.
+tag `v0.2.1`.
 
 | Sibling | Role |
 | --- | --- |

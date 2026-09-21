@@ -151,7 +151,7 @@ uv pip install --python "$VENV_PATH" -e "$PACKAGE_SPEC"
 # Published ss-fusion workspace members. Root pyproject pins these git
 # subdirectory URLs; the explicit --no-deps installs keep console scripts
 # (ssv, ssv-models) registered even when a caller uses --no-deps on the root.
-SS_FUSION_GIT="git+https://github.com/volod/ss-fusion.git@v0.1.0"
+SS_FUSION_GIT="git+https://github.com/volod/ss-fusion.git@v0.2.0"
 uv pip install --python "$VENV_PATH" --no-deps \
   "ss-perception @ ${SS_FUSION_GIT}#subdirectory=packages/ss-perception"
 uv pip install --python "$VENV_PATH" --no-deps \

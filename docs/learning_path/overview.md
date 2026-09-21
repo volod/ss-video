@@ -6,7 +6,7 @@ Three execution views share models and contracts but are not the same program:
 | View | Where it runs | What to read |
 | --- | --- | --- |
 | Production indexer | this repository: API + worker + UI | this learning path, then [production server](../impl/current/production-server.md) |
-| Research local runner | [volod/ss-fusion](https://github.com/volod/ss-fusion) `ssv --mode local` | [ss-fusion learning path](https://github.com/volod/ss-fusion/blob/v0.1.0/docs/learning_path/README.md) |
+| Research local runner | [volod/ss-fusion](https://github.com/volod/ss-fusion) `ssv --mode local` | [ss-fusion learning path](https://github.com/volod/ss-fusion/blob/v0.2.0/docs/learning_path/README.md) |
 | Live site mesh | [volod/ss-sens](https://github.com/volod/ss-sens) plus the fusion-rt sidecar here | chapter [05](05_fusion_rt_and_site.md) and [ss-sens getting started](https://github.com/volod/ss-sens/blob/v0.1.0/docs/ss-sens/getting-started.md) |
 
 Treat those as three views of one system, not as contradictions.

@@ -15,12 +15,12 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/app/routers/` | `admin`, `cvat`, `health`, `index`, `jobs`, `query`, `realtime`, `robot`, `scene`, `site` (`GET /site/cameras` only) |
 | `src/selfsuvis/app/services/` | `search`, `live_streams`, `camera_streams`, `realtime`, `upload_utils`, `form_templates` |
 | `src/selfsuvis/app/deps.py` | API-key auth (timing-safe compare), bounded rate limiting |
-| `selfsuvis.fusion_rt.app` (package `fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) `v0.1.0`) | fusion-rt FastAPI app: `/api/v1/*`, `/site/state`, `/site/threat`, `/site/synthesis`, `WS /site/stream` |
+| `selfsuvis.fusion_rt.app` (package `fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) `v0.2.0`) | fusion-rt FastAPI app: `/api/v1/*`, `/site/state`, `/site/threat`, `/site/synthesis`, `WS /site/stream` |
 | `src/selfsuvis/worker/` | Job consumer; `gpu.py` advisory GPU semaphore; `_run.py` persistent event loop |
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0` | Perception, mapping, research pipeline, fusion-rt |
+| [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
 
@@ -115,7 +115,7 @@ empty `ALLOWED_INDEX_PATHS`, DNS-rebinding peer-IP validation, bounded rate-limi
 table, security headers middleware, CVAT webhook HMAC-SHA256 signatures, SHA-256
 `stable_point_id`. The shared primitives live in `ss_kit.security` / `ss_kit.web`
 and are re-exported from `app/deps.py`, `app/main.py`, and `pipeline/core/utils.py`
-([kit](https://github.com/volod/ss-common/blob/v0.1.0/docs/impl/current/kit.md)).
+([kit](https://github.com/volod/ss-common/blob/v0.2.1/docs/impl/current/kit.md)).
 Details: `docs/reference/configuration.md` (security section).
 
 ## Design decisions

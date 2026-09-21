@@ -65,8 +65,8 @@ new database. New installs skip this.
 
 ## Shared runtime helpers
 
-This repository pins published ss-common (`ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0`
-in `pyproject.toml`, `[tool.uv.sources]` tag `v0.1.0`). Docker builders install `git` and
+This repository pins published ss-common (`ss-common @ git+https://github.com/volod/ss-common.git@v0.2.1`
+in `pyproject.toml`, `[tool.uv.sources]` tag `v0.2.1`). Docker builders install `git` and
 `ca-certificates` so `pip` can fetch that URL, and use `python:3.11-slim` because ss-common
 requires Python 3.11.
 
@@ -126,10 +126,10 @@ Canonical seed YAML is package data at
 ## Manifests
 
 Two file manifests follow ss-common contracts
-([manifest contracts](https://github.com/volod/ss-common/blob/v0.1.0/docs/impl/current/contracts.md#manifest-contracts)).
+([manifest contracts](https://github.com/volod/ss-common/blob/v0.2.1/docs/impl/current/contracts.md#manifest-contracts)).
 Builders return plain dicts in the canonical wire form, so the generated models validate them
 unchanged. This repository pins ss-common; unit tests import `ss_contracts.models` and compare
-against `tests/assets/contracts/golden/` (snapshot of the v0.1.0 goldens).
+against `tests/assets/contracts/golden/` (snapshot of the v0.2.1 goldens).
 Runtime builders still return dicts rather than constructing those models.
 
 | Manifest | Builder | Written by | Location |

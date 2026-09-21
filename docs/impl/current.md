@@ -11,7 +11,8 @@ ss-fusion git tags. fusion-rt may run as a compose sidecar from the same tag.
 | Environments, Docker, tests, CI | [current/build-ci-test.md](current/build-ci-test.md) |
 | Config, Postgres, `.env`, `$DATA_DIR` | [current/data-config.md](current/data-config.md) |
 
-Research pipeline: [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`.
+Research pipeline: [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.
+Shared contracts: [volod/ss-common](https://github.com/volod/ss-common) tag `v0.2.1`.
 Sensor mesh: [volod/ss-sens](https://github.com/volod/ss-sens) tag `v0.1.0`.
 Site control: [volod/ss-control](https://github.com/volod/ss-control) tag `v0.1.0`.
 

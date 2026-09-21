@@ -381,6 +381,91 @@ CREATE INDEX IF NOT EXISTS idx_scene_timeline_created_at ON scene_timeline (crea
     """
 CREATE INDEX IF NOT EXISTS idx_scene_timeline_facts ON scene_timeline USING gin(facts_json) WHERE facts_json IS NOT NULL
     """,
+    """
+    CREATE TABLE IF NOT EXISTS analysis4d_runs (
+        id                 TEXT PRIMARY KEY,
+        mission_id         TEXT NOT NULL REFERENCES missions(id) ON DELETE CASCADE,
+        profile            TEXT NOT NULL CHECK (profile IN ('fast', 'deep')),
+        schema_version     TEXT NOT NULL,
+        coordinate_frame   TEXT NOT NULL,
+        metric_scale       TEXT NOT NULL
+                               CHECK (metric_scale IN ('metric', 'relative', 'unavailable')),
+        calibration_id     TEXT,
+        artifact_dir       TEXT NOT NULL,
+        manifest_sha256    TEXT NOT NULL,
+        degradations_json  JSONB NOT NULL DEFAULT '[]'::jsonb,
+        supersedes_run_id  TEXT REFERENCES analysis4d_runs(id),
+        created_at         TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    )
+
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_analysis4d_runs_mission ON analysis4d_runs (mission_id, created_at DESC)",
+    """
+    CREATE TABLE IF NOT EXISTS analysis4d_events (
+        run_id               TEXT NOT NULL REFERENCES analysis4d_runs(id) ON DELETE CASCADE,
+        event_id             TEXT NOT NULL,
+        mission_id           TEXT NOT NULL,
+        event_type           TEXT NOT NULL,
+        summary              TEXT NOT NULL,
+        start_sec            DOUBLE PRECISION NOT NULL,
+        end_sec              DOUBLE PRECISION NOT NULL,
+        verification_status  TEXT NOT NULL
+                                 CHECK (verification_status IN ('accepted', 'rejected', 'uncertain', 'corrected')),
+        confidence           DOUBLE PRECISION,
+        participants_json    JSONB NOT NULL,
+        evidence_count       INTEGER NOT NULL,
+        artifact_ref         TEXT NOT NULL,
+        supersedes_event_id  TEXT,
+        PRIMARY KEY (run_id, event_id),
+        CHECK (end_sec > start_sec)
+    )
+
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_analysis4d_events_mission_time ON analysis4d_events (mission_id, start_sec)",
+    "CREATE INDEX IF NOT EXISTS idx_analysis4d_events_status ON analysis4d_events (verification_status)",
+    """
+    CREATE TABLE IF NOT EXISTS analysis4d_edges (
+        run_id               TEXT NOT NULL REFERENCES analysis4d_runs(id) ON DELETE CASCADE,
+        edge_id              TEXT NOT NULL,
+        mission_id           TEXT NOT NULL,
+        subject_id           TEXT NOT NULL,
+        predicate            TEXT NOT NULL,
+        object_id            TEXT NOT NULL,
+        start_sec            DOUBLE PRECISION NOT NULL,
+        end_sec              DOUBLE PRECISION NOT NULL,
+        coordinate_frame     TEXT NOT NULL,
+        verification_status  TEXT NOT NULL
+                                 CHECK (verification_status IN ('accepted', 'rejected', 'uncertain', 'corrected')),
+        confidence           DOUBLE PRECISION,
+        source               TEXT NOT NULL CHECK (source IN ('deterministic', 'vlm')),
+        artifact_ref         TEXT NOT NULL,
+        PRIMARY KEY (run_id, edge_id),
+        CHECK (end_sec > start_sec)
+    )
+
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_analysis4d_edges_mission_pred ON analysis4d_edges (mission_id, predicate)",
+    """
+    CREATE TABLE IF NOT EXISTS analysis4d_qa (
+        run_id                   TEXT NOT NULL REFERENCES analysis4d_runs(id) ON DELETE CASCADE,
+        qa_id                    TEXT NOT NULL,
+        mission_id               TEXT NOT NULL,
+        qa_type                  TEXT NOT NULL,
+        question                 TEXT NOT NULL,
+        answer_kind              TEXT NOT NULL,
+        answer_value             TEXT,
+        verification_status      TEXT NOT NULL
+                                     CHECK (verification_status IN ('accepted', 'rejected', 'uncertain', 'corrected')),
+        interval_start_sec       DOUBLE PRECISION NOT NULL,
+        interval_end_sec         DOUBLE PRECISION NOT NULL,
+        evidence_event_ids_json  JSONB NOT NULL,
+        artifact_ref             TEXT NOT NULL,
+        PRIMARY KEY (run_id, qa_id),
+        CHECK (interval_end_sec > interval_start_sec)
+    )
+
+    """,
+    "CREATE INDEX IF NOT EXISTS idx_analysis4d_qa_mission_type ON analysis4d_qa (mission_id, qa_type)",
 ]
 
 VIDEO_SCHEMA_LOCK_KEY = 87263401

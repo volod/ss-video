@@ -1,0 +1,73 @@
+{
+  "artifacts": [
+    {
+      "bytes": 383,
+      "kind": "tracks",
+      "path": "tracks.jsonl",
+      "schema_version": "ss-video.track.v1",
+      "sha256": "sha256:39d1c57f0ca7e9ad1b0aebb247512eff1b8fa69f4b336363c851dd2b2a19f431"
+    },
+    {
+      "bytes": 0,
+      "kind": "graph_deltas",
+      "path": "graph-deltas.jsonl",
+      "schema_version": "ss-video.graph-delta.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "kind": "proposals",
+      "path": "proposals.jsonl",
+      "schema_version": "ss-video.proposal.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 1246,
+      "kind": "timeline",
+      "path": "timeline.json",
+      "schema_version": "ss-video.scene-timeline.v1",
+      "sha256": "sha256:cc0dc1b206b9fc282e935df4fd1bd7790bcec36eed30ddb441cf111967b7b6c0"
+    },
+    {
+      "bytes": 0,
+      "kind": "qa",
+      "path": "qa.jsonl",
+      "schema_version": "ss-video.qa.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    }
+  ],
+  "coordinate_frame": {
+    "calibration_id": "cal-1",
+    "metric_scale": "metric",
+    "name": "mission_enu"
+  },
+  "created_at": "2026-01-15T00:00:00Z",
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "keyframes_sec": [],
+  "mission_id": "mission-dangling",
+  "models": [],
+  "profile": "fast",
+  "schema_version": "ss-video.analysis4d-manifest.v1",
+  "stages": [
+    {
+      "degradation_flags": [
+        "models_missing"
+      ],
+      "inference_time_sec": 0.0,
+      "model": null,
+      "processed_frames": 1,
+      "queue_delay_sec": 0.0,
+      "queue_depth": 0,
+      "skipped_frames": 0,
+      "stage": "contract",
+      "trigger_reason": "fixture"
+    }
+  ],
+  "supersedes_sha256": null
+}

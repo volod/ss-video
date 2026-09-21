@@ -1,0 +1,26 @@
+{
+  "center_m": [
+    0.0,
+    0.0,
+    0.0
+  ],
+  "depth_m": null,
+  "extent_m": [
+    10.0,
+    10.0,
+    4.0
+  ],
+  "frame": "mission_enu",
+  "mission_id": "mission-nominal",
+  "pose_position_m": null,
+  "quaternion_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "sample_id": "g-zone-4",
+  "schema_version": "ss-video.geometry-sample.v1",
+  "subject_id": "n-zone",
+  "t_sec": 4.0
+}

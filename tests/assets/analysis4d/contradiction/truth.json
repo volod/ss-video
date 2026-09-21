@@ -1,0 +1,58 @@
+{
+  "boxes": [],
+  "conditions": [
+    "contradictory_proposal"
+  ],
+  "counts": [],
+  "depths": [],
+  "events": [],
+  "keyframe_boundaries_sec": [],
+  "masks": [],
+  "media_duration_sec": 4.0,
+  "mission_id": "mission-contradiction",
+  "qa": [],
+  "relations": [
+    {
+      "end_sec": 2.0,
+      "object_id": "n-b",
+      "predicate": "left_of",
+      "start_sec": 0.0,
+      "subject_id": "n-a"
+    }
+  ],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-a",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.1,
+        0.1,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "gt_id": "gt-b",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.6,
+        0.1,
+        0.2,
+        0.2
+      ]
+    }
+  ],
+  "verifier": [
+    {
+      "proposal_id": "proposal-false",
+      "should_accept": false
+    },
+    {
+      "proposal_id": "proposal-true",
+      "should_accept": true
+    }
+  ]
+}

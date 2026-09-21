@@ -14,6 +14,7 @@ By default the repository writes runtime data and model caches under `./.data`.
   qdrant-test/    Qdrant volume for `make test`
   postgres/       PostgreSQL volume data (`make up`)
   postgres-test/  PostgreSQL volume for `make test`
+  analysis/       4D analysis artifacts and the fixture benchmark report
 
   .cache/
     torch/
@@ -43,6 +44,22 @@ Schema state lives in two PostgreSQL databases on the compose instance: video
 The API applies both on startup; the worker applies video only.
 `ssv-migrate` (`python -m selfsuvis.scripts.migrate_postgres`) is the CLI
 (`--owner video|fusion|all`). See [data-config.md](../impl/current/data-config.md).
+
+Four-dimensional analysis writes one directory per mission. Query metadata is in the
+video database (`analysis4d_runs`, `analysis4d_events`, `analysis4d_edges`,
+`analysis4d_qa`). The benchmark report is not a mission artifact.
+
+```text
+.data/analysis/<mission_id>/4d/manifest.json
+.data/analysis/<mission_id>/4d/tracks.jsonl
+.data/analysis/<mission_id>/4d/graph-deltas.jsonl
+.data/analysis/<mission_id>/4d/proposals.jsonl
+.data/analysis/<mission_id>/4d/timeline.json
+.data/analysis/<mission_id>/4d/qa.jsonl
+.data/analysis/_benchmark/report.json
+```
+
+See [Four-dimensional analysis artifacts](../impl/current/data-config.md#four-dimensional-analysis-artifacts).
 
 A mission bundle's manifest `mission.json` (contract `mission-bundle`) lists videos
 with their digests, the `media` time base, and the GPS origin. See

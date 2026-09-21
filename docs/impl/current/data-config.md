@@ -36,7 +36,7 @@ Video and fusion may share one Postgres instance and use separate databases:
 
 | Owner | Env var | Default database | Schema module | Tables |
 | --- | --- | --- | --- | --- |
-| ss-video | `DATABASE_URL` | `selfsuvis` | `pipeline/storage/migrate_video.py` | `jobs`, `processed_files`, `missions`, `frames`, mapping/realtime/CVAT tables, `scene_timeline` |
+| ss-video | `DATABASE_URL` | `selfsuvis` | `pipeline/storage/migrate_video.py` | `jobs`, `processed_files`, `missions`, `frames`, mapping/realtime/CVAT tables, `scene_timeline`, `analysis4d_runs`, `analysis4d_events`, `analysis4d_edges`, `analysis4d_qa` |
 | ss-fusion | `FUSION_DATABASE_URL` | `selfsuvis_fusion` | `fusion_rt/migrate.py` | `sensor_keys`, `site_events`, `zones`, `fusion_rules`, `incidents`, `incident_notes` |
 
 `ssv-migrate` (`python -m selfsuvis.scripts.migrate_postgres`) applies both owners by
@@ -122,6 +122,33 @@ Canonical seed YAML is package data at
 - ss-sens bind mounts (`$DATA_DIR/coop/...`) are created by
   [ss-sens-data-dirs.sh](https://github.com/volod/ss-sens/blob/v0.1.0/scripts/ss-sens/ss-sens-data-dirs.sh)
   before first start.
+
+## Four-dimensional analysis artifacts
+
+Versioned 4D outputs are separate from the ss-common `mission-bundle` and `model-artifact`
+manifests. Schema `ss-video.analysis4d-manifest.v1` is internal to ss-video.
+`pipeline/storage/analysis4d.py` materializes query rows; the files remain the audit copy.
+Layout and the benchmark command are in
+[production-server.md](production-server.md#four-dimensional-analysis-contracts). Record:
+[0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md).
+
+```text
+$DATA_DIR/analysis/<mission_id>/4d/
+  manifest.json
+  tracks.jsonl
+  graph-deltas.jsonl
+  proposals.jsonl
+  timeline.json
+  qa.jsonl
+  gaps.jsonl          optional; required when a stage skips frames
+  geometry/           geometry samples referenced by events and edges
+  masks/              mask artifacts referenced by evidence
+  history/            previous timeline or manifest, named by digest prefix
+$DATA_DIR/analysis/_benchmark/report.json
+```
+
+`truth.json` is evaluation-only and is not listed in the runtime manifest. The pinned
+corpus that the benchmark scores is `tests/assets/analysis4d/` (`analysis4d-v1`).
 
 ## Manifests
 

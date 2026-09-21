@@ -1,0 +1,58 @@
+{
+  "schema_version": "ss-video.scene-timeline.v1",
+  "mission_id": "mission-x",
+  "profile": "fast",
+  "coordinate_frame": {
+    "name": "mission_enu",
+    "metric_scale": "metric",
+    "calibration_id": "cal-1"
+  },
+  "model_manifest_ref": "manifest.json",
+  "degradations": [],
+  "events": [
+    {
+      "event_id": "evt-1",
+      "type": "entered_region",
+      "summary": "mixed frame",
+      "start_sec": 1.0,
+      "end_sec": 2.0,
+      "participants": [
+        "track-1"
+      ],
+      "state_delta_refs": [],
+      "location": {
+        "frame": "camera_0",
+        "center_m": [
+          1.0,
+          2.0,
+          3.0
+        ],
+        "covariance_diag": [
+          0.1,
+          0.1,
+          0.1
+        ]
+      },
+      "confidence": 0.5,
+      "verification": {
+        "status": "uncertain",
+        "rules": [],
+        "vlm_claim_ref": null,
+        "reasons": []
+      },
+      "evidence": [
+        {
+          "frame_id": "mission-x:f1:1000",
+          "t_sec": 1.0,
+          "track_ids": [
+            "track-1"
+          ],
+          "mask_ref": null,
+          "geometry_ref": null
+        }
+      ],
+      "supersedes": null
+    }
+  ],
+  "qa_pairs": []
+}

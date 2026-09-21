@@ -79,10 +79,12 @@ spatial exceedance probability.
 ## 8. Time-varying 3D scene understanding
 
 **Gap.** The indexer can keep diverse frames, estimate depth, refine detections with SAM, run
-directed tracking, and build a semantic environment graph. Those outputs are not yet one persistent,
-uncertainty-aware graph: object identities do not have a shared temporal contract, monocular depth
-summaries are not masked 3D geometry, graph edges do not carry validity intervals, and VLM claims do
-not pass a deterministic geometric verifier before becoming narrative output.
+directed tracking, and build a semantic environment graph. A versioned track, graph-delta,
+timeline, and QA contract plus a fixture benchmark now exist
+(`pipeline/analysis4d/`, corpus `analysis4d-v1`). The indexer still does not produce those
+tracks, masked 3D geometry, interval-bearing graph edges, or verified events. Monocular depth
+summaries are not yet masked 3D geometry, and VLM claims do not yet pass a deterministic
+geometric verifier before becoming narrative output.
 
 **Why it matters.** An operator asking "what changed, where, and which evidence proves it?" needs
 track continuity, coordinate-frame discipline, graph edits, and evidence-linked events. Independent

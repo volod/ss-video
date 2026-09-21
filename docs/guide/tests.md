@@ -25,6 +25,7 @@ tests/unit/
   models/
   pipeline/
     analysis/
+    analysis4d/
     core/
     mapping/
     media/
@@ -68,7 +69,8 @@ Same as `make test`; `INDEX_DIR_PATH` is set for dir tests.
 
 ## Assets
 ```
-./tests/assets/   # small test videos and reference image
+./tests/assets/            # small test videos and reference image
+./tests/assets/analysis4d/ # pinned 4D contract corpus (analysis4d-v1)
 ```
 
 ## Integration test coverage

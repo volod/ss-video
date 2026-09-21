@@ -1,0 +1,87 @@
+{
+  "artifacts": [
+    {
+      "bytes": 766,
+      "kind": "tracks",
+      "path": "tracks.jsonl",
+      "schema_version": "ss-video.track.v1",
+      "sha256": "sha256:ceacb6a46a99433acb0b59013dc4f2db0535a1b73d15a8be6ce7df64c0aa0015"
+    },
+    {
+      "bytes": 904,
+      "kind": "graph_deltas",
+      "path": "graph-deltas.jsonl",
+      "schema_version": "ss-video.graph-delta.v1",
+      "sha256": "sha256:ff0f3af2de7b17822908e870fc7ace32d910b96a3f640c60e121b54bc4baad53"
+    },
+    {
+      "bytes": 0,
+      "kind": "proposals",
+      "path": "proposals.jsonl",
+      "schema_version": "ss-video.proposal.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 482,
+      "kind": "timeline",
+      "path": "timeline.json",
+      "schema_version": "ss-video.scene-timeline.v1",
+      "sha256": "sha256:68464fb7080fb0198d78d152a1f6dba1e61700e5807f06f8c0863c47676232b0"
+    },
+    {
+      "bytes": 0,
+      "kind": "qa",
+      "path": "qa.jsonl",
+      "schema_version": "ss-video.qa.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 380,
+      "kind": "geometry",
+      "path": "geometry/n-a/0.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:28a9d01c6a361eb61ec028ad1a7272a2f13f6dc27a015e66935907d9ddb35da1"
+    },
+    {
+      "bytes": 380,
+      "kind": "geometry",
+      "path": "geometry/n-b/0.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:5687ca1d29ddbaceef4728c1170d45079806d5059e952f07bbb803b9471e2053"
+    }
+  ],
+  "coordinate_frame": {
+    "calibration_id": "cal-1",
+    "metric_scale": "metric",
+    "name": "mission_enu"
+  },
+  "created_at": "2026-01-15T00:00:00Z",
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "keyframes_sec": [],
+  "mission_id": "mission-bad-edge",
+  "models": [],
+  "profile": "deep",
+  "schema_version": "ss-video.analysis4d-manifest.v1",
+  "stages": [
+    {
+      "degradation_flags": [
+        "models_missing"
+      ],
+      "inference_time_sec": 0.0,
+      "model": null,
+      "processed_frames": 1,
+      "queue_delay_sec": 0.0,
+      "queue_depth": 0,
+      "skipped_frames": 0,
+      "stage": "contract",
+      "trigger_reason": "fixture"
+    }
+  ],
+  "supersedes_sha256": null
+}

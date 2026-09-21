@@ -20,6 +20,7 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D track, graph, timeline, and QA contracts plus the fixture benchmark |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -96,7 +97,9 @@ and still consumes Frigate MQTT. OpenAPI specs:
 
 - **PostgreSQL**: video database `selfsuvis` holds `jobs`, `missions`,
   `frames`, `processed_files`, `change_detections`, `global_map` + mapping tables,
-  CVAT/automation state (`cvat_tasks`, `system_state`, `gpu_jobs`), model provenance.
+  CVAT/automation state (`cvat_tasks`, `system_state`, `gpu_jobs`), model provenance,
+  and 4D query metadata (`analysis4d_runs`, `analysis4d_events`, `analysis4d_edges`,
+  `analysis4d_qa`).
   Fusion database `selfsuvis_fusion` holds `sensor_keys`, `site_events`, `zones`,
   `fusion_rules`, `incidents`, `incident_notes`. The video API applies the video
   schema and opens `app.state.db_pool`; fusion-rt applies the fusion schema and
@@ -117,6 +120,34 @@ table, security headers middleware, CVAT webhook HMAC-SHA256 signatures, SHA-256
 and are re-exported from `app/deps.py`, `app/main.py`, and `pipeline/core/utils.py`
 ([kit](https://github.com/volod/ss-common/blob/v0.2.1/docs/impl/current/kit.md)).
 Details: `docs/reference/configuration.md` (security section).
+
+## Four-dimensional analysis contracts
+
+Internal schemas for persistent tracks, graph deltas, proposals, verified timelines, and
+spatial QA live in `pipeline/analysis4d/`. They are not an ss-common ODCS contract and
+are not published to fusion-rt. Artifact files stay under
+`$DATA_DIR/analysis/<mission_id>/4d/` (`worker/artifacts.py` `analysis_artifact_dir`).
+JSONL streams are append-only. `timeline.json` and `manifest.json` are replaced only
+when the new file names the previous digest in `supersedes_sha256`; the previous file
+is copied under `history/`.
+
+PostgreSQL rows in `analysis4d_*` are a query index of one manifest. The run id is the
+manifest sha256 hex. Replacing a run that another run already supersedes is rejected.
+Large masks and geometry samples stay on disk.
+
+The fixture benchmark does not load a model:
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.benchmark
+```
+
+It scores the pinned corpus `analysis4d-v1` under `tests/assets/analysis4d/` and writes
+`$DATA_DIR/analysis/_benchmark/report.json` (`ss-video.analysis4d-benchmark.v1`). An empty
+verified timeline (no events, QA pairs, or tracks) is a valid result. Tracking scores are
+single-threshold HOTA and majority-vote IDF1 on the fixtures, not a TrackEval run. The
+report's real-time factor and peak VRAM describe this contract runner; the 15-minute
+fast-profile gate belongs to a later task. Record:
+[0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md).
 
 ## Design decisions
 

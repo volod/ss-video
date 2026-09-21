@@ -1,0 +1,1 @@
+{"answer":{"kind":"track_ref","unit":null,"value":"track-1"},"evidence_event_ids":["evt-1"],"graph_program":"entered(?track, n-zone, after=4.0)","interval_sec":[4.0,6.0],"mission_id":"mission-nominal","qa_id":"qa-1","question":"Which tracked object entered the zone?","schema_version":"ss-video.qa.v1","type":"spatial","verification_status":"accepted"}

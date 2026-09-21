@@ -1,0 +1,89 @@
+{
+  "artifacts": [
+    {
+      "bytes": 776,
+      "kind": "tracks",
+      "path": "tracks.jsonl",
+      "schema_version": "ss-video.track.v1",
+      "sha256": "sha256:3f9cf37310c0039666b0257c546b1551e04007d3958e98a2eccb7c4100ea1606"
+    },
+    {
+      "bytes": 916,
+      "kind": "graph_deltas",
+      "path": "graph-deltas.jsonl",
+      "schema_version": "ss-video.graph-delta.v1",
+      "sha256": "sha256:a36db095148073830d60f8c198377d7ccde346d1247dedae483033895bfc8ade"
+    },
+    {
+      "bytes": 665,
+      "kind": "proposals",
+      "path": "proposals.jsonl",
+      "schema_version": "ss-video.proposal.v1",
+      "sha256": "sha256:87ff7ea96c5c5af63ebf7bbac32a89f5d9acfb9872b9577e2a4039df6a9cab81"
+    },
+    {
+      "bytes": 487,
+      "kind": "timeline",
+      "path": "timeline.json",
+      "schema_version": "ss-video.scene-timeline.v1",
+      "sha256": "sha256:17346f7b7ff936c98dd24993a30f2aa8a5bf25f7b6b25a55754b70dbfe7cf934"
+    },
+    {
+      "bytes": 0,
+      "kind": "qa",
+      "path": "qa.jsonl",
+      "schema_version": "ss-video.qa.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 385,
+      "kind": "geometry",
+      "path": "geometry/n-a/0.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:f5c664052df9c0427a3ca500c19db94d19be2320ff216be785126e9caa2f2612"
+    },
+    {
+      "bytes": 385,
+      "kind": "geometry",
+      "path": "geometry/n-b/0.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:3004bc032d07b8a0a35bf79cbabadf33789d5d38e6296a7ffc13626e6c7d0948"
+    }
+  ],
+  "coordinate_frame": {
+    "calibration_id": "cal-1",
+    "metric_scale": "metric",
+    "name": "mission_enu"
+  },
+  "created_at": "2026-01-15T00:00:00Z",
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "keyframes_sec": [
+    0.0
+  ],
+  "mission_id": "mission-contradiction",
+  "models": [],
+  "profile": "deep",
+  "schema_version": "ss-video.analysis4d-manifest.v1",
+  "stages": [
+    {
+      "degradation_flags": [
+        "models_missing"
+      ],
+      "inference_time_sec": 0.0,
+      "model": null,
+      "processed_frames": 1,
+      "queue_delay_sec": 0.0,
+      "queue_depth": 0,
+      "skipped_frames": 0,
+      "stage": "contract",
+      "trigger_reason": "fixture"
+    }
+  ],
+  "supersedes_sha256": null
+}

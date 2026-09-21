@@ -1,0 +1,146 @@
+{
+  "boxes": [
+    {
+      "center_m": [
+        6.0,
+        0.0,
+        0.5
+      ],
+      "extent_m": [
+        0.4,
+        0.4,
+        0.4
+      ],
+      "subject_id": "n-track-1",
+      "t_sec": 0.0
+    },
+    {
+      "center_m": [
+        1.0,
+        0.0,
+        0.5
+      ],
+      "extent_m": [
+        0.4,
+        0.4,
+        0.4
+      ],
+      "subject_id": "n-track-1",
+      "t_sec": 4.0
+    }
+  ],
+  "conditions": [
+    "moving_camera",
+    "camera_cut"
+  ],
+  "counts": [
+    {
+      "count": 1,
+      "label": "crate",
+      "t_sec": 0.0
+    },
+    {
+      "count": 1,
+      "label": "crate",
+      "t_sec": 4.0
+    }
+  ],
+  "depths": [
+    {
+      "depth_m": 6.0,
+      "subject_id": "n-track-1",
+      "t_sec": 0.0
+    },
+    {
+      "depth_m": 4.0,
+      "subject_id": "n-track-1",
+      "t_sec": 4.0
+    }
+  ],
+  "events": [
+    {
+      "end_sec": 6.0,
+      "participants": [
+        "track-1",
+        "n-zone"
+      ],
+      "start_sec": 4.0,
+      "type": "entered_region"
+    }
+  ],
+  "keyframe_boundaries_sec": [
+    4.0
+  ],
+  "masks": [
+    {
+      "bits": "0000000001111110011111100111111001111110011111100111111000000000",
+      "height": 8,
+      "t_sec": 0.0,
+      "track_id": "track-1",
+      "width": 8
+    }
+  ],
+  "media_duration_sec": 10.0,
+  "mission_id": "mission-nominal",
+  "qa": [
+    {
+      "answer_value": "track-1",
+      "qa_id": "qa-1"
+    }
+  ],
+  "relations": [
+    {
+      "end_sec": 10.0,
+      "object_id": "n-track-1",
+      "predicate": "contains",
+      "start_sec": 4.0,
+      "subject_id": "n-zone"
+    }
+  ],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.1,
+        0.2,
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 4.0,
+      "xywh_norm": [
+        0.4,
+        0.2,
+        0.2,
+        0.3
+      ]
+    },
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 8.0,
+      "xywh_norm": [
+        0.42,
+        0.22,
+        0.2,
+        0.3
+      ]
+    }
+  ],
+  "verifier": [
+    {
+      "proposal_id": "proposal-ok",
+      "should_accept": true
+    },
+    {
+      "proposal_id": "proposal-bad",
+      "should_accept": false
+    }
+  ]
+}

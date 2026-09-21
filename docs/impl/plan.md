@@ -15,21 +15,6 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
 
-#### four-d-contracts-and-benchmark
-
-The service has no versioned contract or reproducible evaluation corpus for persistent tracks,
-time-varying 3D relations, verified events, or spatial Video-QA.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#four-dimensional-video-scene-analysis)
-- Agent status: CLEAR
-- Dependencies: none. Blocks: `four-d-keyframes-and-tracks`.
-- User-visible outcome: Operators and downstream services receive stable, provenance-bearing track, graph-delta, event-timeline, and QA records whose quality can be measured before model adoption.
-- Scope boundary: Add internal Pydantic/JSON schemas, append-only artifact manifests, PostgreSQL query metadata, deterministic geometry/contradiction fixtures, and a benchmark runner; do not add model inference, training, or publish events to fusion-rt.
-- Data and artifact paths: `src/selfsuvis/pipeline/analysis4d/`, `src/selfsuvis/pipeline/storage/`, `tests/assets/analysis4d/`, `tests/unit/pipeline/analysis4d/`, and `$DATA_DIR/analysis/<mission_id>/4d/`.
-- Execution path: Extend the video schema migration and worker artifact conventions, add schema round-trip and supersession tests, and expose a `python -m selfsuvis.pipeline.analysis4d.benchmark` fixture run with a machine-readable report.
-- Acceptance gates: `make test-unit` and `make lint` pass; schema fixtures reject dangling ids, mixed coordinate frames, invalid intervals, and unversioned output; the benchmark reports every metric and degradation field required by the specification and treats an empty verified timeline as valid.
-- Documentation target: [Production server](current/production-server.md) and [Data/config](current/data-config.md).
-
 #### four-d-keyframes-and-tracks
 
 Current adaptive sampling is pairwise and current SAM use refines sampled-frame boxes; it cannot

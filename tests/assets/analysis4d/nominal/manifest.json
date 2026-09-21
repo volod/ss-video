@@ -1,0 +1,112 @@
+{
+  "artifacts": [
+    {
+      "bytes": 1591,
+      "kind": "tracks",
+      "path": "tracks.jsonl",
+      "schema_version": "ss-video.track.v1",
+      "sha256": "sha256:0da7a73f845ec5e3c1887f907fd9a83b86d638c00fa84a5c978ae93f57286c7e"
+    },
+    {
+      "bytes": 1181,
+      "kind": "graph_deltas",
+      "path": "graph-deltas.jsonl",
+      "schema_version": "ss-video.graph-delta.v1",
+      "sha256": "sha256:debcc31ae9d0bb55817bce44e6ac3f3ad1a6b1890f53e08cf3fbdb9c51223a63"
+    },
+    {
+      "bytes": 664,
+      "kind": "proposals",
+      "path": "proposals.jsonl",
+      "schema_version": "ss-video.proposal.v1",
+      "sha256": "sha256:a0645080d233cc60927084247597dcfee8b4106ccfdc568d57715c814e7d8d38"
+    },
+    {
+      "bytes": 1926,
+      "kind": "timeline",
+      "path": "timeline.json",
+      "schema_version": "ss-video.scene-timeline.v1",
+      "sha256": "sha256:39e6943f94921780c34deb0165a9593d89a50a8fc248477bd6b22e67641fccad"
+    },
+    {
+      "bytes": 353,
+      "kind": "qa",
+      "path": "qa.jsonl",
+      "schema_version": "ss-video.qa.v1",
+      "sha256": "sha256:22e7e31c65c53b2d9633c4da844675860cbdbf764664de6993926bb131acc15e"
+    },
+    {
+      "bytes": 389,
+      "kind": "geometry",
+      "path": "geometry/n-zone/4.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:3121c308ec5908fe762dbea2abbd106743b3b4b942c3a183a82f21207bb74733"
+    },
+    {
+      "bytes": 417,
+      "kind": "geometry",
+      "path": "geometry/n-track-1/0.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:7dbfc4aa4b1f7c493338190280d1aeac2b92236762fd950cb96ed033072ea2c9"
+    },
+    {
+      "bytes": 417,
+      "kind": "geometry",
+      "path": "geometry/n-track-1/4.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:75e1a88cb4adf9707003c6746b6caef199f373b33849f77b00ce6d3a25fde613"
+    },
+    {
+      "bytes": 417,
+      "kind": "geometry",
+      "path": "geometry/n-track-3/8.json",
+      "schema_version": "ss-video.geometry-sample.v1",
+      "sha256": "sha256:dd81a770eee04b25faf5792283a76a84770f8832d9dff18ed51a83e527cd6f7a"
+    },
+    {
+      "bytes": 226,
+      "kind": "masks",
+      "path": "masks/track-1/0.json",
+      "schema_version": "ss-video.mask.v1",
+      "sha256": "sha256:51ec443e335fd5c9725affb0036047c8df9306bede1a8b43dd6cae9e9aeee9a3"
+    }
+  ],
+  "coordinate_frame": {
+    "calibration_id": "cal-1",
+    "metric_scale": "metric",
+    "name": "mission_enu"
+  },
+  "created_at": "2026-01-15T00:00:00Z",
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "keyframes_sec": [
+    0.0,
+    4.0,
+    8.0
+  ],
+  "mission_id": "mission-nominal",
+  "models": [],
+  "profile": "deep",
+  "schema_version": "ss-video.analysis4d-manifest.v1",
+  "stages": [
+    {
+      "degradation_flags": [
+        "models_missing"
+      ],
+      "inference_time_sec": 0.0,
+      "model": null,
+      "processed_frames": 3,
+      "queue_delay_sec": 0.0,
+      "queue_depth": 0,
+      "skipped_frames": 0,
+      "stage": "contract",
+      "trigger_reason": "fixture"
+    }
+  ],
+  "supersedes_sha256": null
+}

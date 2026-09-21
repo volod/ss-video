@@ -1,0 +1,30 @@
+{
+  "center_m": [
+    1.1,
+    0.1,
+    0.5
+  ],
+  "depth_m": 3.8,
+  "extent_m": [
+    0.4,
+    0.4,
+    0.4
+  ],
+  "frame": "mission_enu",
+  "mission_id": "mission-nominal",
+  "pose_position_m": [
+    0.6,
+    0.3,
+    1.5
+  ],
+  "quaternion_xyzw": [
+    0.0,
+    0.0,
+    0.0,
+    1.0
+  ],
+  "sample_id": "g-track-8",
+  "schema_version": "ss-video.geometry-sample.v1",
+  "subject_id": "n-track-3",
+  "t_sec": 8.0
+}

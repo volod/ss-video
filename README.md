@@ -58,7 +58,8 @@ directory `$DATA_DIR/analysis/<mission_id>/4d/`. A copy of that summary is
 `$DATA_DIR/analysis/<mission_id>/summary.json`. Sampling defaults to 1 frame
 per second with prompts `person,vehicle`. When a GPU slot is free, kept
 keyframes get depth-backed boxes. Without calibration, `metric_scale` stays
-`unavailable`.
+`unavailable`. Each newly accepted event is published once on
+`ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`.
 
 ```bash
 make analyze VIDEO=/path/to/video.mp4 ANALYZE_ARGS="--profile deep"

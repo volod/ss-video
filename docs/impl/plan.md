@@ -13,22 +13,7 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ## Agent Implementation Tasks
 
-### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
-
-#### four-d-verified-event-delivery
-
-Accepted 4D events stay in `published-events.jsonl`. The site correlator does not
-receive those envelopes.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#processing-profiles-and-data-flow)
-- Agent status: CLEAR
-- Dependencies: `four-d-profile-orchestration`.
-- User-visible outcome: Each newly accepted event is handed to the existing video MQTT contract publisher, and a replay does not send it again.
-- Scope boundary: Reuse `pipeline/realtime/contract_publisher.py` and the `verified-scene-event` payload. Do not add or change a fusion-rt correlation rule. Do not publish rejected or uncertain rows.
-- Data and artifact paths: `src/selfsuvis/pipeline/analysis4d/publish.py`, `src/selfsuvis/pipeline/realtime/contract_publisher.py`, and `$DATA_DIR/analysis/<mission_id>/4d/published-events.jsonl`.
-- Execution path: Publish one accepted envelope through the existing MQTT client seam, skip an id already in the ledger, and leave rejected timeline rows unsent.
-- Acceptance gates: `make test-unit` passes; a repeated event id produces one publish call; rejected and uncertain rows produce none; the fusion rule set is unchanged.
-- Documentation target: [Operations](../operations/operations.md) and the [profile orchestration runbook](../runbooks/four-d-profile-orchestration.md).
+No agent-lane tasks remain.
 
 ## Human-Assisted Tasks
 

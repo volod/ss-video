@@ -17,14 +17,16 @@ ss-fusion), not video source. Compose service `fusion-rt` listens on host
 OpenAPI: `docs/api/fusion-rt-openapi.json`. Integration test:
 `tests/test_fusion_rt.py` via `make test`.
 
-The video API still owns `GET /site/cameras`. It publishes `camera-event` and
-`scene-caption` (`pipeline/realtime/contract_publisher.py`) and consumes Frigate
-MQTT.
+The video API still owns `GET /site/cameras`. It publishes `camera-event`,
+`scene-caption`, and accepted 4D `event-envelope` messages
+(`pipeline/realtime/contract_publisher.py`) and consumes Frigate MQTT.
 
 ## MQTT
 
 fusion-rt subscribes to contract topics `sensor-event`, `sensor-state`,
-`camera-event`, and `scene-caption`. LoRaWAN decoding and the device registry
+`camera-event`, and `scene-caption`. Accepted 4D events are published on
+`event-envelope` at `ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`.
+LoRaWAN decoding and the device registry
 are [volod/ss-sens](https://github.com/volod/ss-sens). Two Postgres databases
 share the compose instance: video (`selfsuvis`) and fusion (`selfsuvis_fusion`).
 Migrate with `python -m selfsuvis.scripts.migrate_postgres --owner all`.

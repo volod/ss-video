@@ -90,10 +90,9 @@ frame captions cannot reliably answer that question, especially through occlusio
 **Shipped capability:** `four-d-scene-analysis`. Read the
 [specification](../design/spec.md#four-dimensional-video-scene-analysis) and the
 [production server](../impl/current/production-server.md#profile-orchestration).
-One follow-up is scheduled:
-[verified event delivery](../impl/plan.md#four-d-verified-event-delivery) so accepted
-envelopes reach the existing MQTT publisher. Keyframe geometry already writes
-depth-backed boxes from the fast profile when a GPU slot is free.
+Accepted envelopes are handed to the video MQTT publisher on the event-envelope
+topic. Keyframe geometry writes depth-backed boxes from the fast profile when a
+GPU slot is free.
 
 **Study first:** distinguish relative from metric depth; camera calibration from surface-normal
 estimation; a VLM proposal from a verified graph edge; and online bounded keyframe selection from a

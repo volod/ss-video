@@ -12,5 +12,6 @@ Copy the [template](template.md) using the
 | 0005 | `four-d-strict-verifier-and-qa` | [0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md) |
 | 0006 | `four-d-profile-orchestration` | [0006-four-d-scene-analysis-four-d-profile-orchestration](0006-four-d-scene-analysis-four-d-profile-orchestration.md) |
 | 0007 | `four-d-keyframe-geometry` | [0007-four-d-scene-analysis-four-d-keyframe-geometry](0007-four-d-scene-analysis-four-d-keyframe-geometry.md) |
+| 0008 | `four-d-verified-event-delivery` | [0008-four-d-scene-analysis-four-d-verified-event-delivery](0008-four-d-scene-analysis-four-d-verified-event-delivery.md) |
 
-Next unused sequence: `0008`.
+Next unused sequence: `0009`.

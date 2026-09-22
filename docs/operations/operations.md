@@ -102,10 +102,20 @@ Processed files are moved to `DRONE_AUDIO_WATCH_DIR/processed/`.
 
 Accepted 4D events are written as ss-common `event-envelope` 1.0.0 lines in
 `$DATA_DIR/analysis/<mission_id>/4d/published-events.jsonl`. The payload is
-`verified-scene-event` 1.0.0. Rejected and uncertain rows stay in the timeline
-and are not published. The default fusion-rt correlation rules are unchanged:
-the published modality is `video_4d`, and this repository does not add a fusion
-rule. Profile selection, queue pressure, and replay are in the
+`verified-scene-event` 1.0.0. Each new line is handed to
+`pipeline/realtime/contract_publisher.py`, which publishes it on
+
+```text
+ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d
+```
+
+`site_id` is `COOP_SITE_ID` (default `local`). `zone_id` is `ANALYSIS4D_ZONE_ID`
+(default `site`). QoS is 1. An event id already in the ledger is left there and
+is not sent again. Rejected and uncertain timeline rows stay in `timeline.json`.
+A broker refusal still appends the ledger line, and the later replay skips that
+id. The packaged fusion-rt seed `fusion_rules.yaml` is unchanged. fusion-rt
+still subscribes to `sensor-event`, `sensor-state`, `camera-event`, and
+`scene-caption`. Profile selection, queue pressure, and replay are in the
 [profile orchestration runbook](../runbooks/four-d-profile-orchestration.md).
 
 ## OpenAPI spec

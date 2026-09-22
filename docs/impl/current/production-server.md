@@ -80,7 +80,8 @@ MQTT: fusion-rt consumes contract `sensor-event`, `sensor-state`, `camera-event`
 and `scene-caption` topics and persists camera plus sensor events into
 `site_events` so the correlator can open incidents. The video API publishes
 `camera-event` and `scene-caption` (`pipeline/realtime/contract_publisher.py`)
-and still consumes Frigate MQTT. OpenAPI specs:
+and still consumes Frigate MQTT. The same publisher sends each newly accepted
+4D envelope on `ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`. OpenAPI specs:
 `docs/api/video-openapi.json` and `docs/api/fusion-rt-openapi.json`
 (`make export-openapi`). Integration: `tests/test_fusion_rt.py` via
 `make test` (full stack, including the fusion-rt sidecar) or `make test-no-gpu`.
@@ -136,7 +137,9 @@ Internal schemas for persistent tracks, graph deltas, proposals, verified timeli
 spatial QA live in `pipeline/analysis4d/`. Those files are not ss-common contracts.
 Accepted events are published separately: the payload is the ODCS contract
 `verified-scene-event` 1.0.0 (`contracts/odcs/verified-scene-event.odcs.yaml`) inside an
-ss-common `event-envelope` 1.0.0. Fusion-rt correlation rules are unchanged. Artifact files stay under
+ss-common `event-envelope` 1.0.0 on MQTT topic
+`ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`. The packaged fusion-rt
+rule seed is unchanged. Artifact files stay under
 `$DATA_DIR/analysis/<mission_id>/4d/` (`worker/artifacts.py` `analysis_artifact_dir`).
 JSONL streams are append-only. `timeline.json` and `manifest.json` are replaced only
 when the new file names the previous digest in `supersedes_sha256`; the previous file
@@ -340,9 +343,13 @@ default VLM and review providers stay `unavailable`. A remote VLM is not enabled
 
 Only `accepted` timeline rows are published. The ledger is
 `published-events.jsonl`. Each line is an `event-envelope` 1.0.0 whose payload
-validates as `verified-scene-event` 1.0.0. The modality is `video_4d`, which does
-not match the default fusion camera-and-audio rules, so no fusion rule was added.
-A repeated event id is not appended again.
+validates as `verified-scene-event` 1.0.0. That envelope is handed to
+`pipeline/realtime/contract_publisher.py` and published with modality
+`video_4d`. A repeated event id stays in the ledger and is not sent again.
+Rejected and uncertain rows stay in the timeline. A broker refusal still
+appends the ledger line. The fusion-rt subscription list and seed rules stay
+as shipped with fusion-rt `v0.2.0`. Record:
+[0008-four-d-scene-analysis-four-d-verified-event-delivery](../records/0008-four-d-scene-analysis-four-d-verified-event-delivery.md).
 
 `orchestration-state.json` stores the input digest. The same digest with
 `fast_done` or `deep_done` returns the previous result. Deep does not overwrite

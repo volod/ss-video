@@ -23,7 +23,8 @@ default postflight chain.
 
 The fast pass writes `tracks.jsonl`, `gaps.jsonl` when frames are coalesced,
 `timeline.json`, `manifest.json`, `orchestration-state.json`, and
-`published-events.jsonl`. The deep pass keeps the fast event ids, appends
+`published-events.jsonl`. Each new ledger line is published on the
+event-envelope MQTT topic. The deep pass keeps the fast event ids, appends
 superseding events, and replaces `manifest.json` only after copying the
 previous file under `history/` and setting `supersedes_sha256` to the fast
 digest.
@@ -47,12 +48,34 @@ stages with `budget_shed`. Tracks still run. `ANALYSIS4D_VLM_PROVIDER` and
 
 Only `accepted` rows are published. Each ledger line is an ss-common
 `event-envelope` 1.0.0. The payload is `verified-scene-event` 1.0.0
-(`contracts/odcs/verified-scene-event.odcs.yaml`). The envelope modality is
-`video_4d`. Default fusion-rt rules match camera plus audio, so this publish
-path does not change correlation policy and does not add a fusion rule.
+(`contracts/odcs/verified-scene-event.odcs.yaml`). `VideoContractPublisher`
+sends that envelope on
 
-Rejected and uncertain timeline rows stay in `timeline.json` and are absent
-from the ledger. Publishing the same event id again is a no-op.
+```text
+ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d
+```
+
+`site_id` comes from `COOP_SITE_ID`. `zone_id` comes from `ANALYSIS4D_ZONE_ID`.
+The modality is `video_4d`. A one-shot client is used from the worker and from
+`python -m selfsuvis.pipeline.analysis4d.analyze`. That client omits
+`COOP_MQTT_CLIENT_ID` and leaves the API publisher session in place. QoS
+follows the committed `event-envelope` topic entry (1).
+
+```bash
+mosquitto_sub -h "${COOP_MQTT_HOST:-localhost}" -p "${COOP_MQTT_PORT:-1883}" \
+  -t 'ss/v1/site/+/zone/+/event/video_4d' -v
+```
+
+Rejected and uncertain timeline rows stay in `timeline.json`. They are absent
+from the ledger and from MQTT. An event id already in the ledger stays
+unpublished on later runs. When the broker refuses the connection, the ledger
+line is still appended and the warning `verified event MQTT delivery failed`
+is logged. A later run skips that id.
+
+The packaged fusion-rt seed `selfsuvis/fusion_rt/data/fusion_rules.yaml` stays
+as shipped. fusion-rt still subscribes to `sensor-event`, `sensor-state`,
+`camera-event`, and `scene-caption`. This publish path leaves that subscription
+list and the seed rules in place.
 
 ## Status
 

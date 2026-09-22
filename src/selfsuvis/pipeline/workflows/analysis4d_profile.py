@@ -1,9 +1,10 @@
 """Causal fast profile and postflight deep profile for one mission.
 
 The fast pass keeps track continuity when the queue is under pressure and
-publishes only accepted events. The deep pass appends a revision and points
-the manifest and timeline at the fast digest. A second call with the same
-frames does not publish those events again.
+publishes only accepted events. Each new envelope is handed to the video MQTT
+publisher. The deep pass appends a revision and points the manifest and
+timeline at the fast digest. A second call with the same frames does not
+publish those events again.
 """
 
 import json

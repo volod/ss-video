@@ -137,9 +137,12 @@ Keyframe selection and the pinned grounding model are in the
 [0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md),
 [0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md),
 [0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md),
-[0006-four-d-scene-analysis-four-d-profile-orchestration](../records/0006-four-d-scene-analysis-four-d-profile-orchestration.md).
+[0006-four-d-scene-analysis-four-d-profile-orchestration](../records/0006-four-d-scene-analysis-four-d-profile-orchestration.md),
+[0007-four-d-scene-analysis-four-d-keyframe-geometry](../records/0007-four-d-scene-analysis-four-d-keyframe-geometry.md),
+[0008-four-d-scene-analysis-four-d-verified-event-delivery](../records/0008-four-d-scene-analysis-four-d-verified-event-delivery.md).
 Accepted events are also copied into `published-events.jsonl` as `event-envelope`
-1.0.0 rows. The payload contract is `contracts/odcs/verified-scene-event.odcs.yaml`.
+1.0.0 rows and handed to the video MQTT publisher. The payload contract is
+`contracts/odcs/verified-scene-event.odcs.yaml`. The topic modality is `video_4d`.
 
 ```text
 $DATA_DIR/analysis/<mission_id>/4d/

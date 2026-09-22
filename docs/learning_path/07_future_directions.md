@@ -90,6 +90,10 @@ frame captions cannot reliably answer that question, especially through occlusio
 **Shipped capability:** `four-d-scene-analysis`. Read the
 [specification](../design/spec.md#four-dimensional-video-scene-analysis) and the
 [production server](../impl/current/production-server.md#profile-orchestration).
+Two follow-ups are scheduled: [keyframe geometry](../impl/plan.md#four-d-keyframe-geometry)
+so a real file can produce depth-backed events, and
+[verified event delivery](../impl/plan.md#four-d-verified-event-delivery) so accepted
+envelopes reach the existing MQTT publisher.
 
 **Study first:** distinguish relative from metric depth; camera calibration from surface-normal
 estimation; a VLM proposal from a verified graph edge; and online bounded keyframe selection from a

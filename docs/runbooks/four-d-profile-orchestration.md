@@ -79,3 +79,20 @@ The report is `$DATA_DIR/analysis/_benchmark/profile-report.json`
 a gap record for every coalesced span, a fast replay, and a deep manifest
 that supersedes the fast digest without dropping fast event ids. The report
 records the CUDA device name from torch.
+
+## Analyze a file
+
+```bash
+.venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze /path/to/video.mp4
+```
+
+Requires `ffmpeg`. Samples at 1 fps unless `--fps` is set. Prompts default to
+`person,vehicle`. The summary lists track labels and accepted events. Geometry
+samples are absent until the keyframe-geometry task lands, so a clip can finish
+with tracks and zero region events. That is a valid result. Artifacts:
+
+```text
+$DATA_DIR/analysis/<mission_id>/summary.json
+$DATA_DIR/analysis/<mission_id>/4d/tracks.jsonl
+$DATA_DIR/analysis/<mission_id>/4d/timeline.json
+```

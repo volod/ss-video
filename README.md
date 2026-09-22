@@ -18,5 +18,69 @@ tag `v0.2.1`.
 make up          # api + fusion-rt + worker + ui + qdrant
 ```
 
+## Quick start
+
+`make venv` creates the project environment. When `ffmpeg` is missing it offers
+to install system packages. It also asks for `HF_TOKEN` when `.env` does not
+have one. Each run below checks both again before it starts. The first run of
+a model downloads its weights.
+
+### Quick run
+
+Sample one video and write frame descriptions. This is the short file pipeline.
+
+```bash
+make venv
+make run VIDEO=/path/to/video.mp4
+```
+
+```bash
+.venv/bin/ssv --mode file --input /path/to/video.mp4
+```
+
+Output goes to `$DATA_DIR/local_runs/<video-name>/`. Extra `ssv` flags go in
+`RUN_ARGS`.
+
+### 4D analysis
+
+Ground one video, then write tracks and a scene timeline.
+
+```bash
+make analyze VIDEO=/path/to/video.mp4
+```
+
+```bash
+.venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze /path/to/video.mp4
+```
+
+Prints track labels, accepted events, and the artifact directory
+`$DATA_DIR/analysis/<mission_id>/4d/`. A copy of that summary is
+`$DATA_DIR/analysis/<mission_id>/summary.json`. Sampling defaults to 1 frame
+per second with prompts `person,vehicle`.
+
+```bash
+make analyze VIDEO=/path/to/video.mp4 ANALYZE_ARGS="--profile deep"
+```
+
+`--profile deep` adds the postflight revision. `--fps` and `--prompts` change
+the sample rate and the grounding text.
+
+### Full run
+
+Run the long local pipeline on one video: perception, mapping, and captions.
+
+```bash
+make run-full VIDEO=/path/to/video.mp4
+```
+
+```bash
+.venv/bin/ssv --mode local --video /path/to/video.mp4
+```
+
+Extra `ssv` flags go in `RUN_ARGS`. The run writes under
+`$DATA_DIR/local_runs/`.
+
+## Docs
+
 See [docs](docs/README.md), the [specification](docs/design/spec.md), and
 [current implementation](docs/impl/current.md).

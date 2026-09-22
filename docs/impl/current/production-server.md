@@ -345,6 +345,19 @@ the fast timeline: fast event ids remain, new deep events set `supersedes`, and
 `manifest.json` names the fast digest in `supersedes_sha256`. The previous
 manifest is copied under `history/`.
 
+Indexing and the worker load each stored `frame_path` as an image. The fast
+profile grounds those images. A file can be analyzed without the API:
+
+```bash
+make analyze VIDEO=/path/to/video.mp4
+.venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze /path/to/video.mp4
+```
+
+The command samples at 1 fps, prompts for `person` and `vehicle`, and writes
+`$DATA_DIR/analysis/<mission_id>/4d/` plus `summary.json` beside that directory.
+`--profile deep` runs the postflight revision. Region and count events stay
+empty until a geometry sample exists. Track rows are the reviewable result.
+
 Job progress and `GET /analysis/{mission_id}/4d/status` expose profile, queue
 depth and capacity, degradations, backlog, and published event ids. The index
 form and the Streamlit index page send `analysis_profile` (`off`, `fast`, or

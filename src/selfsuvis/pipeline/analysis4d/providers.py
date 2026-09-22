@@ -404,11 +404,16 @@ class GroundingDinoProvider:
     def ground(self, frame: FrameSignal, prompts: list[Prompt]) -> list[Detection]:
         if frame.image is None or self.failed:
             return []
+        from selfsuvis.pipeline.analysis4d.signals import load_rgb
+
+        image = load_rgb(frame.image)
+        if image is None:
+            return []
         loaded = self._load()
         if loaded is None:
             return []
         try:
-            return _detect_grounding_dino(loaded, frame.image, prompts)
+            return _detect_grounding_dino(loaded, image, prompts)
         except Exception:
             return []
 

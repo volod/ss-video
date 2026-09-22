@@ -8,6 +8,7 @@ frames does not publish those events again.
 
 import json
 import math
+import shutil
 import time
 from collections.abc import Callable
 from dataclasses import dataclass, field
@@ -60,6 +61,7 @@ from selfsuvis.pipeline.analysis4d.schemas import (
     TimelineEvent,
     TrackRecord,
 )
+from selfsuvis.pipeline.analysis4d.signals import signals_from_paths
 from selfsuvis.pipeline.analysis4d.store import AnalysisStore
 from selfsuvis.pipeline.analysis4d.tracks import Observation, TrackerConfig
 from selfsuvis.pipeline.analysis4d.validate import validate_bundle
@@ -144,6 +146,7 @@ def run_fast_profile(
         return _from_state(target, state, profile="fast", replayed=True)
     if state.get("input_digest") not in (None, digest):
         raise ValueError("mission already has a 4D run for a different input")
+    _reset_unfinished(target, state)
 
     started = time.perf_counter()
     limit = capacity if capacity is not None else queue_capacity()
@@ -415,11 +418,23 @@ def write_track_boxes(dest: Path, mission_id: str) -> None:
 
 
 def frames_from_rows(rows: list[dict]) -> list[FrameSignal]:
-    """Build causal frame signals from indexed mission rows."""
-    frames = [
+    """Build causal frame signals from indexed mission rows.
+
+    A row with ``frame_path`` keeps that path on the signal and a thumbnail
+    embedding, so grounding can open the image later. A row without a path
+    stays a usable timestamp with a constant embedding.
+    """
+    located = [
+        (float(row.get("t_sec") or 0.0), str(row.get("frame_path")))
+        for row in rows
+        if row.get("frame_path")
+    ]
+    plain = [
         FrameSignal(t_sec=float(row.get("t_sec") or 0.0), embedding=(1.0, 0.0), quality_ok=True)
         for row in rows
+        if not row.get("frame_path")
     ]
+    frames = [*signals_from_paths(located), *plain]
     frames.sort(key=lambda item: item.t_sec)
     return frames
 
@@ -576,7 +591,7 @@ def _append_deep_graph(dest: Path, mission_id: str, fast_events: list[TimelineEv
             continue
         if any(ref not in fresh_ids for ref in event.state_delta_refs):
             continue
-        match = next((item.event_id for item in fast_events if item.type == event.type), None)
+        match = _superseded_event_id(event, fast_events)
         linked.append(event.model_copy(update={"supersedes": match}) if match else event)
     if not linked:
         _retarget_timeline(dest, fast_events, profile="deep")
@@ -610,6 +625,38 @@ def _mark_deep(dest: Path, *, before_digest: str, stages: list[StageReport]) -> 
         }
     )
     AnalysisStore(dest).write_manifest(updated)
+
+
+def _superseded_event_id(event: TimelineEvent, fast_events: list[TimelineEvent]) -> str | None:
+    """Return the fast event this deep event revises, when one is identifiable."""
+    same_type = [item for item in fast_events if item.type == event.type]
+    if not same_type:
+        return None
+    participants = set(event.participants)
+    shared = [item for item in same_type if participants.intersection(item.participants)]
+    pool = shared or same_type
+
+    def _overlap(item: TimelineEvent) -> float:
+        return min(item.end_sec, event.end_sec) - max(item.start_sec, event.start_sec)
+
+    overlapping = [item for item in pool if _overlap(item) > 0]
+    if overlapping:
+        return max(overlapping, key=_overlap).event_id
+    if shared:
+        return min(shared, key=lambda item: abs(item.start_sec - event.start_sec)).event_id
+    return None
+
+
+def _reset_unfinished(dest: Path, state: dict) -> None:
+    """Remove a 4D directory that stopped before the fast profile was recorded."""
+    if state.get("fast_done") or not (dest / "manifest.json").is_file():
+        return
+    logger.warning("removing unfinished 4D artifacts dir=%s", dest)
+    for child in list(dest.iterdir()):
+        if child.is_dir():
+            shutil.rmtree(child)
+        else:
+            child.unlink()
 
 
 def _lags(timeline: SceneTimeline, media: float, elapsed: float, chunk_sec: float) -> list[float]:

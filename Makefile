@@ -1,4 +1,4 @@
-.PHONY: help up down logs data-dirs fix-data env env-interactive venv venv-cuda venv-pip venv-rebuild-xformers docker-check test test-no-gpu test-ci test-unit test-heavy test-unit-no-cv2 test-dir lint lint-spec-plan lint-doc-links lint-imports plan-status ci ci-github cvat-up cvat-down cvat-logs cvat-admin mapper-logs utlz-install utlz utlz-endpoints export-openapi frigate-up
+.PHONY: help up down logs data-dirs fix-data env env-interactive venv venv-cuda venv-pip venv-rebuild-xformers docker-check test test-no-gpu test-ci test-unit test-heavy test-unit-no-cv2 test-dir lint lint-spec-plan lint-doc-links lint-imports plan-status ci ci-github cvat-up cvat-down cvat-logs cvat-admin mapper-logs utlz-install utlz utlz-endpoints export-openapi frigate-up run analyze run-full
 
 # Base data directory — overridden by DATA_DIR in .env or shell environment.
 DATA_DIR ?= .data
@@ -40,13 +40,20 @@ help:
 	@echo "  -----------------"
 	@echo "  make env             Generate .data/.env (auto-detects GPU/RAM, picks models)"
 	@echo "  make env-interactive Generate .data/.env with interactive prompts (profile, sidecars, models)"
-	@echo "  make venv                    Create .venv and install deps; if .venv exists, prompts to recreate or update"
+	@echo "  make venv                    Create .venv and install deps; prompts for ffmpeg and HF_TOKEN; if .venv exists, prompts to recreate or update"
 	@echo "  make venv-cuda               Same as venv but forces CUDA wheel install (use if nvidia-smi is absent but GPU present)"
 	@echo "  make venv-pip                Install pip into an existing .venv (e.g. after uv venv .venv)"
 	@echo "  make venv-rebuild-xformers   Rebuild xformers from source for common GPU arches (RTX 2000/3000/4000, H100)"
 	@echo "  make utlz-install            Install optional Utilyze GPU profiler (Linux amd64, NVIDIA Ampere+)"
 	@echo "  make utlz                    Run Utilyze with selfsuvis-safe defaults (disables upstream metrics by default)"
 	@echo "  make utlz-endpoints          Show Utilyze-discovered inference endpoints per GPU"
+	@echo ""
+	@echo "  Run one video"
+	@echo "  -------------"
+	@echo "  make run VIDEO=/path/to/video.mp4        Quick run: sample frames and describe them"
+	@echo "  make analyze VIDEO=/path/to/video.mp4    4D analysis: tracks, events, and a timeline"
+	@echo "  make run-full VIDEO=/path/to/video.mp4   Full run: perception, mapping, and captions"
+	@echo "  RUN_ARGS and ANALYZE_ARGS append extra flags to run, run-full, and analyze"
 	@echo ""
 	@echo "  Tests"
 	@echo "  -----"
@@ -103,6 +110,8 @@ env-interactive:
 	$(if $(wildcard .venv/bin/python),.venv/bin/python -m selfsuvis.scripts.generate_env --interactive,python -m selfsuvis.scripts.generate_env --interactive)
 
 venv:
+	@./scripts/install/ensure_prereqs.sh ffmpeg
+	@./scripts/install/ensure_prereqs.sh hf-token
 	@if [ -d .venv ]; then \
 		printf "\n  .venv already exists.\n"; \
 		printf "  [r] Recreate — remove and create a fresh .venv\n"; \
@@ -132,6 +141,8 @@ venv:
 
 # Force CUDA torch wheels regardless of nvidia-smi detection (use when GPU is present but nvidia-smi absent)
 venv-cuda:
+	@./scripts/install/ensure_prereqs.sh ffmpeg
+	@./scripts/install/ensure_prereqs.sh hf-token
 	uv venv .venv
 	FORCE_CUDA=1 ./scripts/install/install_requirements.sh vision,dev .venv
 
@@ -152,6 +163,27 @@ venv-rebuild-xformers:
 	.venv/bin/python -m pip install xformers \
 	  --no-build-isolation --no-deps --no-binary xformers --force-reinstall --no-cache-dir
 	@echo "Done. Verify:  .venv/bin/python -m xformers.info"
+
+# Quick file pipeline: sample frames and describe them.
+run:
+	@test -n "$(VIDEO)" || { printf '%s\n' "Usage: make run VIDEO=/path/to/video.mp4"; exit 1; }
+	@test -f "$(VIDEO)" || { printf '%s\n' "Video not found: $(VIDEO)"; exit 1; }
+	./scripts/install/ensure_prereqs.sh start -- \
+	  .venv/bin/ssv --mode file --input "$(VIDEO)" --output-dir "$(DATA_DIR)/local_runs" $(RUN_ARGS)
+
+# 4D analysis: grounding, tracks, and a scene timeline.
+analyze:
+	@test -n "$(VIDEO)" || { printf '%s\n' "Usage: make analyze VIDEO=/path/to/video.mp4"; exit 1; }
+	@test -f "$(VIDEO)" || { printf '%s\n' "Video not found: $(VIDEO)"; exit 1; }
+	./scripts/install/ensure_prereqs.sh start -- \
+	  .venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze "$(VIDEO)" $(ANALYZE_ARGS)
+
+# Full local pipeline: perception, mapping, and captions.
+run-full:
+	@test -n "$(VIDEO)" || { printf '%s\n' "Usage: make run-full VIDEO=/path/to/video.mp4"; exit 1; }
+	@test -f "$(VIDEO)" || { printf '%s\n' "Video not found: $(VIDEO)"; exit 1; }
+	./scripts/install/ensure_prereqs.sh start -- \
+	  .venv/bin/ssv --mode local --video "$(VIDEO)" $(RUN_ARGS)
 
 # Install pip into existing .venv (when uv created it without pip)
 venv-pip:

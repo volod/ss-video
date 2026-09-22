@@ -39,6 +39,7 @@ _VALID_POSTFLIGHT_TYPES = {
     "postflight_mapping",
     "postflight_semantic_graph",
     "postflight_scene_graph",
+    "postflight_strict_verifier",
 }
 
 
@@ -537,3 +538,74 @@ def handle_postflight_scene_graph_job(job_id: str, payload: dict, pool, logger) 
                     )
 
         _run(_mark_scene_error())
+
+
+def handle_postflight_strict_verifier_job(job_id: str, payload: dict, pool, logger) -> None:
+    """Verify 4D claims and write the timeline and Video-QA log.
+
+    Rejected and uncertain claims stay in the audit files. This handler does
+    not publish them to fusion-rt.
+    """
+    mission_id = payload.get("mission_id") or payload.get("video_id")
+    if not mission_id:
+        _update_job_sync(
+            pool,
+            job_id,
+            status="error",
+            error="postflight_strict_verifier requires mission_id",
+            finished_at=time.time(),
+        )
+        return
+
+    try:
+
+        async def _load_mission():
+            async with pool.acquire() as conn:
+                return await fetch_mission(conn, mission_id)
+
+        mission = _run(_load_mission())
+        if mission is None:
+            raise LookupError(f"mission not found: {mission_id}")
+
+        from selfsuvis.pipeline.workflows.analysis4d_verify import run_mission_verify
+
+        result = run_mission_verify(mission_id)
+        accepted = [event for event in result.events if event.verification.status == "accepted"]
+
+        async def _finish():
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    await _finalize_postflight_job_success(
+                        conn,
+                        job_id=job_id,
+                        mission_id=mission_id,
+                        payload=payload,
+                        progress={
+                            "mission_id": mission_id,
+                            "event_count": len(accepted),
+                            "qa_count": len(
+                                [row for row in result.qa if row.verification_status == "accepted"]
+                            ),
+                            "review_failure": result.review_failure,
+                            "degradations": result.degradations,
+                        },
+                        logger=logger,
+                    )
+
+        _run(_finish())
+        logger.info("Post-flight strict verifier job finished id=%s mission=%s", job_id, mission_id)
+    except Exception as exc:
+        logger.exception("Post-flight strict verifier job failed id=%s error=%s", job_id, exc)
+        error_message = str(exc)
+
+        async def _mark_verifier_error():
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    await _finalize_postflight_job_error(
+                        conn,
+                        job_id=job_id,
+                        mission_id=mission_id,
+                        error=error_message,
+                    )
+
+        _run(_mark_verifier_error())

@@ -132,6 +132,27 @@ async def replace_analysis_run(conn, rows: dict[str, Any]) -> None:
         )
 
 
+def publishable_metadata(rows: dict[str, Any]) -> dict[str, Any]:
+    """Return the accepted subset of query rows.
+
+    The full index keeps rejected and uncertain claims for audit. This view is
+    the only set that may be handed to fusion-rt. Corrected and rejected rows
+    stay in the audit index.
+
+    Args:
+        rows: Output of ``metadata_rows``.
+
+    Returns:
+        A copy whose events, edges, and QA are limited to ``accepted``.
+    """
+    return {
+        "run": rows["run"],
+        "events": [row for row in rows["events"] if row["verification_status"] == "accepted"],
+        "edges": [row for row in rows["edges"] if row["verification_status"] == "accepted"],
+        "qa": [row for row in rows["qa"] if row["verification_status"] == "accepted"],
+    }
+
+
 async def list_events(conn, mission_id: str, *, status: str | None = None) -> list[dict[str, Any]]:
     """Return event metadata for a mission, optionally filtered by verification status."""
     if status is None:

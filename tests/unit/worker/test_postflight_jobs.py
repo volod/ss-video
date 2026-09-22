@@ -174,3 +174,43 @@ def test_handle_postflight_scene_graph_job_marks_done():
 
     run_graph.assert_called_once_with("m1")
     assert mark_finished.await_args.kwargs["status"] == "done"
+
+
+def test_handle_postflight_strict_verifier_job_marks_done():
+    pool = FakePool(FakeConn())
+    logger = MagicMock()
+    mission = {"id": "m1"}
+    event = MagicMock()
+    event.verification.status = "accepted"
+    qa = MagicMock()
+    qa.verification_status = "accepted"
+    result = MagicMock(
+        events=[event],
+        qa=[qa],
+        degradations=["provider_unavailable"],
+        review_failure=None,
+    )
+
+    with (
+        patch.object(postflight_mod, "fetch_mission", new_callable=AsyncMock, return_value=mission),
+        patch(
+            "selfsuvis.pipeline.workflows.analysis4d_verify.run_mission_verify",
+            return_value=result,
+        ) as run_verify,
+        patch.object(postflight_mod, "update_job", new_callable=AsyncMock),
+        patch.object(
+            postflight_mod, "_enqueue_postflight_jobs", new_callable=AsyncMock, return_value=[]
+        ),
+        patch.object(
+            postflight_mod, "mark_mission_finished", new_callable=AsyncMock
+        ) as mark_finished,
+    ):
+        postflight_mod.handle_postflight_strict_verifier_job(
+            "job-verify",
+            {"mission_id": "m1", "next_postflight_jobs": []},
+            pool,
+            logger,
+        )
+
+    run_verify.assert_called_once_with("m1")
+    assert mark_finished.await_args.kwargs["status"] == "done"

@@ -15,21 +15,6 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
 
-#### four-d-strict-verifier-and-qa
-
-No current gate prevents a VLM-proposed spatial relation or action from becoming unsupported
-narrative output, and Video-QA answers are not compiled from verified graph state.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#strict-verifier)
-- Agent status: RUN NEEDED
-- Dependencies: `four-d-scene-graph`. Blocks: `four-d-profile-orchestration`.
-- User-visible outcome: Timeline events and auto-generated spatial Video-QA are schema-valid, evidence-linked, geometrically checked, and explicit about rejection or uncertainty.
-- Scope boundary: Implement deterministic validators, provider-neutral multimodal review with local Qwen-VL and optional strict-JSON remote providers, claim resolution/audit, executable graph-query QA generation, persistence, and read APIs; do not let VLM confidence override reliable geometry or send rejected/uncertain claims to fusion-rt.
-- Data and artifact paths: `src/selfsuvis/pipeline/analysis4d/`, `src/selfsuvis/app/routers/`, `src/selfsuvis/pipeline/storage/`, `tests/assets/analysis4d/`, `$DATA_DIR/analysis/<mission_id>/4d/timeline.json`, and `$DATA_DIR/analysis/<mission_id>/4d/qa.jsonl`.
-- Execution path: Validate strict schemas, recompute geometry and temporal constraints, submit only unresolved semantic claims with positive and counter-evidence, execute accepted graph programs for answers, and add mission timeline/QA endpoints with evidence retrieval.
-- Acceptance gates: `make test-unit`, `make test-ci`, API schema export, and the contradiction/QA benchmark pass; deep-profile relation precision is at least 0.90, false acceptance is at most 0.02 on the pinned contradiction suite, every accepted event and answer resolves to evidence, and timeout/refusal/malformed model output fails closed without blocking deterministic results.
-- Documentation target: [Production server](current/production-server.md), [API reference](../reference/api.md), and a new strict-verifier/Video-QA runbook.
-
 #### four-d-profile-orchestration
 
 The component stages need an end-to-end budget controller, observable degradation, and a safe

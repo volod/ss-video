@@ -1,6 +1,6 @@
 """VideoContractPublisher serializes Frigate events onto the topic map."""
 
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from selfsuvis.pipeline.realtime.camera_events import CameraEvent
 from selfsuvis.pipeline.realtime.contract_publisher import (
@@ -17,7 +17,7 @@ def test_camera_event_to_contract_round_trip() -> None:
         score=0.81,
         top_score=0.84,
         event_type="new",
-        started_at=datetime(2026, 9, 19, 8, 0, tzinfo=timezone.utc),
+        started_at=datetime(2026, 9, 19, 8, 0, tzinfo=UTC),
         ended_at=None,
         has_snapshot=True,
         has_clip=False,
@@ -41,7 +41,7 @@ def test_scene_caption_to_contract() -> None:
         gps_lon=None,
         gps_alt=None,
         t_sec=1.5,
-        created_at=datetime(2026, 9, 19, 8, 0, tzinfo=timezone.utc),
+        created_at=datetime(2026, 9, 19, 8, 0, tzinfo=UTC),
     )
     assert model.mission_id == "mission-1"
     assert model.caption == "a truck at the gate"

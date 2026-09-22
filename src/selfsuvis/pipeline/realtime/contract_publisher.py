@@ -3,7 +3,7 @@
 import asyncio
 import json
 from collections.abc import Awaitable, Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from ss_contracts.models import CameraEvent as ContractCameraEvent
@@ -20,8 +20,8 @@ logger = get_logger(__name__)
 def _iso(value: datetime | None) -> str | None:
     if value is None:
         return None
-    dt = value if value.tzinfo is not None else value.replace(tzinfo=timezone.utc)
-    return dt.astimezone(timezone.utc).isoformat().replace("+00:00", "Z")
+    dt = value if value.tzinfo is not None else value.replace(tzinfo=UTC)
+    return dt.astimezone(UTC).isoformat().replace("+00:00", "Z")
 
 
 def camera_event_to_contract(event: CameraEvent) -> ContractCameraEvent:
@@ -64,7 +64,7 @@ def scene_caption_to_contract(
         "gps_lat": gps_lat,
         "gps_lon": gps_lon,
         "gps_alt": gps_alt,
-        "created_at": created_at or datetime.now(timezone.utc),
+        "created_at": created_at or datetime.now(UTC),
     }
     return SceneCaption.model_validate({k: v for k, v in payload.items() if v is not None})
 

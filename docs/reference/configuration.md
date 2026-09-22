@@ -206,7 +206,23 @@ intervals, and the pinned comparison are in the
 |---|---|---|
 | `ANALYSIS4D_VLM_PROVIDER` | `unavailable` | Proposal provider. `unavailable` keeps the deterministic graph and records `provider_unavailable`. `smolvlm` loads `HuggingFaceTB/SmolVLM-256M-Instruct`. |
 
-SceneGraphVLM training is not configured here. A remote VLM is not the default.
+SceneGraphVLM training is not configured here. A remote proposal model is not the default.
+
+## Strict verifier and Video-QA
+
+These overrides apply to `workflows/analysis4d_verify.py`. The gate, the
+graph programs, and the pinned rates are in the
+[strict verifier runbook](../runbooks/four-d-strict-verifier.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_REVIEW_PROVIDER` | `unavailable` | Semantic reviewer. `unavailable` leaves unsettled claims `uncertain` and keeps deterministic events. `qwen` loads the local Qwen-VL adapter. `remote` calls the Responses API. |
+| `ANALYSIS4D_QWEN_VL_MODEL` | `Qwen/Qwen2.5-VL-3B-Instruct` | Local Qwen-VL weights used when the reviewer is `qwen`. |
+| `ANALYSIS4D_REVIEW_REMOTE_MODEL` | `gpt-6-astra` | Remote model id used when the reviewer is `remote`. |
+| `ANALYSIS4D_REVIEW_TIMEOUT_SEC` | `30` | Reviewer timeout. A timeout fails closed. |
+
+Remote review is not the default. It sends selected images and a strict JSON
+schema. It does not send video.
 
 ## Notes
 

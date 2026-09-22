@@ -9,5 +9,6 @@ Copy the [template](template.md) using the
 | 0002 | `four-d-keyframes-and-tracks` | [0002-four-d-scene-analysis-four-d-keyframes-and-tracks](0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md) |
 | 0003 | `four-d-spatial-reconstruction` | [0003-four-d-scene-analysis-four-d-spatial-reconstruction](0003-four-d-scene-analysis-four-d-spatial-reconstruction.md) |
 | 0004 | `four-d-scene-graph` | [0004-four-d-scene-analysis-four-d-scene-graph](0004-four-d-scene-analysis-four-d-scene-graph.md) |
+| 0005 | `four-d-strict-verifier-and-qa` | [0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md) |
 
-Next unused sequence: `0005`.
+Next unused sequence: `0006`.

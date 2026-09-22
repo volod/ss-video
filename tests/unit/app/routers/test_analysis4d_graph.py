@@ -56,3 +56,58 @@ def test_scene_graph_routes_return_deltas_and_filter_time(tmp_path, monkeypatch)
 
     missing = client.get("/analysis/other-mission/4d/graph")
     assert missing.status_code == 404
+
+
+def test_timeline_and_qa_routes_return_evidence(tmp_path, monkeypatch) -> None:
+    from selfsuvis.pipeline.analysis4d.review import UnavailableReview
+    from selfsuvis.pipeline.workflows.analysis4d_verify import run_mission_verify
+
+    prepare_pinned_scene(tmp_path)
+    run_mission_graph(
+        "mission-graph",
+        dest=tmp_path,
+        provider=UnavailableVlm(),
+        regions=[RegionBox("region-1", "loading-zone", [0.0, 0.0, 0.0], [10.0, 10.0, 4.0])],
+    )
+    run_mission_verify("mission-graph", dest=tmp_path, reviewer=UnavailableReview())
+
+    def _dir(mission_id: str):
+        if mission_id != "mission-graph":
+            raise ValueError("mission_id must be a single path segment")
+        return tmp_path
+
+    monkeypatch.setattr("selfsuvis.app.routers.analysis4d.analysis_dir", _dir)
+    app = FastAPI()
+    app.include_router(router)
+    app.dependency_overrides[require_api_key] = lambda: None
+    app.dependency_overrides[rate_limit] = lambda: None
+    client = TestClient(app)
+
+    timeline = client.get("/analysis/mission-graph/4d/timeline")
+    assert timeline.status_code == 200
+    body = timeline.json()
+    assert body["schema_version"] == "ss-video.scene-timeline.v1"
+    accepted = [event for event in body["events"] if event["verification"]["status"] == "accepted"]
+    assert accepted
+    assert all(event["evidence"] for event in accepted)
+
+    qa = client.get("/analysis/mission-graph/4d/qa")
+    assert qa.status_code == 200
+    rows = qa.json()["qa"]
+    assert rows
+    assert all(
+        row["evidence_event_ids"] for row in rows if row["verification_status"] == "accepted"
+    )
+
+    evidence = client.get(
+        "/analysis/mission-graph/4d/evidence",
+        params={"event_id": accepted[0]["event_id"]},
+    )
+    assert evidence.status_code == 200
+    assert evidence.json()["evidence"]
+    missing_query = client.get("/analysis/mission-graph/4d/evidence")
+    assert missing_query.status_code == 400
+    missing_event = client.get(
+        "/analysis/mission-graph/4d/evidence", params={"event_id": "evt-missing"}
+    )
+    assert missing_event.status_code == 404

@@ -4,6 +4,7 @@ from selfsuvis.worker.handlers.postflight import (
     handle_postflight_mapping_job,
     handle_postflight_scene_graph_job,
     handle_postflight_semantic_graph_job,
+    handle_postflight_strict_verifier_job,
 )
 from selfsuvis.worker.handlers.reembed import handle_reembed_job
 
@@ -13,5 +14,6 @@ __all__ = [
     "handle_postflight_mapping_job",
     "handle_postflight_scene_graph_job",
     "handle_postflight_semantic_graph_job",
+    "handle_postflight_strict_verifier_job",
     "handle_reembed_job",
 ]

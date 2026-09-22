@@ -280,7 +280,7 @@ class RealtimePacketPublisher:
         while True:
             try:
                 packet = await asyncio.wait_for(self._queue.get(), timeout=self._flush_interval_sec)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 packet = ...
 
             if packet is None:

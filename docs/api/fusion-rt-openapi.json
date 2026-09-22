@@ -1548,6 +1548,7 @@
         "properties": {
           "ts": {
             "type": "string",
+            "format": "date-time",
             "title": "Ts",
             "description": "ISO 8601 event timestamp"
           },

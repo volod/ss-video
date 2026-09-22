@@ -9,7 +9,7 @@ import os
 import subprocess
 import time
 from collections.abc import Callable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 from unittest.mock import patch
@@ -47,7 +47,7 @@ def _publish_uplink() -> None:
     user = os.getenv("CHIRPSTACK_MQTT_USERNAME", "chirpstack")
     password = os.getenv("CHIRPSTACK_MQTT_PASSWORD", "chirpstack")
     payload = json.loads(UPLINK.read_text(encoding="utf-8"))
-    payload["time"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
+    payload["time"] = datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%S.%fZ")
     result = subprocess.run(
         [
             "docker",

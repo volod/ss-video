@@ -20,10 +20,11 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, appearance, and the temporal scene graph |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, appearance, the temporal scene graph, and the strict verifier |
 | `src/selfsuvis/pipeline/workflows/analysis4d_tracks.py` | Fast causal and deep forward/backward 4D track passes |
 | `src/selfsuvis/pipeline/workflows/analysis4d_geometry.py` | Back-projected geometry samples and masked appearance prototypes |
 | `src/selfsuvis/pipeline/workflows/analysis4d_graph.py` | Postflight temporal scene graph from tracks and geometry |
+| `src/selfsuvis/pipeline/workflows/analysis4d_verify.py` | Strict verifier and graph-program Video-QA |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -271,6 +272,48 @@ intervals. An unavailable VLM still yields 19 accepted edges and
 `provider_unavailable`. Details:
 [temporal scene-graph runbook](../../runbooks/four-d-scene-graph.md). Record:
 [0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md).
+
+## Strict verifier and Video-QA
+
+`workflows/analysis4d_verify.py` `run_mission_verify` reads the mission 4D
+directory and supersedes `timeline.json`. It appends `qa.jsonl` and, when a
+claim's status changes, a proposal row whose `supersedes` points at the
+original. The worker job is `postflight_strict_verifier`. It is not in the
+default postflight chain. Rejected and uncertain claims stay in the audit log.
+`pipeline/storage/analysis4d.py` `publishable_metadata` is the only row set
+that may be handed to fusion-rt, and this job does not call fusion-rt.
+
+Geometry is recomputed before any reviewer runs. A measurable predicate whose
+calibration gate passes is accepted or rejected from the stored boxes. Model
+confidence cannot override that result. A high residual or a missing metric
+scale leaves the claim `uncertain`. Semantic claims that geometry does not
+settle go to a reviewer with measurements and counter-evidence. An action is
+accepted only when an accepted deterministic event already covers its
+interval. Identity, counts, metric distance, intersection, and event time are
+not taken from the reviewer alone. Timeout, refusal, and malformed output
+record `provider_unavailable` and keep the deterministic timeline.
+
+`ANALYSIS4D_REVIEW_PROVIDER` defaults to `unavailable`. `qwen` loads
+`Qwen/Qwen2.5-VL-3B-Instruct`. `remote` calls the Responses API with strict
+JSON and image inputs. The remote model name defaults to `gpt-6-astra`.
+Neither model is the default.
+
+Read routes, all API-key protected:
+
+- `GET /analysis/{mission_id}/4d/timeline`
+- `GET /analysis/{mission_id}/4d/qa`
+- `GET /analysis/{mission_id}/4d/evidence` with `event_id` or `qa_id`
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.verifier_benchmark
+```
+
+The report is `$DATA_DIR/analysis/_benchmark/verifier-report.json`
+(`ss-video.strict-verifier-benchmark.v1`). On the pinned contradiction suite
+false acceptance is 0.0. Deep-profile relation precision on the pinned scene
+is 1.0. Every accepted event and answer cites evidence. Details:
+[strict verifier runbook](../../runbooks/four-d-strict-verifier.md). Record:
+[0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md).
 
 ## Design decisions
 

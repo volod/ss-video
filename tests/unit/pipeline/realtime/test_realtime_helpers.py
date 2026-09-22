@@ -1,6 +1,6 @@
 """Unit tests for pure realtime helper methods."""
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 
 import pytest
@@ -261,7 +261,7 @@ def test_packet_sensor_summary_counts_normalized_names():
 
 
 def test_pose_freshness_ms_handles_datetime_and_string():
-    now = datetime(2026, 4, 8, 12, 0, 1, tzinfo=timezone.utc)
+    now = datetime(2026, 4, 8, 12, 0, 1, tzinfo=UTC)
     created = now - timedelta(milliseconds=250)
     assert pose_freshness_ms(created, now=now) == 250
     assert pose_freshness_ms(created.isoformat(), now=now) == 250

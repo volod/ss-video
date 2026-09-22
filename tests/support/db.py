@@ -1,7 +1,7 @@
 """Shared in-process database helpers for tests."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -27,7 +27,7 @@ class PipelineMockConn:
 
     @staticmethod
     def _min_dt() -> datetime:
-        return datetime.min.replace(tzinfo=timezone.utc)
+        return datetime.min.replace(tzinfo=UTC)
 
     async def execute(self, query: str, *args) -> str:
         q = query.strip().upper()

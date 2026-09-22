@@ -15,7 +15,7 @@ import json
 import os
 import pathlib
 from collections.abc import Callable
-from datetime import date, datetime, timezone
+from datetime import UTC, date, datetime
 from typing import Any
 
 import numpy as np
@@ -69,7 +69,7 @@ FRIGATE_END: dict[str, Any] = {
     },
 }
 
-FIXED = datetime(2026, 9, 19, 8, 0, 0, 500000, tzinfo=timezone.utc)
+FIXED = datetime(2026, 9, 19, 8, 0, 0, 500000, tzinfo=UTC)
 
 
 # -- Builders: one per golden fixture, through the current code path ----------------------

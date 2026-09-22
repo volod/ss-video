@@ -13,7 +13,7 @@ are automatically picked up without a restart.
 
 import asyncio
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -33,7 +33,7 @@ class _CameraSession:
     rtsp_url: str
     mediamtx_path: str
     session_id: str | None = None
-    started_at: datetime = field(default_factory=lambda: datetime.now(timezone.utc))
+    started_at: datetime = field(default_factory=lambda: datetime.now(UTC))
 
 
 class FrigateRtspBridge:
@@ -70,7 +70,7 @@ class FrigateRtspBridge:
                 logger.exception("FrigateRtspBridge: camera sync error")
             try:
                 await asyncio.wait_for(asyncio.shield(self._stop.wait()), timeout=self._refresh_sec)
-            except asyncio.TimeoutError:
+            except TimeoutError:
                 pass
 
     async def shutdown(self) -> None:

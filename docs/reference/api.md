@@ -251,9 +251,9 @@ For deployment and publish examples, see [MediaMTX streaming](streaming-mediamtx
 
 ## Analysis routes
 
-Read routes for one mission's temporal scene graph. They require the API key.
-The files live under `$DATA_DIR/analysis/<mission_id>/4d/`. A missing manifest
-is HTTP 404. Timeline and Video-QA routes are not part of this surface.
+Read routes for one mission's temporal scene graph, verified timeline, and
+Video-QA. They require the API key. The files live under
+`$DATA_DIR/analysis/<mission_id>/4d/`. A missing manifest is HTTP 404.
 
 ### `GET /analysis/{mission_id}/4d/graph`
 
@@ -274,7 +274,24 @@ Returns the append-only graph log in `(t_sec, delta_id)` order.
 Returns proposal rows, including uncertain, rejected, corrected, and superseded
 claims.
 
-Runbook: [temporal scene graph](../runbooks/four-d-scene-graph.md).
+### `GET /analysis/{mission_id}/4d/timeline`
+
+Returns the verified timeline. Events may be `accepted`, `rejected`,
+`uncertain`, or `corrected`. An accepted event cites evidence.
+
+### `GET /analysis/{mission_id}/4d/qa`
+
+Returns Video-QA rows. `publishable_qa_ids` lists accepted answers. The
+answer comes from the graph program.
+
+### `GET /analysis/{mission_id}/4d/evidence`
+
+Query: exactly one of `event_id` or `qa_id`. Returns that row and the
+geometry or mask files it cites. Omitting both is HTTP 400. An unknown id
+is HTTP 404.
+
+Runbooks: [temporal scene graph](../runbooks/four-d-scene-graph.md),
+[strict verifier and Video-QA](../runbooks/four-d-strict-verifier.md).
 
 ---
 [← Develop](../guide/develop.md) | [UI →](ui.md)

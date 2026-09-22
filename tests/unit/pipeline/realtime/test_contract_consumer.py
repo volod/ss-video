@@ -1,7 +1,7 @@
 """ContractEventConsumer dispatches sensor-event and sensor-state payloads."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from selfsuvis.pipeline.realtime.contract_consumer import ContractEventConsumer
 from ss_kit.mqtt import TopicBuilder
@@ -37,7 +37,7 @@ async def test_handle_message_dispatches_sensor_event_and_state() -> None:
     }
     state_body = {
         "dev_eui": "70b3d57ed0060001",
-        "last_seen": datetime(2026, 9, 19, 8, 0, tzinfo=timezone.utc).isoformat(),
+        "last_seen": datetime(2026, 9, 19, 8, 0, tzinfo=UTC).isoformat(),
         "reading_count": 2,
         "temperature_c": 21.4,
     }

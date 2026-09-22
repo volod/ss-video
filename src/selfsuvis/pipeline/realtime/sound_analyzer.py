@@ -13,7 +13,7 @@ Requires: ffmpeg on PATH, faster-whisper installed.
 import asyncio
 import subprocess
 from dataclasses import dataclass, field
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import numpy as np
@@ -95,7 +95,7 @@ class SoundAnalyzer:
             await asyncio.sleep(self._chunk_sec)
             return
 
-        recorded_at = datetime.now(timezone.utc)
+        recorded_at = datetime.now(UTC)
         rms = float(np.sqrt(np.mean(audio.astype(np.float64) ** 2)))
         # Plain Python scalars: numpy ones do not serialize to JSON.
         rms_db = float(20.0 * np.log10(max(rms, 1e-6)) - 90.0)  # rough dBFS

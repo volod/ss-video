@@ -134,7 +134,8 @@ Keyframe selection and the pinned grounding model are in the
 [4D model runbook](../../runbooks/four-d-models.md). Records:
 [0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md),
 [0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md),
-[0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md).
+[0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md),
+[0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md).
 
 ```text
 $DATA_DIR/analysis/<mission_id>/4d/
@@ -153,6 +154,7 @@ $DATA_DIR/analysis/<mission_id>/4d/
 $DATA_DIR/analysis/_benchmark/report.json
 $DATA_DIR/analysis/_benchmark/tracks-report.json
 $DATA_DIR/analysis/_benchmark/geometry-report.json
+$DATA_DIR/analysis/_benchmark/graph-report.json
 $DATA_DIR/hf-cache/   Hugging Face weights when HF_HOME is unset
 ```
 

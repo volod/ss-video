@@ -18,6 +18,7 @@ from selfsuvis.worker.handlers import (
     handle_finetune_job,
     handle_index_job,
     handle_postflight_mapping_job,
+    handle_postflight_scene_graph_job,
     handle_postflight_semantic_graph_job,
     handle_reembed_job,
 )
@@ -31,6 +32,7 @@ class JobType(str, Enum):
     REEMBED = "reembed"
     POSTFLIGHT_MAPPING = "postflight_mapping"
     POSTFLIGHT_SEMANTIC_GRAPH = "postflight_semantic_graph"
+    POSTFLIGHT_SCENE_GRAPH = "postflight_scene_graph"
 
 
 def _claim_next_job(pool) -> dict | None:
@@ -111,6 +113,10 @@ def main() -> None:
 
             if job_type == JobType.POSTFLIGHT_SEMANTIC_GRAPH:
                 handle_postflight_semantic_graph_job(job_id, payload, pool, logger)
+                continue
+
+            if job_type == JobType.POSTFLIGHT_SCENE_GRAPH:
+                handle_postflight_scene_graph_job(job_id, payload, pool, logger)
                 continue
 
             if job_type not in (None, JobType.INDEX):

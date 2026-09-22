@@ -12,7 +12,7 @@ Start with `make up` (compose files under `docker/core/`).
 | Path | Role |
 | --- | --- |
 | `src/selfsuvis/app/main.py` | FastAPI app assembly, lifespan services, security middleware |
-| `src/selfsuvis/app/routers/` | `admin`, `cvat`, `health`, `index`, `jobs`, `query`, `realtime`, `robot`, `scene`, `site` (`GET /site/cameras` only) |
+| `src/selfsuvis/app/routers/` | `admin`, `analysis4d`, `cvat`, `health`, `index`, `jobs`, `query`, `realtime`, `robot`, `scene`, `site` (`GET /site/cameras` only) |
 | `src/selfsuvis/app/services/` | `search`, `live_streams`, `camera_streams`, `realtime`, `upload_utils`, `form_templates` |
 | `src/selfsuvis/app/deps.py` | API-key auth (timing-safe compare), bounded rate limiting |
 | `selfsuvis.fusion_rt.app` (package `fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) `v0.2.0`) | fusion-rt FastAPI app: `/api/v1/*`, `/site/state`, `/site/threat`, `/site/synthesis`, `WS /site/stream` |
@@ -20,9 +20,10 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, and appearance |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, appearance, and the temporal scene graph |
 | `src/selfsuvis/pipeline/workflows/analysis4d_tracks.py` | Fast causal and deep forward/backward 4D track passes |
 | `src/selfsuvis/pipeline/workflows/analysis4d_geometry.py` | Back-projected geometry samples and masked appearance prototypes |
+| `src/selfsuvis/pipeline/workflows/analysis4d_graph.py` | Postflight temporal scene graph from tracks and geometry |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -40,7 +41,9 @@ Start with `make up` (compose files under `docker/core/`).
    (`POSTFLIGHT_MAPPING`, `POSTFLIGHT_SEMANTIC_GRAPH`) run 3D mapping and graphs.
 
 Job types: `INDEX`, `SUPERVISED_FINETUNE`, `REEMBED`, `POSTFLIGHT_MAPPING`,
-`POSTFLIGHT_SEMANTIC_GRAPH` -- one handler module per type under `worker/handlers/`. An accepted
+`POSTFLIGHT_SEMANTIC_GRAPH`, `POSTFLIGHT_SCENE_GRAPH` -- one handler module per type under
+`worker/handlers/`. `POSTFLIGHT_SCENE_GRAPH` reads an existing 4D artifact directory. It is
+not in the default mapping chain. An accepted
 fine-tuning checkpoint also gets a `model-artifact` manifest next to it
 ([manifests](data-config.md#manifests)).
 
@@ -222,6 +225,52 @@ The report is `$DATA_DIR/analysis/_benchmark/geometry-report.json`
 (`ss-video.geometry-benchmark.v1`). Pins, the synthetic camera, and the cache:
 [4D geometry runbook](../../runbooks/four-d-geometry.md). Record:
 [0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md).
+
+## Temporal scene graph
+
+`workflows/analysis4d_graph.py` `run_mission_graph` reads `tracks.jsonl` and
+`geometry/`, then appends `graph-deltas.jsonl`. Replaying those deltas in
+`(t_sec, delta_id)` order is the current graph. The worker job is
+`postflight_scene_graph`. It does not replace the YOLO semantic environment
+graph and it does not publish events to fusion-rt.
+
+Relation intervals are half-open. A predicate is written when it stops holding,
+or one second after the last sample when it holds through the end of the
+mission. Accepted edges use the deterministic predicates in the contract.
+Metric predicates (`distance_band`, `supports`, `contacts`) are omitted unless
+the manifest scale is `metric`. Identity links add a new node whose delta
+`supersedes` the earlier node. The earlier track file is not rewritten.
+
+The event reducer turns those edits into `entered_region`, `left_region`,
+`approached`, `put_down`, `picked_up`, and `count_changed`. Each accepted event
+points at the delta and a geometry sample.
+
+`pipeline/analysis4d/vlm.py` is the schema-constrained proposal adapter.
+`ANALYSIS4D_VLM_PROVIDER` defaults to `unavailable`. SmolVLM
+(`HuggingFaceTB/SmolVLM-256M-Instruct`) is optional. SceneGraphVLM training
+stays in ss-fusion. A missing model, a refusal, or malformed JSON records
+`provider_unavailable` and keeps the deterministic graph. Proposals stay in
+`proposals.jsonl` with status `uncertain`, `rejected`, or `corrected`. A
+correction sets `supersedes`. VLM claims are not accepted timeline events.
+
+Read routes, all API-key protected:
+
+- `GET /analysis/{mission_id}/4d/graph` with optional `t_sec`
+- `GET /analysis/{mission_id}/4d/deltas`
+- `GET /analysis/{mission_id}/4d/proposals`
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.graph_benchmark
+```
+
+The report is `$DATA_DIR/analysis/_benchmark/graph-report.json`
+(`ss-video.scene-graph-benchmark.v1`). On the pinned scene the deterministic
+relation precision is 1.0 and the YOLO semantic-graph baseline is 0.0, because
+that baseline emits undirected `near` edges without these predicates or
+intervals. An unavailable VLM still yields 19 accepted edges and
+`provider_unavailable`. Details:
+[temporal scene-graph runbook](../../runbooks/four-d-scene-graph.md). Record:
+[0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md).
 
 ## Design decisions
 

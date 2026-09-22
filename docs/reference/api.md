@@ -249,5 +249,32 @@ Stops a live stream runtime. With `{"delete_path": true}`, also deletes the Medi
 
 For deployment and publish examples, see [MediaMTX streaming](streaming-mediamtx.md).
 
+## Analysis routes
+
+Read routes for one mission's temporal scene graph. They require the API key.
+The files live under `$DATA_DIR/analysis/<mission_id>/4d/`. A missing manifest
+is HTTP 404. Timeline and Video-QA routes are not part of this surface.
+
+### `GET /analysis/{mission_id}/4d/graph`
+
+Returns the materialized graph: current nodes, superseded nodes, edges, and
+superseded delta ids.
+
+Query:
+
+- `t_sec` optional. When set, edges are those whose half-open interval contains
+  that time.
+
+### `GET /analysis/{mission_id}/4d/deltas`
+
+Returns the append-only graph log in `(t_sec, delta_id)` order.
+
+### `GET /analysis/{mission_id}/4d/proposals`
+
+Returns proposal rows, including uncertain, rejected, corrected, and superseded
+claims.
+
+Runbook: [temporal scene graph](../runbooks/four-d-scene-graph.md).
+
 ---
 [← Develop](../guide/develop.md) | [UI →](ui.md)

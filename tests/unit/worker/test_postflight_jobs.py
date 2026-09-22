@@ -143,3 +143,34 @@ def test_handle_postflight_semantic_graph_job_builds_graph_and_marks_done():
         )
 
     assert mark_finished.await_args.kwargs["status"] == "done"
+
+
+def test_handle_postflight_scene_graph_job_marks_done():
+    pool = FakePool(FakeConn())
+    logger = MagicMock()
+    mission = {"id": "m1"}
+    result = MagicMock(deltas=[1], proposals=[], events=[], degradations=["provider_unavailable"])
+
+    with (
+        patch.object(postflight_mod, "fetch_mission", new_callable=AsyncMock, return_value=mission),
+        patch(
+            "selfsuvis.pipeline.workflows.analysis4d_graph.run_mission_graph",
+            return_value=result,
+        ) as run_graph,
+        patch.object(postflight_mod, "update_job", new_callable=AsyncMock),
+        patch.object(
+            postflight_mod, "_enqueue_postflight_jobs", new_callable=AsyncMock, return_value=[]
+        ),
+        patch.object(
+            postflight_mod, "mark_mission_finished", new_callable=AsyncMock
+        ) as mark_finished,
+    ):
+        postflight_mod.handle_postflight_scene_graph_job(
+            "job-scene",
+            {"mission_id": "m1", "next_postflight_jobs": []},
+            pool,
+            logger,
+        )
+
+    run_graph.assert_called_once_with("m1")
+    assert mark_finished.await_args.kwargs["status"] == "done"

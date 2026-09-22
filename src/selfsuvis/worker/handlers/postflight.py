@@ -35,7 +35,11 @@ def _normalize_postflight_job_names(value) -> list[str]:
     return names
 
 
-_VALID_POSTFLIGHT_TYPES = {"postflight_mapping", "postflight_semantic_graph"}
+_VALID_POSTFLIGHT_TYPES = {
+    "postflight_mapping",
+    "postflight_semantic_graph",
+    "postflight_scene_graph",
+}
 
 
 async def _enqueue_postflight_jobs(conn, payload: dict, logger) -> list[str]:
@@ -469,3 +473,67 @@ def handle_postflight_semantic_graph_job(job_id: str, payload: dict, pool, logge
                     )
 
         _run(_mark_error())
+
+
+def handle_postflight_scene_graph_job(job_id: str, payload: dict, pool, logger) -> None:
+    """Reduce the mission 4D tracks and geometry into graph deltas."""
+    mission_id = payload.get("mission_id") or payload.get("video_id")
+    if not mission_id:
+        _update_job_sync(
+            pool,
+            job_id,
+            status="error",
+            error="postflight_scene_graph requires mission_id",
+            finished_at=time.time(),
+        )
+        return
+
+    try:
+
+        async def _load_mission():
+            async with pool.acquire() as conn:
+                return await fetch_mission(conn, mission_id)
+
+        mission = _run(_load_mission())
+        if mission is None:
+            raise LookupError(f"mission not found: {mission_id}")
+
+        from selfsuvis.pipeline.workflows.analysis4d_graph import run_mission_graph
+
+        result = run_mission_graph(mission_id)
+
+        async def _finish():
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    await _finalize_postflight_job_success(
+                        conn,
+                        job_id=job_id,
+                        mission_id=mission_id,
+                        payload=payload,
+                        progress={
+                            "mission_id": mission_id,
+                            "delta_count": len(result.deltas),
+                            "proposal_count": len(result.proposals),
+                            "event_count": len(result.events),
+                            "degradations": result.degradations,
+                        },
+                        logger=logger,
+                    )
+
+        _run(_finish())
+        logger.info("Post-flight scene graph job finished id=%s mission=%s", job_id, mission_id)
+    except Exception as exc:
+        logger.exception("Post-flight scene graph job failed id=%s error=%s", job_id, exc)
+        error_message = str(exc)
+
+        async def _mark_scene_error():
+            async with pool.acquire() as conn:
+                async with conn.transaction():
+                    await _finalize_postflight_job_error(
+                        conn,
+                        job_id=job_id,
+                        mission_id=mission_id,
+                        error=error_message,
+                    )
+
+        _run(_mark_scene_error())

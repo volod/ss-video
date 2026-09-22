@@ -196,6 +196,18 @@ an empty or rejected token fails
 `python -m selfsuvis.pipeline.analysis4d.geometry_benchmark`. The failure detail
 names `HF_TOKEN`. The token value is not written to logs or to the report.
 
+## 4D scene graph
+
+These overrides apply to `workflows/analysis4d_graph.py`. The predicates,
+intervals, and the pinned comparison are in the
+[temporal scene-graph runbook](../runbooks/four-d-scene-graph.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_VLM_PROVIDER` | `unavailable` | Proposal provider. `unavailable` keeps the deterministic graph and records `provider_unavailable`. `smolvlm` loads `HuggingFaceTB/SmolVLM-256M-Instruct`. |
+
+SceneGraphVLM training is not configured here. A remote VLM is not the default.
+
 ## Notes
 
 - If `ALLOWED_INDEX_PATHS` is empty, path-based indexing endpoints are disabled by design.

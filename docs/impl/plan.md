@@ -15,22 +15,6 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
 
-#### four-d-scene-graph
-
-The current semantic environment graph is a mission summary; it does not preserve temporal edge
-validity, graph edits, action intervals, or superseded identities.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#temporal-3d-scene-graph-and-narrative)
-- Agent status: RUN NEEDED
-- Research: yes
-- Dependencies: `four-d-spatial-reconstruction`. Blocks: `four-d-strict-verifier-and-qa`.
-- User-visible outcome: Operators can inspect how objects, relations, and actions evolved over time and trace every narrative event back to graph deltas and observations.
-- Scope boundary: Merge 2D tracks and eligible 3D geometry into append-only temporal nodes/edges, implement deterministic relations and event reduction, and integrate one schema-constrained compact VLM proposal provider; SceneGraphVLM-style SFT/GRPO training and dataset work remain in ss-fusion.
-- Data and artifact paths: `src/selfsuvis/pipeline/analysis4d/`, `src/selfsuvis/worker/handlers/`, `tests/assets/analysis4d/`, `$DATA_DIR/analysis/<mission_id>/4d/graph-deltas.jsonl`, and `$DATA_DIR/analysis/<mission_id>/4d/proposals.jsonl`.
-- Execution path: Add a postflight graph job and a causal graph reducer, materialize current state from graph deltas, serialize region/geometry/trajectory context for the selected VLM provider, and preserve proposed, corrected, rejected, and superseded claims.
-- Acceptance gates: `make test-unit`, `make test-ci`, and the pinned scene-graph benchmark pass; replaying deltas is deterministic, graph intervals and references are valid, deterministic relation precision improves over the current YOLO semantic-graph baseline, and an unavailable VLM yields a useful deterministic graph with an explicit degradation record.
-- Documentation target: [Production server](current/production-server.md), [API reference](../reference/api.md), and a new temporal scene-graph runbook.
-
 #### four-d-strict-verifier-and-qa
 
 No current gate prevents a VLM-proposed spatial relation or action from becoming unsupported

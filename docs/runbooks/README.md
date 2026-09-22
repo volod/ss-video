@@ -15,6 +15,7 @@ Operations runbooks for models used by the video indexer and for realtime pose s
 | [yolo-sam.md](yolo-sam.md) | YOLO11 + SAM2/3 |
 | [four-d-models.md](four-d-models.md) | 4D keyframes, Grounding DINO, and track propagation |
 | [four-d-geometry.md](four-d-geometry.md) | 4D depth, boxes, and masked appearance |
+| [four-d-scene-graph.md](four-d-scene-graph.md) | 4D temporal scene graph and proposals |
 
 Research-pipeline models (Gemma, Qwen, UniDrive, world-model, RF-DETR tracking) live in
 [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.

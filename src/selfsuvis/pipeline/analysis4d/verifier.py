@@ -13,6 +13,7 @@ from dataclasses import dataclass, field
 from pathlib import Path
 
 from selfsuvis.pipeline.analysis4d.geometry import relation_holds, velocity_feasible
+from selfsuvis.pipeline.analysis4d.graph import event_token
 from selfsuvis.pipeline.analysis4d.review import (
     ReviewDecision,
     ReviewError,
@@ -251,7 +252,7 @@ def count_events(
             continue
         stamp = proposal.start_sec or sample.t_sec
         millis = int(round(stamp * 1000))
-        event_id = f"evt-count-{label}-{millis:07d}"
+        event_id = f"evt-count-{event_token(label)}-{millis:07d}"
         if any(event.event_id == event_id for event in events):
             continue
         delta_ids = _node_deltas(deltas, participants)

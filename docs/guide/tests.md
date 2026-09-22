@@ -81,7 +81,9 @@ The geometry benchmark is `python -m selfsuvis.pipeline.analysis4d.geometry_benc
 ([4D geometry runbook](../runbooks/four-d-geometry.md)).
 The 15-minute profile load benchmark is `python -m selfsuvis.pipeline.analysis4d.profile_benchmark`
 ([profile orchestration runbook](../runbooks/four-d-profile-orchestration.md)).
-One video file is `python -m selfsuvis.pipeline.analysis4d.analyze VIDEO`.
+One video file is `python -m selfsuvis.pipeline.analysis4d.analyze VIDEO`. A
+free GPU slot writes geometry samples for kept keyframes. `metric_scale` stays
+`unavailable` without calibration.
 
 ## Integration test coverage
 - Health, index (video/url/dir), precheck, precheck_dir, jobs, query (image/text)

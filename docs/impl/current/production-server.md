@@ -198,12 +198,17 @@ weights. Model choice, budgets, and cache layout:
 `tracks.jsonl` and writes geometry samples plus masked appearance prototypes. It
 does not rewrite the track file. A depth provider that fails to load, or that
 returns no map, records `provider_unavailable` and leaves the 2D tracks in place.
-The worker does not call this pass yet.
+The fast profile calls `run_keyframe_geometry` when `dense_geometry` is admitted.
 
 Each sample is `ss-video.geometry-sample.v1`. `metric_scale` is `metric` only when
 the depth provider claims meters and the camera has a `calibration_id`. Relative
 depth stays `relative` even when the pose is metric. A missing pose or missing
-intrinsics is `unavailable`. Perspective Fields, when present, fills roll, pitch,
+intrinsics is `unavailable`. A keyframe that still has a depth map gets a box:
+`metric_scale` is `unavailable`, `calibration_id` is empty, and the numbers are
+camera rays with depth divided by its median. They are not meters and they stay
+out of the static cloud. The manifest `metric_scale` stays `unavailable` unless
+every sample is `metric` and shares one calibration id. Perspective Fields,
+when present, fills roll, pitch,
 and field of view. It does not invent metric scale or normals. The
 `perspective_fields` package is not installed on the reference host.
 
@@ -355,8 +360,26 @@ make analyze VIDEO=/path/to/video.mp4
 
 The command samples at 1 fps, prompts for `person` and `vehicle`, and writes
 `$DATA_DIR/analysis/<mission_id>/4d/` plus `summary.json` beside that directory.
-`--profile deep` runs the postflight revision. Region and count events stay
-empty until a geometry sample exists. Track rows are the reviewable result.
+`--profile deep` runs the postflight revision. When a GPU slot is free and the
+queue did not coalesce, kept keyframes are back-projected. Accepted count and
+region events cite those geometry files. Without calibration, `metric_scale`
+stays `unavailable`. A depth failure records `provider_unavailable` and keeps
+the tracks. Queue pressure sheds `dense_geometry`, keeps the tracks, and writes
+a `queue_coalesce` gap.
+
+Optional regions live in `$DATA_DIR/analysis/<mission_id>/regions.json`
+(`ss-video.region-boxes.v1`). `analyze` copies `<video-stem>.regions.json` from
+beside the video when that mission file is absent. A prompt may contain spaces.
+The event id replaces separators with hyphens. The summary keeps the prompt text.
+
+On this host a 4-second file at 1 fps wrote 8 geometry samples, all
+`metric_scale` `unavailable`, and 3 accepted count events that cite those
+files. Geometry degradations were `calibration_missing` and `pose_missing`.
+The scene graph and the strict verifier stayed `provider_unavailable` because
+those providers remain off. Cold-start real-time factor was about 3.6 because
+Grounding DINO and Depth Anything loaded inside the timed pass. The scheduler
+gate below is a separate scripted stream. Record:
+[0007-four-d-scene-analysis-four-d-keyframe-geometry](../records/0007-four-d-scene-analysis-four-d-keyframe-geometry.md).
 
 Job progress and `GET /analysis/{mission_id}/4d/status` expose profile, queue
 depth and capacity, degradations, backlog, and published event ids. The index

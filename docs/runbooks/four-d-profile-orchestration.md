@@ -87,12 +87,43 @@ records the CUDA device name from torch.
 ```
 
 Requires `ffmpeg`. Samples at 1 fps unless `--fps` is set. Prompts default to
-`person,vehicle`. The summary lists track labels and accepted events. Geometry
-samples are absent until the keyframe-geometry task lands, so a clip can finish
-with tracks and zero region events. That is a valid result. Artifacts:
+`person,vehicle`. The summary lists track labels, accepted events, geometry
+sample count, `metric_scale`, and degradations.
+
+A free GPU slot and a queue that did not coalesce run keyframe depth. Samples
+land in `geometry/`. Without a camera calibration id every sample is
+`metric_scale` `unavailable` and the manifest stays `unavailable`. The box is a
+camera ray with depth divided by its median. It is not meters. A depth load
+failure records `provider_unavailable` and keeps the tracks. A saturated queue
+sheds `dense_geometry` with `budget_shed`, keeps the tracks, and writes a
+`queue_coalesce` gap.
+
+Optional regions use `ss-video.region-boxes.v1`:
+
+```json
+{
+  "schema_version": "ss-video.region-boxes.v1",
+  "regions": [
+    {
+      "node_id": "region-yard",
+      "label": "yard",
+      "center_m": [0.0, 0.0, 1.0],
+      "extent_m": [4.0, 4.0, 4.0]
+    }
+  ]
+}
+```
+
+Place that file at `$DATA_DIR/analysis/<mission_id>/regions.json`, or as
+`<video-stem>.regions.json` beside the video. `analyze` copies the sibling file
+when the mission file is absent. A prompt may contain spaces. Event ids replace
+separators with hyphens. The summary keeps the prompt text.
+
+Artifacts:
 
 ```text
 $DATA_DIR/analysis/<mission_id>/summary.json
 $DATA_DIR/analysis/<mission_id>/4d/tracks.jsonl
 $DATA_DIR/analysis/<mission_id>/4d/timeline.json
+$DATA_DIR/analysis/<mission_id>/4d/geometry/
 ```

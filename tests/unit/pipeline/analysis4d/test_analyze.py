@@ -114,6 +114,7 @@ def test_analyze_video_writes_a_summary(tmp_path: Path) -> None:
         decoder=_decode,
         grounding=_scripted(hit),
         fixture_geometry=True,
+        slots=0,
         fps=1.0,
     )
     assert summary["mission_id"] == "mission-yard-clip"

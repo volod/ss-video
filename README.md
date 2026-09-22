@@ -53,10 +53,12 @@ make analyze VIDEO=/path/to/video.mp4
 .venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze /path/to/video.mp4
 ```
 
-Prints track labels, accepted events, and the artifact directory
-`$DATA_DIR/analysis/<mission_id>/4d/`. A copy of that summary is
+Prints track labels, accepted events, geometry sample count, and the artifact
+directory `$DATA_DIR/analysis/<mission_id>/4d/`. A copy of that summary is
 `$DATA_DIR/analysis/<mission_id>/summary.json`. Sampling defaults to 1 frame
-per second with prompts `person,vehicle`.
+per second with prompts `person,vehicle`. When a GPU slot is free, kept
+keyframes get depth-backed boxes. Without calibration, `metric_scale` stays
+`unavailable`.
 
 ```bash
 make analyze VIDEO=/path/to/video.mp4 ANALYZE_ARGS="--profile deep"

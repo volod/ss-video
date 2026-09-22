@@ -75,6 +75,24 @@ def test_perspective_fields_do_not_invent_metric_scale() -> None:
     assert resolve_scale("metric", camera) == "unavailable"
 
 
+def test_missing_calibration_keeps_depth_boxes_unavailable(tmp_path) -> None:
+    mission = "geometry-unscaled"
+    dest = tmp_path / "bundle"
+    _write_one_track(mission, dest)
+    result = run_mission_geometry(
+        mission,
+        [GeometryView(t_sec=0.0)],
+        dest=dest,
+        depth=ScriptedDepth(np.full((64, 96), 4.0), "metric"),
+    )
+    assert result.samples
+    assert {sample.metric_scale for sample in result.samples} == {"unavailable"}
+    assert all(sample.calibration_id is None for sample in result.samples)
+    bundle = validate_bundle(dest)
+    assert bundle.manifest.coordinate_frame.metric_scale == "unavailable"
+    assert bundle.manifest.coordinate_frame.calibration_id is None
+
+
 def test_metric_sample_requires_calibration() -> None:
     try:
         GeometrySample(
@@ -122,9 +140,7 @@ def test_axis_gate_keeps_a_box_and_drops_a_far_point() -> None:
     assert fitted.center_m[0] < 1.0
 
 
-def test_metric_calibration_is_stored_on_the_mission_frame(tmp_path) -> None:
-    mission = "geometry-metric"
-    dest = tmp_path / "bundle"
+def _write_one_track(mission: str, dest) -> None:
     write_profiles(
         mission,
         [FrameSignal(t_sec=0.0, embedding=(1.0, 0.0), drift=1.0)],
@@ -147,6 +163,12 @@ def test_metric_calibration_is_stored_on_the_mission_frame(tmp_path) -> None:
         profiles=("fast",),
         created_at="2026-01-15T00:00:00Z",
     )
+
+
+def test_metric_calibration_is_stored_on_the_mission_frame(tmp_path) -> None:
+    mission = "geometry-metric"
+    dest = tmp_path / "bundle"
+    _write_one_track(mission, dest)
     before = (dest / "tracks.jsonl").read_bytes()
     camera = camera_look_at(
         (0.0, -3.0, 1.4),

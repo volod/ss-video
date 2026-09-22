@@ -158,6 +158,15 @@ class HuggingFaceDepth:
         return self._loaded
 
 
+def pinned_relative_depth() -> HuggingFaceDepth:
+    """Return the pinned relative depth adapter.
+
+    Weights load on the first ``estimate`` call. The adapter does not relabel
+    a relative map as meters.
+    """
+    return HuggingFaceDepth(RELATIVE_DEPTH_ID, "relative", "depth_anything")
+
+
 class DinoAppearance:
     """Masked pool of the project's DINOv3 alias (DINOv2 with register tokens)."""
 

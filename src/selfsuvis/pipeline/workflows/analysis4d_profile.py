@@ -8,6 +8,7 @@ frames does not publish those events again.
 
 import json
 import math
+import re
 import shutil
 import time
 from collections.abc import Callable
@@ -23,6 +24,7 @@ from selfsuvis.pipeline.analysis4d.budget import (
 from selfsuvis.pipeline.analysis4d.graph import RegionBox, reduce_graph
 from selfsuvis.pipeline.analysis4d.io import (
     canonical_bytes,
+    load_json_object,
     read_jsonl,
     read_model,
     sha256_bytes,
@@ -67,6 +69,7 @@ from selfsuvis.pipeline.analysis4d.tracks import Observation, TrackerConfig
 from selfsuvis.pipeline.analysis4d.validate import validate_bundle
 from selfsuvis.pipeline.analysis4d.vlm import UnavailableVlm
 from selfsuvis.pipeline.core import get_logger
+from selfsuvis.pipeline.workflows.analysis4d_geometry import run_keyframe_geometry
 from selfsuvis.pipeline.workflows.analysis4d_graph import run_mission_graph
 from selfsuvis.pipeline.workflows.analysis4d_tracks import _load_grounding, _load_mask
 from selfsuvis.pipeline.workflows.analysis4d_verify import run_mission_verify
@@ -75,6 +78,8 @@ logger = get_logger(__name__)
 
 STATE_NAME = "orchestration-state.json"
 _QUAT = [0.0, 0.0, 0.0, 1.0]
+_REGION_SCHEMA = "ss-video.region-boxes.v1"
+_NODE_ID = re.compile(r"^[A-Za-z0-9][A-Za-z0-9_.:-]{0,127}$")
 _REGION = RegionBox(
     node_id="region-loading",
     label="loading-zone",
@@ -112,6 +117,7 @@ def run_fast_profile(
     prepare_geometry: Callable[[Path], None] | None = None,
     fixture_geometry: bool = False,
     regions: list[RegionBox] | None = None,
+    depth: object | None = None,
     duration_sec: float | None = None,
     capacity: int | None = None,
     slots: int | None = None,
@@ -125,9 +131,13 @@ def run_fast_profile(
         prompts: Grounding prompts.
         dest: Artifact directory. The default is the mission 4D directory.
         grounding: Keyframe detector. The default follows the pinned provider.
-        prepare_geometry: Optional dense-geometry callback. Skipped under pressure.
-        fixture_geometry: Write one box per track so the graph can emit events.
-        regions: Regions passed to the scene graph when fixture geometry is on.
+        prepare_geometry: Optional dense-geometry callback. Replaces the keyframe
+            depth pass. Skipped under pressure.
+        fixture_geometry: Write one box per track when the depth pass wrote none.
+        regions: Static regions. When omitted, ``regions.json`` beside the
+            artifact directory is used.
+        depth: Depth provider for kept keyframes. The default is the pinned
+            relative model, loaded only when ``dense_geometry`` is admitted.
         duration_sec: Media length used for the real-time factor. The default
             is the span of ``frames``.
         capacity: Queue capacity. The default is ``ANALYSIS4D_QUEUE_CAPACITY``.
@@ -150,12 +160,14 @@ def run_fast_profile(
 
     started = time.perf_counter()
     limit = capacity if capacity is not None else queue_capacity()
-    kept, spans, depth = _ingest(frames, limit, chunk_seconds())
+    kept, spans, depth_seen = _ingest(frames, limit, chunk_seconds())
+    owns_grounding = grounding is None
     provider = grounding if grounding is not None else _load_grounding(active_grounding())
     seed = selector_config()
+    used = kept or frames[:1]
     write_profiles(
         mission_id,
-        kept or frames[:1],
+        used,
         prompts,
         target,
         grounding=provider,
@@ -166,13 +178,18 @@ def run_fast_profile(
         created_at=_utc_now(),
         coordinate_frame=CoordinateFrame(name="mission_enu", metric_scale="unavailable"),
     )
+    if owns_grounding:
+        _drop_loaded_model(provider)
     gap_ids = _append_queue_gaps(target, mission_id, spans)
     budget = BudgetController(gpu_slots=slots if slots is not None else gpu_slots())
     pressure = bool(spans)
     degradations = _shed_under_pressure(budget, pressure)
-    if prepare_geometry is not None and budget.admit("dense_geometry", pressure=pressure):
+    if budget.admit("dense_geometry", pressure=pressure):
         try:
-            prepare_geometry(target)
+            if prepare_geometry is not None:
+                prepare_geometry(target)
+            else:
+                run_keyframe_geometry(mission_id, used, dest=target, depth=depth)
         except Exception:
             logger.warning("dense geometry failed mission=%s; tracks kept", mission_id)
             degradations.append(
@@ -184,7 +201,7 @@ def run_fast_profile(
             )
         finally:
             budget.release("dense_geometry")
-    if fixture_geometry:
+    if fixture_geometry and not _has_geometry(target):
         write_track_boxes(target, mission_id)
     reviewer = None
     proposal_provider = None
@@ -196,9 +213,7 @@ def run_fast_profile(
         reviewer = UnavailableReview()
     else:
         budget.release("review")
-    graph_regions = (
-        list(regions) if regions is not None else ([_REGION] if fixture_geometry else None)
-    )
+    graph_regions = _graph_regions(target, regions, fixture_geometry=fixture_geometry)
     run_mission_graph(
         mission_id,
         dest=target,
@@ -210,7 +225,7 @@ def run_fast_profile(
     media = _media_duration(frames, duration_sec)
     _append_stage(
         target,
-        queue_depth=depth,
+        queue_depth=depth_seen,
         skipped=sum(span.skipped_frames for span in spans),
         processed=len(kept),
         elapsed=elapsed,
@@ -233,7 +248,7 @@ def run_fast_profile(
         published_event_ids=published_ids(target),
         degradations=[item.code for item in degradations],
         backlog=list(budget.shed),
-        queue_depth=depth,
+        queue_depth=depth_seen,
         queue_capacity=limit,
         real_time_factor=factor,
         lags_sec=lags,
@@ -249,7 +264,7 @@ def run_fast_profile(
             "deep_done": False,
             "published_event_ids": run.published_event_ids,
             "backlog": run.backlog,
-            "queue_depth": depth,
+            "queue_depth": depth_seen,
             "queue_capacity": limit,
             "real_time_factor": factor,
             "lags_sec": lags,
@@ -263,7 +278,7 @@ def run_fast_profile(
         "fast profile mission=%s published=%d queue_depth=%d rtf=%.4f",
         mission_id,
         len(run.published_event_ids),
-        depth,
+        depth_seen,
         factor,
     )
     return run
@@ -277,6 +292,8 @@ def run_deep_profile(
     dest: Path | None = None,
     grounding: object | None = None,
     fixture_geometry: bool = False,
+    regions: list[RegionBox] | None = None,
+    depth: object | None = None,
     duration_sec: float | None = None,
     capacity: int | None = None,
     slots: int | None = None,
@@ -291,6 +308,8 @@ def run_deep_profile(
         dest: Artifact directory.
         grounding: Keyframe detector for both passes.
         fixture_geometry: Write track boxes before the graph runs.
+        regions: Static regions forwarded to the fast pass.
+        depth: Depth provider forwarded to the fast pass.
         duration_sec: Media length forwarded to the fast pass.
         capacity: Queue capacity forwarded to the fast pass.
         slots: GPU slots forwarded to the fast pass.
@@ -311,6 +330,8 @@ def run_deep_profile(
         dest=target,
         grounding=grounding,
         fixture_geometry=fixture_geometry,
+        regions=regions,
+        depth=depth,
         duration_sec=duration_sec,
         capacity=capacity,
         slots=slots,
@@ -389,6 +410,41 @@ def read_profile_status(mission_id: str, dest: Path | None = None) -> dict:
         "supersedes_sha256": manifest.supersedes_sha256,
         "real_time_factor": state.get("real_time_factor"),
     }
+
+
+def load_region_boxes(dest: Path) -> list[RegionBox]:
+    """Read optional region boxes for a mission directory.
+
+    Args:
+        dest: The 4D artifact directory. The file is ``regions.json`` in that
+            directory or in its parent.
+
+    Returns:
+        Parsed boxes. A missing or unreadable file returns an empty list.
+    """
+    path = _region_file(dest)
+    if path is None:
+        return []
+    try:
+        payload = load_json_object(path)
+    except (OSError, ValueError):
+        logger.warning("region file ignored path=%s", path)
+        return []
+    if payload.get("schema_version") != _REGION_SCHEMA:
+        logger.warning("region file schema ignored path=%s", path)
+        return []
+    rows = payload.get("regions")
+    if not isinstance(rows, list):
+        return []
+    boxes: list[RegionBox] = []
+    seen: set[str] = set()
+    for row in rows:
+        box = _region_box(row)
+        if box is None or box.node_id in seen:
+            continue
+        seen.add(box.node_id)
+        boxes.append(box)
+    return boxes
 
 
 def write_track_boxes(dest: Path, mission_id: str) -> None:
@@ -780,3 +836,76 @@ def _load_geometry(dest: Path) -> list[GeometrySample]:
 
 def _utc_now() -> str:
     return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
+
+
+def _graph_regions(
+    dest: Path, regions: list[RegionBox] | None, *, fixture_geometry: bool
+) -> list[RegionBox] | None:
+    if regions is not None:
+        return list(regions)
+    loaded = load_region_boxes(dest)
+    if loaded:
+        return loaded
+    if fixture_geometry:
+        return [_REGION]
+    return None
+
+
+def _region_file(dest: Path) -> Path | None:
+    for path in (dest.parent / "regions.json", dest / "regions.json"):
+        if path.is_file():
+            return path
+    return None
+
+
+def _region_box(row: object) -> RegionBox | None:
+    if not isinstance(row, dict):
+        return None
+    node_id = row.get("node_id")
+    label = row.get("label")
+    if not isinstance(node_id, str) or _NODE_ID.fullmatch(node_id) is None:
+        return None
+    if not isinstance(label, str) or not label.strip():
+        return None
+    center = _vec3(row.get("center_m"))
+    extent = _vec3(row.get("extent_m"), positive=True)
+    if center is None or extent is None:
+        return None
+    return RegionBox(node_id=node_id, label=label.strip(), center_m=center, extent_m=extent)
+
+
+def _vec3(value: object, *, positive: bool = False) -> list[float] | None:
+    if not isinstance(value, list) or len(value) != 3:
+        return None
+    numbers: list[float] = []
+    for item in value:
+        if isinstance(item, bool) or not isinstance(item, (int, float)):
+            return None
+        number = float(item)
+        if not math.isfinite(number):
+            return None
+        if positive and number <= 0:
+            return None
+        numbers.append(number)
+    return numbers
+
+
+def _has_geometry(dest: Path) -> bool:
+    root = dest / "geometry"
+    return root.is_dir() and any(root.rglob("*.json"))
+
+
+def _drop_loaded_model(provider: object) -> None:
+    """Drop lazily loaded weights so the depth pass can use the GPU."""
+    if getattr(provider, "_loaded", None) is None:
+        return
+    setattr(provider, "_loaded", None)
+    import gc
+
+    gc.collect()
+    try:
+        import torch
+    except ImportError:
+        return
+    if torch.cuda.is_available():
+        torch.cuda.empty_cache()

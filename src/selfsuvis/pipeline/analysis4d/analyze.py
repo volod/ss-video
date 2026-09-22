@@ -14,7 +14,7 @@ from pathlib import Path
 from selfsuvis.pipeline.analysis4d.io import read_jsonl, read_model, write_bytes
 from selfsuvis.pipeline.analysis4d.profile import default_prompts, normalize_profile
 from selfsuvis.pipeline.analysis4d.providers import Prompt
-from selfsuvis.pipeline.analysis4d.schemas import SceneTimeline, TrackRecord
+from selfsuvis.pipeline.analysis4d.schemas import AnalysisManifest, SceneTimeline, TrackRecord
 from selfsuvis.pipeline.analysis4d.signals import signals_from_paths
 from selfsuvis.pipeline.core import get_logger, settings
 from selfsuvis.pipeline.workflows.analysis4d_profile import run_deep_profile, run_fast_profile
@@ -84,6 +84,7 @@ def analyze_video(
     decoder: Callable[[Path, Path, float], list[tuple[float, str]]] | None = None,
     grounding: object | None = None,
     fixture_geometry: bool = False,
+    slots: int | None = None,
 ) -> dict:
     """Sample ``video`` and run one 4D profile.
 
@@ -97,6 +98,7 @@ def analyze_video(
         decoder: Replacement for ffmpeg. It receives ``(video, frame_dir, fps)``.
         grounding: Detector. The default is the pinned grounding provider.
         fixture_geometry: Write synthetic boxes. Leave this false for a real file.
+        slots: GPU slots for optional stages. The default is ``ANALYSIS4D_GPU_SLOTS``.
 
     Returns:
         A summary of frames, tracks, accepted events, and artifact paths.
@@ -121,11 +123,13 @@ def analyze_video(
         raise ValueError(f"no frames decoded from {source}")
     frames = signals_from_paths(samples)
     active_prompts = list(prompts) if prompts is not None else default_prompts()
+    _install_regions(source, target.parent)
     kwargs = {
         "dest": target,
         "grounding": grounding,
         "fixture_geometry": fixture_geometry,
         "duration_sec": max(frames[-1].t_sec, 1.0 / max(fps, 0.1)),
+        "slots": slots,
     }
     if chosen == "deep":
         run_deep_profile(mission, frames, active_prompts, **kwargs)
@@ -174,6 +178,11 @@ def _summary(mission_id: str, profile: str, dest: Path, *, frame_count: int) -> 
         ]
     geometry = dest / "geometry"
     geometry_count = len(list(geometry.rglob("*.json"))) if geometry.is_dir() else 0
+    manifest = (
+        read_model(dest / "manifest.json", AnalysisManifest)
+        if (dest / "manifest.json").is_file()
+        else None
+    )
     return {
         "schema_version": SUMMARY_SCHEMA,
         "mission_id": mission_id,
@@ -185,6 +194,14 @@ def _summary(mission_id: str, profile: str, dest: Path, *, frame_count: int) -> 
         "accepted_event_count": len(accepted),
         "accepted_events": accepted,
         "geometry_samples": geometry_count,
+        "metric_scale": (
+            manifest.coordinate_frame.metric_scale if manifest is not None else "unavailable"
+        ),
+        "degradations": (
+            [f"{item.stage}:{item.code}" for item in manifest.degradations]
+            if manifest is not None
+            else []
+        ),
         "artifact_dir": str(dest),
         "timeline_path": str(dest / "timeline.json"),
         "tracks_path": str(dest / "tracks.jsonl"),
@@ -199,6 +216,8 @@ def _print_summary(summary: dict) -> None:
     print(f"labels={json.dumps(summary['labels'], sort_keys=True)}")
     print(f"accepted_events={summary['accepted_event_count']}")
     print(f"geometry_samples={summary['geometry_samples']}")
+    print(f"metric_scale={summary['metric_scale']}")
+    print(f"degradations={json.dumps(summary['degradations'])}")
     for event in summary["accepted_events"][:20]:
         print(
             f"event {event['event_id']} type={event['type']} "
@@ -206,6 +225,16 @@ def _print_summary(summary: dict) -> None:
         )
     print(f"artifacts={summary['artifact_dir']}")
     print(f"summary={summary['summary_path']}")
+
+
+def _install_regions(video: Path, mission_root: Path) -> None:
+    """Copy ``<video-stem>.regions.json`` next to the mission artifacts."""
+    source = video.with_name(video.stem + ".regions.json")
+    target = mission_root / "regions.json"
+    if not source.is_file() or target.exists():
+        return
+    target.parent.mkdir(parents=True, exist_ok=True)
+    target.write_bytes(source.read_bytes())
 
 
 def main() -> None:

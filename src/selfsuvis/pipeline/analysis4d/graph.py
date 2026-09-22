@@ -32,6 +32,13 @@ _ACTIVE = frozenset({"tentative", "confirmed", "occluded"})
 _APPROACH_M = 2.0
 
 
+def event_token(value: str) -> str:
+    """Return a contract id token. Separators in ``value`` become hyphens."""
+    cleaned = "".join(char if char.isalnum() else "-" for char in value.lower())
+    token = "-".join(part for part in cleaned.split("-") if part)
+    return (token or "label")[:64]
+
+
 @dataclass(frozen=True)
 class RegionBox:
     """Static region the reducer can write when the mission has no region sample yet."""
@@ -627,7 +634,7 @@ def _counts(
             ]
             events.append(
                 TimelineEvent(
-                    event_id=f"evt-count-{label}-{int(round(stamp * 1000)):07d}",
+                    event_id=f"evt-count-{event_token(label)}-{int(round(stamp * 1000)):07d}",
                     type="count_changed",
                     summary=f"{label} count changed to {len(current)}",
                     start_sec=stamp,

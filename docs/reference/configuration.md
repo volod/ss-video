@@ -242,7 +242,9 @@ The queue, publication, and the 15-minute gate are in the
 | `ANALYSIS4D_PROMPTS` | `object` | Comma-separated prompts for a worker profile run. |
 
 `ANALYSIS4D_VLM_PROVIDER` and `ANALYSIS4D_REVIEW_PROVIDER` stay `unavailable`
-unless an operator sets them. A remote model is not the default.
+unless an operator sets them. A remote model is not the default. A free GPU
+slot runs keyframe depth on the fast profile. Optional region boxes are
+`$DATA_DIR/analysis/<mission_id>/regions.json` (`ss-video.region-boxes.v1`).
 
 ## Notes
 

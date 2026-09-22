@@ -1,8 +1,9 @@
 """Write 3D observations for an existing 2D track bundle.
 
 A depth-provider failure records a degradation and leaves ``tracks.jsonl``
-unchanged. Relative depth is not stored as metric. Dynamic points stay out of
-the static cloud.
+unchanged. Relative depth is not stored as metric. A depth map without pose
+or intrinsics is stored with ``metric_scale`` ``unavailable`` and is left out
+of the static cloud. Dynamic points stay out of the static cloud.
 """
 
 import math
@@ -17,7 +18,11 @@ from selfsuvis.pipeline.analysis4d.camera import (
     apply_perspective_fields,
     resolve_scale,
 )
-from selfsuvis.pipeline.analysis4d.geometry_providers import DepthMap, GeometryView
+from selfsuvis.pipeline.analysis4d.geometry_providers import (
+    DepthMap,
+    GeometryView,
+    pinned_relative_depth,
+)
 from selfsuvis.pipeline.analysis4d.io import (
     canonical_bytes,
     read_jsonl,
@@ -25,6 +30,7 @@ from selfsuvis.pipeline.analysis4d.io import (
     sha256_bytes,
     write_bytes,
 )
+from selfsuvis.pipeline.analysis4d.keyframes import FrameSignal
 from selfsuvis.pipeline.analysis4d.paths import analysis_dir
 from selfsuvis.pipeline.analysis4d.reconstruct import (
     StaticCloud,
@@ -44,9 +50,11 @@ from selfsuvis.pipeline.analysis4d.schemas import (
     GeometrySample,
     SceneTimeline,
     StageReport,
+    TrackAudit,
     TrackEmbedding,
     TrackRecord,
 )
+from selfsuvis.pipeline.analysis4d.signals import load_rgb
 from selfsuvis.pipeline.analysis4d.store import AnalysisStore
 from selfsuvis.pipeline.core import get_logger
 
@@ -136,6 +144,39 @@ def run_mission_geometry(
     )
 
 
+def run_keyframe_geometry(
+    mission_id: str,
+    frames: list[FrameSignal],
+    *,
+    dest: Path,
+    depth: object | None = None,
+) -> GeometryResult:
+    """Back-project kept keyframes that already have 2D tracks.
+
+    Args:
+        mission_id: Mission whose tracks and ``track-audit.json`` already exist.
+        frames: Frames the fast pass kept. ``FrameSignal.image`` is a path.
+        dest: Artifact directory.
+        depth: Depth provider. The default is the pinned relative model.
+
+    Returns:
+        Written samples. Missing calibration stays ``unavailable``.
+    """
+    target = Path(dest)
+    provider = depth if depth is not None else pinned_relative_depth()
+    views: list[GeometryView] = []
+    if not getattr(provider, "failed", False):
+        wanted = _track_stamps(target)
+        views = [view for view in _keyframe_views(frames, target) if _stamp(view.t_sec) in wanted]
+    logger.info(
+        "keyframe geometry mission=%s views=%d depth=%s",
+        mission_id,
+        len(views),
+        getattr(provider, "provider_id", "depth"),
+    )
+    return run_mission_geometry(mission_id, views, dest=target, depth=_CachedDepth(provider))
+
+
 def _reconstruct(
     mission_id: str,
     records: list[TrackRecord],
@@ -169,7 +210,17 @@ def _reconstruct(
                 continue
             attempted += 1
             camera, depth_map, scale = _observe(view, depth, calibration, flags)
-            if camera is None or depth_map is None or scale == "unavailable":
+            if depth_map is None:
+                continue
+            if scale == "unavailable":
+                sample = _unavailable_sample(
+                    mission_id, frame_name, record, depth_map, dynamic=dynamic
+                )
+                if sample is not None:
+                    samples.append(sample)
+                    produced += 1
+                continue
+            if camera is None:
                 continue
             mask = (
                 view.mask
@@ -253,6 +304,147 @@ def _observe(
             "pose_missing" if camera is None or not camera.pose_known else "calibration_missing"
         )
     return camera, depth_map, scale
+
+
+def _keyframe_views(frames: list[FrameSignal], dest: Path) -> list[GeometryView]:
+    """Open images for audit keyframes. Other kept frames stay 2D."""
+    wanted = _audit_stamps(dest)
+    if not wanted:
+        wanted = {_stamp(frame.t_sec) for frame in frames if frame.image is not None}
+    views: list[GeometryView] = []
+    seen: set[float] = set()
+    for frame in frames:
+        stamp = _stamp(frame.t_sec)
+        if stamp not in wanted or stamp in seen or frame.image is None:
+            continue
+        image = load_rgb(frame.image)
+        if image is None:
+            continue
+        seen.add(stamp)
+        views.append(GeometryView(t_sec=frame.t_sec, image=image))
+    return views
+
+
+class _CachedDepth:
+    """Estimate each timestamp once. Several tracks can share one depth map."""
+
+    def __init__(self, inner: object):
+        self._inner = inner
+        self._cache: dict[float, DepthMap | None] = {}
+        self.failed = bool(getattr(inner, "failed", False))
+        self.scale = getattr(inner, "scale", "relative")
+        self.provider_id = getattr(inner, "provider_id", "depth")
+
+    def estimate(self, view: GeometryView) -> DepthMap | None:
+        if self.failed:
+            return None
+        stamp = _stamp(view.t_sec)
+        if stamp not in self._cache:
+            estimate = getattr(self._inner, "estimate", None)
+            try:
+                self._cache[stamp] = None if estimate is None else estimate(view)
+            except Exception:
+                logger.warning("depth estimate failed at t=%s", stamp)
+                self._cache[stamp] = None
+            self.failed = bool(getattr(self._inner, "failed", False))
+            self.scale = getattr(self._inner, "scale", self.scale)
+        return self._cache[stamp]
+
+
+def _track_stamps(dest: Path) -> set[float]:
+    path = dest / "tracks.jsonl"
+    if not path.is_file():
+        return set()
+    return {_stamp(row.t_sec) for row in read_jsonl(path, TrackRecord) if row.state in _ACTIVE}
+
+
+def _audit_stamps(dest: Path) -> set[float]:
+    path = dest / "track-audit.json"
+    if not path.is_file():
+        return set()
+    audit = read_model(path, TrackAudit)
+    return {_stamp(note.t_sec) for note in audit.keyframes}
+
+
+def _unavailable_sample(
+    mission_id: str,
+    frame_name: str,
+    record: TrackRecord,
+    depth_map: DepthMap,
+    *,
+    dynamic: bool,
+) -> GeometrySample | None:
+    """Fit a depth-backed box and label it unavailable.
+
+    Rays use a nominal pinhole whose focal length is the longer depth-map
+    side. Depth is divided by its median so the typical value is 1. Neither
+    step is a calibration, and the sample carries no ``calibration_id``.
+    """
+    values = np.asarray(depth_map.values, dtype=np.float64)
+    if values.ndim != 2:
+        return None
+    scaled = _unit_median_depth(values)
+    if scaled is None:
+        return None
+    height, width = scaled.shape
+    camera = _ray_camera(width, height)
+    mask = _mask_from_box(record.box.xywh_norm, width, height)
+    points, _pixels, z = backproject_mask(scaled, mask, camera)
+    if len(points) == 0:
+        return None
+    fitted = fit_gravity_box(points, metric_scale="unavailable", dynamic=dynamic)
+    if fitted is None:
+        return None
+    finite_z = z[np.isfinite(z)]
+    depth_value = float(np.median(finite_z)) if finite_z.size else None
+    millis = int(round(record.t_sec * 1000))
+    return GeometrySample(
+        schema_version=SCHEMA_GEOMETRY,
+        mission_id=mission_id,
+        sample_id=f"geo-{record.track_id}-{millis:07d}",
+        subject_id=record.track_id,
+        t_sec=record.t_sec,
+        frame=frame_name,
+        center_m=[float(value) for value in fitted.center_m],
+        extent_m=[float(value) for value in fitted.extent_m],
+        quaternion_xyzw=[float(value) for value in fitted.quaternion_xyzw],
+        depth_m=depth_value,
+        metric_scale="unavailable",
+        calibration_id=None,
+        covariance_diag=[float(value) for value in fitted.covariance_diag],
+        residual_m=float(fitted.residual_m),
+        observation_count=fitted.observation_count,
+        scale_confidence=0.0,
+        dynamic=bool(fitted.dynamic),
+    )
+
+
+def _unit_median_depth(values: np.ndarray) -> np.ndarray | None:
+    finite = values[np.isfinite(values) & (values > 1e-6)]
+    if finite.size < 12:
+        return None
+    median = float(np.median(finite))
+    if median <= 0:
+        return None
+    return np.where(np.isfinite(values) & (values > 1e-6), values / median, np.nan)
+
+
+def _ray_camera(width: int, height: int) -> CameraModel:
+    """Origin pinhole used only to turn pixels into rays. Not a mission pose."""
+    focal = float(max(width, height, 2))
+    return CameraModel(
+        width=width,
+        height=height,
+        fx=focal,
+        fy=focal,
+        cx=(width - 1) * 0.5,
+        cy=(height - 1) * 0.5,
+        rotation_cam_from_world=np.eye(3),
+        translation_cam_from_world=np.zeros(3),
+        pose_known=True,
+        metric_alignment=False,
+        calibration_id=None,
+    )
 
 
 def _sample(
@@ -498,8 +690,8 @@ def _image_size(view: GeometryView, camera: CameraModel | None) -> tuple[int, in
 def _detail(code: str) -> str:
     return {
         "provider_unavailable": "depth provider returned no map; 2D tracks were kept",
-        "calibration_missing": "intrinsics or calibration id missing",
-        "pose_missing": "camera pose missing; no mission-frame box was written",
+        "calibration_missing": "intrinsics or calibration id missing; scale stays unavailable",
+        "pose_missing": "camera pose missing; scale stays unavailable",
         "metric_scale_missing": "metric depth was kept relative because calibration is incomplete",
         "relative_depth_only": "depth has no metric alignment",
         "empty_scene": "no valid depth pixels inside the track",

@@ -28,8 +28,10 @@ Index a single video from:
 Form fields:
 
 - `enable_tiles=true|false`
+- `analysis_profile=off|fast|deep` (optional; omitted uses `ANALYSIS4D_PROFILE`, default `off`)
 
-Returns `{"video_id", "job_id"}`.
+Returns `{"video_id", "job_id"}`. The same optional `analysis_profile` field is
+accepted by `POST /index/url`, `POST /index/dir`, and `POST /index/rtsp`.
 
 ### `POST /index/url`
 
@@ -255,6 +257,12 @@ Read routes for one mission's temporal scene graph, verified timeline, and
 Video-QA. They require the API key. The files live under
 `$DATA_DIR/analysis/<mission_id>/4d/`. A missing manifest is HTTP 404.
 
+### `GET /analysis/{mission_id}/4d/status`
+
+Returns the selected profile, queue depth and capacity, stage degradations,
+optional-stage backlog, published event ids, and the manifest supersession
+digest. A missing manifest is HTTP 404 with `analysis profile not found`.
+
 ### `GET /analysis/{mission_id}/4d/graph`
 
 Returns the materialized graph: current nodes, superseded nodes, edges, and
@@ -291,7 +299,8 @@ geometry or mask files it cites. Omitting both is HTTP 400. An unknown id
 is HTTP 404.
 
 Runbooks: [temporal scene graph](../runbooks/four-d-scene-graph.md),
-[strict verifier and Video-QA](../runbooks/four-d-strict-verifier.md).
+[strict verifier and Video-QA](../runbooks/four-d-strict-verifier.md),
+[profile orchestration](../runbooks/four-d-profile-orchestration.md).
 
 ---
 [← Develop](../guide/develop.md) | [UI →](ui.md)

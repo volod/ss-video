@@ -10,5 +10,6 @@ Copy the [template](template.md) using the
 | 0003 | `four-d-spatial-reconstruction` | [0003-four-d-scene-analysis-four-d-spatial-reconstruction](0003-four-d-scene-analysis-four-d-spatial-reconstruction.md) |
 | 0004 | `four-d-scene-graph` | [0004-four-d-scene-analysis-four-d-scene-graph](0004-four-d-scene-analysis-four-d-scene-graph.md) |
 | 0005 | `four-d-strict-verifier-and-qa` | [0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md) |
+| 0006 | `four-d-profile-orchestration` | [0006-four-d-scene-analysis-four-d-profile-orchestration](0006-four-d-scene-analysis-four-d-profile-orchestration.md) |
 
-Next unused sequence: `0006`.
+Next unused sequence: `0007`.

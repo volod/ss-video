@@ -41,6 +41,7 @@ DegradationCode = Literal[
     "relative_depth_only",
     "empty_scene",
     "provider_unavailable",
+    "budget_shed",
 ]
 
 DETERMINISTIC_PREDICATES = frozenset(

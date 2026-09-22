@@ -17,14 +17,15 @@ Start with `make up` (compose files under `docker/core/`).
 | `src/selfsuvis/app/deps.py` | API-key auth (timing-safe compare), bounded rate limiting |
 | `selfsuvis.fusion_rt.app` (package `fusion-rt` from [volod/ss-fusion](https://github.com/volod/ss-fusion) `v0.2.0`) | fusion-rt FastAPI app: `/api/v1/*`, `/site/state`, `/site/threat`, `/site/synthesis`, `WS /site/stream` |
 | `src/selfsuvis/worker/` | Job consumer; `gpu.py` advisory GPU semaphore; `_run.py` persistent event loop |
-| `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight` job handlers |
+| `src/selfsuvis/worker/handlers/` | `index`, `finetune`, `reembed`, `postflight`, `analysis4d` job handlers |
 | `src/selfsuvis/ui/` | Streamlit app (`app.py`, `pages/`, `components/`) |
 | `src/selfsuvis/pipeline/` | Video remainder: workflows, realtime, ICP mapper, video media/storage |
-| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, appearance, the temporal scene graph, and the strict verifier |
+| `src/selfsuvis/pipeline/analysis4d/` | Versioned 4D contracts, keyframes, tracks, depth, appearance, the temporal scene graph, the strict verifier, and profile admission |
 | `src/selfsuvis/pipeline/workflows/analysis4d_tracks.py` | Fast causal and deep forward/backward 4D track passes |
 | `src/selfsuvis/pipeline/workflows/analysis4d_geometry.py` | Back-projected geometry samples and masked appearance prototypes |
 | `src/selfsuvis/pipeline/workflows/analysis4d_graph.py` | Postflight temporal scene graph from tracks and geometry |
 | `src/selfsuvis/pipeline/workflows/analysis4d_verify.py` | Strict verifier and graph-program Video-QA |
+| `src/selfsuvis/pipeline/workflows/analysis4d_profile.py` | Fast and deep profile orchestration, restart replay, and verified-event publication |
 | [volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0` | Perception, mapping, research pipeline, fusion-rt |
 | `src/selfsuvis/realtime/` | SLAM/pose bridge runtime + adapters (`pose`, `occupancy`, `registry`) |
 | `src/selfsuvis/mapper/` | ICP fusion service (separate container, no GPU) |
@@ -42,9 +43,11 @@ Start with `make up` (compose files under `docker/core/`).
    (`POSTFLIGHT_MAPPING`, `POSTFLIGHT_SEMANTIC_GRAPH`) run 3D mapping and graphs.
 
 Job types: `INDEX`, `SUPERVISED_FINETUNE`, `REEMBED`, `POSTFLIGHT_MAPPING`,
-`POSTFLIGHT_SEMANTIC_GRAPH`, `POSTFLIGHT_SCENE_GRAPH` -- one handler module per type under
-`worker/handlers/`. `POSTFLIGHT_SCENE_GRAPH` reads an existing 4D artifact directory. It is
-not in the default mapping chain. An accepted
+`POSTFLIGHT_SEMANTIC_GRAPH`, `POSTFLIGHT_SCENE_GRAPH`, `POSTFLIGHT_STRICT_VERIFIER`,
+`ANALYSIS4D_FAST`, `POSTFLIGHT_ANALYSIS4D_DEEP` -- one handler module per type under
+`worker/handlers/`. The 4D jobs read an existing mission. They are not in the default
+mapping chain. `ANALYSIS4D_PROFILE` defaults to `off`, so indexing does not enqueue them.
+An accepted
 fine-tuning checkpoint also gets a `model-artifact` manifest next to it
 ([manifests](data-config.md#manifests)).
 
@@ -130,8 +133,10 @@ Details: `docs/reference/configuration.md` (security section).
 ## Four-dimensional analysis contracts
 
 Internal schemas for persistent tracks, graph deltas, proposals, verified timelines, and
-spatial QA live in `pipeline/analysis4d/`. They are not an ss-common ODCS contract and
-are not published to fusion-rt. Artifact files stay under
+spatial QA live in `pipeline/analysis4d/`. Those files are not ss-common contracts.
+Accepted events are published separately: the payload is the ODCS contract
+`verified-scene-event` 1.0.0 (`contracts/odcs/verified-scene-event.odcs.yaml`) inside an
+ss-common `event-envelope` 1.0.0. Fusion-rt correlation rules are unchanged. Artifact files stay under
 `$DATA_DIR/analysis/<mission_id>/4d/` (`worker/artifacts.py` `analysis_artifact_dir`).
 JSONL streams are append-only. `timeline.json` and `manifest.json` are replaced only
 when the new file names the previous digest in `supersedes_sha256`; the previous file
@@ -151,8 +156,8 @@ It scores the pinned corpus `analysis4d-v1` under `tests/assets/analysis4d/` and
 `$DATA_DIR/analysis/_benchmark/report.json` (`ss-video.analysis4d-benchmark.v1`). An empty
 verified timeline (no events, QA pairs, or tracks) is a valid result. Tracking scores are
 single-threshold HOTA and majority-vote IDF1 on the fixtures, not a TrackEval run. The
-report's real-time factor and peak VRAM describe this contract runner; the 15-minute
-fast-profile gate belongs to a later task. Record:
+report's real-time factor and peak VRAM describe this contract runner. The 15-minute
+fast-profile gate is the profile load benchmark below. Record:
 [0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md).
 
 ## Four-dimensional keyframes and tracks
@@ -314,6 +319,54 @@ false acceptance is 0.0. Deep-profile relation precision on the pinned scene
 is 1.0. Every accepted event and answer cites evidence. Details:
 [strict verifier runbook](../../runbooks/four-d-strict-verifier.md). Record:
 [0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md).
+
+## Profile orchestration
+
+`workflows/analysis4d_profile.py` runs the causal fast profile and the postflight
+deep profile. The default profile is `off`. Indexing then follows the video-search
+path and does not enqueue a 4D job. `fast` enqueues `analysis4d_fast`. `deep`
+enqueues `analysis4d_fast` and then `postflight_analysis4d_deep`.
+
+The fast pass drains a bounded queue at each chunk boundary. Timestamps stay in
+order. A coalesced frame becomes a gap record (`queue_coalesce`). Track continuity
+always runs. `dense_geometry`, `vlm`, and `review` are shed when the queue is under
+pressure or `ANALYSIS4D_GPU_SLOTS` is 0. Those stages record `budget_shed`. The
+default VLM and review providers stay `unavailable`. A remote VLM is not enabled.
+
+Only `accepted` timeline rows are published. The ledger is
+`published-events.jsonl`. Each line is an `event-envelope` 1.0.0 whose payload
+validates as `verified-scene-event` 1.0.0. The modality is `video_4d`, which does
+not match the default fusion camera-and-audio rules, so no fusion rule was added.
+A repeated event id is not appended again.
+
+`orchestration-state.json` stores the input digest. The same digest with
+`fast_done` or `deep_done` returns the previous result. Deep does not overwrite
+the fast timeline: fast event ids remain, new deep events set `supersedes`, and
+`manifest.json` names the fast digest in `supersedes_sha256`. The previous
+manifest is copied under `history/`.
+
+Job progress and `GET /analysis/{mission_id}/4d/status` expose profile, queue
+depth and capacity, degradations, backlog, and published event ids. The index
+form and the Streamlit index page send `analysis_profile` (`off`, `fast`, or
+`deep`).
+
+Lag for the load gate is the chunk's compute time divided by the number of
+accepted fast events of the configured types (`entered_region`, `left_region`,
+`count_changed`). Real-time factor is elapsed compute divided by media duration.
+
+```bash
+python -m selfsuvis.pipeline.analysis4d.profile_benchmark
+```
+
+The report is `$DATA_DIR/analysis/_benchmark/profile-report.json`
+(`ss-video.profile-benchmark.v1`). The fixture is a 15-minute scripted stream
+so the scheduler, gaps, replay, and supersession are what the gate measures.
+On this host the reference device is `NVIDIA GeForce RTX 4060 Ti`, real-time
+factor is below 1.0, p95 lag is below 3 seconds, and queue depth stays at the
+configured capacity. Details:
+[profile orchestration runbook](../../runbooks/four-d-profile-orchestration.md).
+Record:
+[0006-four-d-scene-analysis-four-d-profile-orchestration](../records/0006-four-d-scene-analysis-four-d-profile-orchestration.md).
 
 ## Design decisions
 

@@ -98,6 +98,16 @@ DRONE_AUDIO_WATCH_DIR=/path/to/wav/watch/dir
 The adapter polls `DRONE_AUDIO_WATCH_DIR` every 5 s for `*.wav` files.
 Processed files are moved to `DRONE_AUDIO_WATCH_DIR/processed/`.
 
+## Verified 4D events
+
+Accepted 4D events are written as ss-common `event-envelope` 1.0.0 lines in
+`$DATA_DIR/analysis/<mission_id>/4d/published-events.jsonl`. The payload is
+`verified-scene-event` 1.0.0. Rejected and uncertain rows stay in the timeline
+and are not published. The default fusion-rt correlation rules are unchanged:
+the published modality is `video_4d`, and this repository does not add a fusion
+rule. Profile selection, queue pressure, and replay are in the
+[profile orchestration runbook](../runbooks/four-d-profile-orchestration.md).
+
 ## OpenAPI spec
 
 The OpenAPI specs are tracked in `docs/api/video-openapi.json` and

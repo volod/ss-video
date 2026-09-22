@@ -15,6 +15,8 @@ from selfsuvis.pipeline.storage import fetch_and_claim_next_pending
 from selfsuvis.pipeline.storage.processed import ainit_db as init_processed_db_async
 from selfsuvis.worker._run import _run, _update_job_sync, init_loop
 from selfsuvis.worker.handlers import (
+    handle_analysis4d_deep_job,
+    handle_analysis4d_fast_job,
     handle_finetune_job,
     handle_index_job,
     handle_postflight_mapping_job,
@@ -35,6 +37,8 @@ class JobType(StrEnum):
     POSTFLIGHT_SEMANTIC_GRAPH = "postflight_semantic_graph"
     POSTFLIGHT_SCENE_GRAPH = "postflight_scene_graph"
     POSTFLIGHT_STRICT_VERIFIER = "postflight_strict_verifier"
+    ANALYSIS4D_FAST = "analysis4d_fast"
+    POSTFLIGHT_ANALYSIS4D_DEEP = "postflight_analysis4d_deep"
 
 
 def _claim_next_job(pool) -> dict | None:
@@ -123,6 +127,14 @@ def main() -> None:
 
             if job_type == JobType.POSTFLIGHT_STRICT_VERIFIER:
                 handle_postflight_strict_verifier_job(job_id, payload, pool, logger)
+                continue
+
+            if job_type == JobType.ANALYSIS4D_FAST:
+                handle_analysis4d_fast_job(job_id, payload, pool, logger)
+                continue
+
+            if job_type == JobType.POSTFLIGHT_ANALYSIS4D_DEEP:
+                handle_analysis4d_deep_job(job_id, payload, pool, logger)
                 continue
 
             if job_type not in (None, JobType.INDEX):

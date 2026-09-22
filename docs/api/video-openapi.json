@@ -232,6 +232,61 @@
         }
       }
     },
+    "/analysis/{mission_id}/4d/status": {
+      "get": {
+        "tags": [
+          "analysis"
+        ],
+        "summary": "Read Analysis Status",
+        "description": "Return profile, queue depth, degradations, backlog, and published events.",
+        "operationId": "read_analysis_status_analysis__mission_id__4d_status_get",
+        "parameters": [
+          {
+            "name": "mission_id",
+            "in": "path",
+            "required": true,
+            "schema": {
+              "type": "string",
+              "title": "Mission Id"
+            }
+          },
+          {
+            "name": "x-api-key",
+            "in": "header",
+            "required": false,
+            "schema": {
+              "type": "string",
+              "default": "",
+              "title": "X-Api-Key"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true,
+                  "title": "Response Read Analysis Status Analysis  Mission Id  4D Status Get"
+                }
+              }
+            }
+          },
+          "422": {
+            "description": "Validation Error",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/HTTPValidationError"
+                }
+              }
+            }
+          }
+        }
+      }
+    },
     "/analysis/{mission_id}/4d/timeline": {
       "get": {
         "tags": [
@@ -2976,6 +3031,17 @@
             "type": "boolean",
             "title": "Enable Tiles",
             "default": true
+          },
+          "analysis_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Profile"
           }
         },
         "type": "object",
@@ -3013,6 +3079,17 @@
             "type": "boolean",
             "title": "Enable Tiles",
             "default": true
+          },
+          "analysis_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Profile"
           }
         },
         "type": "object",
@@ -3049,6 +3126,17 @@
             "type": "boolean",
             "title": "Enable Tiles",
             "default": true
+          },
+          "analysis_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Profile"
           }
         },
         "type": "object",
@@ -3083,6 +3171,17 @@
             "type": "boolean",
             "title": "Enable Tiles",
             "default": true
+          },
+          "analysis_profile": {
+            "anyOf": [
+              {
+                "type": "string"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "title": "Analysis Profile"
           }
         },
         "type": "object",

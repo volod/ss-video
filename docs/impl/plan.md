@@ -13,22 +13,7 @@ This repository is ss-video. It pins `ss-perception`, `ss-mapping`, `ss-fusion`,
 
 ## Agent Implementation Tasks
 
-### Near-real-time 4D scene analysis -- `four-d-scene-analysis`
-
-#### four-d-profile-orchestration
-
-The component stages need an end-to-end budget controller, observable degradation, and a safe
-handoff from verified video events to site correlation.
-
-- Serves: `four-d-scene-analysis` -- [Specification section](../design/spec.md#processing-profiles-and-data-flow)
-- Agent status: RUN NEEDED
-- Dependencies: `four-d-keyframes-and-tracks`, `four-d-strict-verifier-and-qa`.
-- User-visible outcome: Operators can select fast or deep analysis, see backlog and degraded stages, receive bounded-latency verified events, and later inspect higher-quality superseding results.
-- Scope boundary: Add profile configuration, GPU/resource admission, bounded queues, stage telemetry, gap/coalescing records, restart/idempotency behavior, UI/job status, an ss-common ODCS contract, and verified event publication; do not change fusion-rt correlation policy or make remote VLM use the default.
-- Data and artifact paths: `src/selfsuvis/worker/`, `src/selfsuvis/pipeline/workflows/`, `src/selfsuvis/pipeline/realtime/`, `src/selfsuvis/app/`, `src/selfsuvis/ui/`, `tests/assets/analysis4d/`, and `$DATA_DIR/analysis/<mission_id>/4d/`.
-- Execution path: Wire causal fast and postflight deep DAGs, prioritize track continuity over optional stages, publish only accepted versioned event envelopes, run a 15-minute load fixture on declared reference hardware, and verify restart replay plus fast-to-deep supersession.
-- Acceptance gates: `make ci` and the declared load/integration run pass; fast-profile real-time factor is at most 1.0 with bounded queue growth, p95 verified-event lag is at most 3 seconds for configured fast events, every discarded interval has a gap record, deep results supersede rather than overwrite fast results, and disabling the capability preserves current video-search behavior and performance.
-- Documentation target: [Production server](current/production-server.md), [Configuration](../reference/configuration.md), [Operations](../operations/operations.md), and a new 4D operations runbook.
+No agent-lane tasks remain.
 
 ## Human-Assisted Tasks
 

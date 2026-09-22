@@ -40,6 +40,8 @@ _VALID_POSTFLIGHT_TYPES = {
     "postflight_semantic_graph",
     "postflight_scene_graph",
     "postflight_strict_verifier",
+    "analysis4d_fast",
+    "postflight_analysis4d_deep",
 }
 
 

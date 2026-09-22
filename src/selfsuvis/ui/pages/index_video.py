@@ -12,9 +12,10 @@ def render_index_video_tab() -> None:
     url_input = st.text_input("Or URL (HTTP/S)")
     path_input = st.text_input("Or directory path (inside container, for batch indexing)")
     enable_tiles = st.checkbox("Enable tile indexing", value=True)
+    analysis_profile = st.selectbox("4D analysis profile", ["off", "fast", "deep"], index=0)
 
     if st.button("Start Indexing"):
-        resp = _submit_indexing(uploaded, url_input, path_input, enable_tiles)
+        resp = _submit_indexing(uploaded, url_input, path_input, enable_tiles, analysis_profile)
         if resp is None:
             st.error("Upload a video or provide URL/path.")
         elif resp.ok:
@@ -31,13 +32,29 @@ def render_index_video_tab() -> None:
     if st.button("Refresh Status") and job_id:
         resp = requests.get(f"{API_URL}/jobs/{job_id}", headers=HEADERS)
         if resp.ok:
-            st.json(resp.json())
+            body = resp.json()
+            analysis = (body.get("progress") or {}).get("analysis4d")
+            if analysis:
+                st.subheader("4D analysis")
+                st.write(
+                    {
+                        "profile": analysis.get("profile"),
+                        "queue_depth": analysis.get("queue_depth"),
+                        "queue_capacity": analysis.get("queue_capacity"),
+                        "backlog": analysis.get("backlog") or [],
+                        "degradations": analysis.get("degradations") or [],
+                        "published_events": analysis.get("published_events"),
+                    }
+                )
+            st.json(body)
         else:
             st.error(resp.text)
 
 
-def _submit_indexing(uploaded, url_input: str, path_input: str, enable_tiles: bool):
-    data = {"enable_tiles": str(enable_tiles).lower()}
+def _submit_indexing(
+    uploaded, url_input: str, path_input: str, enable_tiles: bool, analysis_profile: str
+):
+    data = {"enable_tiles": str(enable_tiles).lower(), "analysis_profile": analysis_profile}
     if uploaded:
         files = {"file": (uploaded.name, uploaded.getvalue(), uploaded.type)}
         return requests.post(f"{API_URL}/index/video", files=files, data=data, headers=HEADERS)

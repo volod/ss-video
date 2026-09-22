@@ -224,6 +224,26 @@ graph programs, and the pinned rates are in the
 Remote review is not the default. It sends selected images and a strict JSON
 schema. It does not send video.
 
+## Profile orchestration
+
+These overrides apply to `workflows/analysis4d_profile.py` and to index enqueue.
+The queue, publication, and the 15-minute gate are in the
+[profile orchestration runbook](../runbooks/four-d-profile-orchestration.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_PROFILE` | `off` | `off` leaves video search unchanged. `fast` enqueues the causal job. `deep` also enqueues the postflight revision. |
+| `ANALYSIS4D_QUEUE_CAPACITY` | `32` | Maximum frames held before the next chunk drain. Extra frames are coalesced into gap records. |
+| `ANALYSIS4D_GPU_SLOTS` | `1` | Optional-stage admission. `0` sheds dense geometry, VLM, and review and records `budget_shed`. Tracks still run. |
+| `ANALYSIS4D_PROFILE_CHUNK_SEC` | `ANALYSIS4D_CHUNK_SEC`, else `4` | Fast-pass chunk length used by the orchestrator. |
+| `ANALYSIS4D_FAST_EVENT_TYPES` | `entered_region,left_region,count_changed` | Event types included in the p95 lag gate. |
+| `ANALYSIS4D_ZONE_ID` | `site` | Zone id on the published event envelope. |
+| `ANALYSIS4D_SENSOR_ID` | mission id | Sensor id on the published event envelope. |
+| `ANALYSIS4D_PROMPTS` | `object` | Comma-separated prompts for a worker profile run. |
+
+`ANALYSIS4D_VLM_PROVIDER` and `ANALYSIS4D_REVIEW_PROVIDER` stay `unavailable`
+unless an operator sets them. A remote model is not the default.
+
 ## Notes
 
 - If `ALLOWED_INDEX_PATHS` is empty, path-based indexing endpoints are disabled by design.

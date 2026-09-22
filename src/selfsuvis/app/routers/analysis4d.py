@@ -20,6 +20,7 @@ from selfsuvis.pipeline.analysis4d.schemas import (
     SceneTimeline,
 )
 from selfsuvis.pipeline.analysis4d.verifier import publishable_events
+from selfsuvis.pipeline.workflows.analysis4d_profile import read_profile_status
 
 router = APIRouter(
     prefix="/analysis",
@@ -72,6 +73,15 @@ def read_scene_proposals(mission_id: str) -> dict:
         "mission_id": mission_id,
         "proposals": [row.model_dump(mode="json") for row in proposals],
     }
+
+
+@router.get("/{mission_id}/4d/status")
+def read_analysis_status(mission_id: str) -> dict:
+    """Return profile, queue depth, degradations, backlog, and published events."""
+    try:
+        return read_profile_status(mission_id)
+    except (FileNotFoundError, ValueError) as exc:
+        raise HTTPException(status_code=404, detail="analysis profile not found") from exc
 
 
 @router.get("/{mission_id}/4d/timeline")

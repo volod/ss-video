@@ -79,20 +79,17 @@ spatial exceedance probability.
 ## 8. Time-varying 3D scene understanding
 
 **Gap.** The indexer can keep diverse frames, estimate depth, refine detections with SAM, run
-directed tracking, and build a semantic environment graph. A versioned track, graph-delta,
-timeline, and QA contract plus a fixture benchmark now exist
-(`pipeline/analysis4d/`, corpus `analysis4d-v1`). The indexer still does not produce those
-tracks, masked 3D geometry, interval-bearing graph edges, or verified events. Monocular depth
-summaries are not yet masked 3D geometry, and VLM claims do not yet pass a deterministic
-geometric verifier before becoming narrative output.
+directed tracking, and build a semantic environment graph. The `four-d-scene-analysis` capability
+now also writes versioned tracks, masked geometry, interval-bearing graph edges, a verified
+timeline, and published accepted events (`pipeline/analysis4d/`, corpus `analysis4d-v1`).
 
 **Why it matters.** An operator asking "what changed, where, and which evidence proves it?" needs
 track continuity, coordinate-frame discipline, graph edits, and evidence-linked events. Independent
 frame captions cannot reliably answer that question, especially through occlusion or a camera cut.
 
-**Scheduled capability:** `four-d-scene-analysis`. Read the
+**Shipped capability:** `four-d-scene-analysis`. Read the
 [specification](../design/spec.md#four-dimensional-video-scene-analysis) and the
-[implementation plan](../impl/plan.md#near-real-time-4d-scene-analysis----four-d-scene-analysis).
+[production server](../impl/current/production-server.md#profile-orchestration).
 
 **Study first:** distinguish relative from metric depth; camera calibration from surface-normal
 estimation; a VLM proposal from a verified graph edge; and online bounded keyframe selection from a

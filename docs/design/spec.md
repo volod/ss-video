@@ -58,7 +58,7 @@ Current state: [production server](../impl/current/production-server.md).
 
 Operators need more than frame retrieval: they need to know which persistent entities were present,
 where they moved in a common coordinate frame, how their relationships changed, and which changes
-constitute an event of interest. The planned `four-d-scene-analysis` capability turns monocular video,
+constitute an event of interest. The `four-d-scene-analysis` capability turns monocular video,
 pose, and optional calibration into a provenance-bearing temporal scene graph, an event timeline, and
 spatial Video-QA records. Here, 4D means 3D state evolving over time; it does not imply metrically
 accurate reconstruction when metric scale or camera calibration is unavailable.
@@ -66,6 +66,8 @@ accurate reconstruction when metric scale or camera calibration is unavailable.
 The capability extends the existing adaptive sampling, CLIP/DINO embeddings, depth, YOLO+SAM,
 Gemma-directed tracking, semantic graph, `scene_timeline`, and postflight job seams. It does not
 replace frame search or fusion-rt incident correlation.
+
+Current state: [production server](../impl/current/production-server.md#profile-orchestration).
 
 ### Ownership and trust boundary
 
@@ -346,7 +348,7 @@ unverified incident publication are not valid degradation modes.
 | # | Capability | Status | How it is evaluated | Implementation |
 | --- | --- | --- | --- | --- |
 | 1 | `video-search` | shipped | Docker integration suite and unit tests over app, worker, storage | [Production server](../impl/current/production-server.md) |
-| 2 | `four-d-scene-analysis` | planned | Pinned 4D mission corpus: track/geometry/relation/event/QA quality, strict-verifier contradiction suite, provenance audit, and fast-profile latency/backpressure benchmark | [Implementation plan](../impl/plan.md) |
+| 2 | `four-d-scene-analysis` | shipped | Pinned 4D mission corpus: track/geometry/relation/event/QA quality, strict-verifier contradiction suite, provenance audit, and fast-profile latency/backpressure benchmark | [Production server](../impl/current/production-server.md#profile-orchestration) |
 
 ## Extending this specification
 

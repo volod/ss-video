@@ -136,7 +136,10 @@ Keyframe selection and the pinned grounding model are in the
 [0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md),
 [0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md),
 [0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md),
-[0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md).
+[0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md),
+[0006-four-d-scene-analysis-four-d-profile-orchestration](../records/0006-four-d-scene-analysis-four-d-profile-orchestration.md).
+Accepted events are also copied into `published-events.jsonl` as `event-envelope`
+1.0.0 rows. The payload contract is `contracts/odcs/verified-scene-event.odcs.yaml`.
 
 ```text
 $DATA_DIR/analysis/<mission_id>/4d/
@@ -147,6 +150,8 @@ $DATA_DIR/analysis/<mission_id>/4d/
   timeline.json
   qa.jsonl
   gaps.jsonl          optional; required when a stage skips frames
+  orchestration-state.json  profile digest, queue depth, and replay flags
+  published-events.jsonl    accepted event envelopes, append-only
   track-audit.json    keyframe reasons, memory resets, count disagreements
   geometry/           one JSON sample per track and timestamp
   embeddings/         masked appearance prototypes, one directory per track
@@ -157,6 +162,7 @@ $DATA_DIR/analysis/_benchmark/tracks-report.json
 $DATA_DIR/analysis/_benchmark/geometry-report.json
 $DATA_DIR/analysis/_benchmark/graph-report.json
 $DATA_DIR/analysis/_benchmark/verifier-report.json
+$DATA_DIR/analysis/_benchmark/profile-report.json
 $DATA_DIR/hf-cache/   Hugging Face weights when HF_HOME is unset
 ```
 

@@ -79,6 +79,8 @@ The keyframe and track benchmark is `python -m selfsuvis.pipeline.analysis4d.tra
 ([4D model runbook](../runbooks/four-d-models.md)).
 The geometry benchmark is `python -m selfsuvis.pipeline.analysis4d.geometry_benchmark`
 ([4D geometry runbook](../runbooks/four-d-geometry.md)).
+The 15-minute profile load benchmark is `python -m selfsuvis.pipeline.analysis4d.profile_benchmark`
+([profile orchestration runbook](../runbooks/four-d-profile-orchestration.md)).
 
 ## Integration test coverage
 - Health, index (video/url/dir), precheck, precheck_dir, jobs, query (image/text)

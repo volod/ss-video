@@ -1,7 +1,8 @@
 """Mission entry for 4D keyframes and prompted tracks.
 
-Profile orchestration is a later task. This module runs the fast causal pass
-and the deep forward/backward pass into ``$DATA_DIR/analysis/<mission_id>/4d``.
+``workflows/analysis4d_profile.py`` schedules the fast causal pass and the
+deep revision. This module still runs one track pass when a caller asks for
+tracks directly.
 """
 
 from datetime import UTC

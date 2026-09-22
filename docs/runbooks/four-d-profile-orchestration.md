@@ -116,7 +116,8 @@ sample count, `metric_scale`, and degradations.
 A free GPU slot and a queue that did not coalesce run keyframe depth. Samples
 land in `geometry/`. Without a camera calibration id every sample is
 `metric_scale` `unavailable` and the manifest stays `unavailable`. The box is a
-camera ray with depth divided by its median. It is not meters. A depth load
+camera ray with depth divided by its median. It is not meters, and the 30 m/s
+speed check does not apply. A depth load
 failure records `provider_unavailable` and keeps the tracks. A saturated queue
 sheds `dense_geometry` with `budget_shed`, keeps the tracks, and writes a
 `queue_coalesce` gap.

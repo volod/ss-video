@@ -55,11 +55,27 @@ make analyze VIDEO=/path/to/video.mp4
 
 Prints track labels, accepted events, geometry sample count, and the artifact
 directory `$DATA_DIR/analysis/<mission_id>/4d/`. A copy of that summary is
-`$DATA_DIR/analysis/<mission_id>/summary.json`. Sampling defaults to 1 frame
-per second with prompts `person,vehicle`. When a GPU slot is free, kept
-keyframes get depth-backed boxes. Without calibration, `metric_scale` stays
-`unavailable`. Each newly accepted event is published once on
+`$DATA_DIR/analysis/<mission_id>/summary.json`. 
+
+Sampling defaults to 1 frame per second with prompts `person,vehicle`. 
+When a GPU slot is free, kept keyframes get depth-backed boxes. Without calibration,
+`metric_scale` stays `unavailable` and the run still finishes: those boxes are
+relative depth, and the 30 m/s speed check applies only to metric boxes.
+
+Each newly accepted event is published once on
 `ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`.
+A missing broker logs a warning and leaves the timeline on disk.
+
+Prompts must name things that are actually in the frames. `person,vehicle` on
+a screen recording of a map or a title card counts icons and UI as people and
+vehicles. For a camera clip, pass the objects in the scene:
+
+```bash
+make analyze VIDEO=/path/to/clip.mp4 ANALYZE_ARGS="--prompts person,vehicle,aircraft"
+```
+
+The same file is not grounded again. A finished mission is validated and the
+summary is reprinted.
 
 ```bash
 make analyze VIDEO=/path/to/video.mp4 ANALYZE_ARGS="--profile deep"
@@ -67,6 +83,15 @@ make analyze VIDEO=/path/to/video.mp4 ANALYZE_ARGS="--profile deep"
 
 `--profile deep` adds the postflight revision. `--fps` and `--prompts` change
 the sample rate and the grounding text.
+
+### Cache models for a full run
+
+`make run-full` stops until the local preflight models are on disk. Cache that
+set once. A model that is already cached is skipped.
+
+```bash
+make models
+```
 
 ### Full run
 

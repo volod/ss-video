@@ -172,6 +172,30 @@ def velocity_feasible(
     return True
 
 
+def metric_series_feasible(
+    samples: list[tuple[str, float, list[float]]],
+    *,
+    max_speed_m_s: float = _DEFAULT_MAX_SPEED_M_S,
+) -> bool:
+    """True unless every sample is metric and a step exceeds ``max_speed_m_s``.
+
+    Args:
+        samples: ``(metric_scale, t_sec, center_m)`` rows for one subject.
+        max_speed_m_s: Speed cap used only when every scale is ``metric``.
+
+    Returns:
+        False when a metric series implies a faster translation. ``relative``
+        and ``unavailable`` centers are not meters, so the cap does not apply.
+        Fewer than two samples is feasible.
+    """
+    if len(samples) < 2:
+        return True
+    if any(scale != "metric" for scale, _t_sec, _center in samples):
+        return True
+    series = [(t_sec, center) for _scale, t_sec, center in samples]
+    return velocity_feasible(series, max_speed_m_s=max_speed_m_s)
+
+
 def project_pinhole(
     point_m: list[float],
     *,

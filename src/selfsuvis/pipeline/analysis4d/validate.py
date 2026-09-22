@@ -5,7 +5,7 @@ from pathlib import Path
 
 from pydantic import ValidationError
 
-from selfsuvis.pipeline.analysis4d.geometry import relation_holds, velocity_feasible
+from selfsuvis.pipeline.analysis4d.geometry import metric_series_feasible, relation_holds
 from selfsuvis.pipeline.analysis4d.io import read_model, sha256_bytes
 from selfsuvis.pipeline.analysis4d.schemas import (
     SCHEMA_DELTA,
@@ -426,8 +426,8 @@ def _check_geometry(
 ) -> None:
     grouped = _geometry_index(geometry)
     for subject_id, samples in grouped.items():
-        series = [(sample.t_sec, sample.center_m) for sample in samples]
-        if not velocity_feasible(series):
+        series = [(sample.metric_scale, sample.t_sec, sample.center_m) for sample in samples]
+        if not metric_series_feasible(series):
             issues.append(f"schema: infeasible velocity for {subject_id}")
     metric = manifest.coordinate_frame.metric_scale == "metric"
     for delta in deltas:

@@ -370,8 +370,10 @@ The command samples at 1 fps, prompts for `person` and `vehicle`, and writes
 `--profile deep` runs the postflight revision. When a GPU slot is free and the
 queue did not coalesce, kept keyframes are back-projected. Accepted count and
 region events cite those geometry files. Without calibration, `metric_scale`
-stays `unavailable`. A depth failure records `provider_unavailable` and keeps
-the tracks. Queue pressure sheds `dense_geometry`, keeps the tracks, and writes
+stays `unavailable`. The 30 m/s speed check applies only to metric boxes, so
+relative depth still produces a valid bundle. A depth failure records
+`provider_unavailable` and keeps the tracks. Queue pressure sheds
+`dense_geometry`, keeps the tracks, and writes
 a `queue_coalesce` gap.
 
 Optional regions live in `$DATA_DIR/analysis/<mission_id>/regions.json`

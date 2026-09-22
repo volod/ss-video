@@ -79,8 +79,8 @@ dimension, and preprocessing id. A mismatch is `IncompatibleEmbedding`.
 fast profile calls `run_keyframe_geometry` when `dense_geometry` is admitted,
 which is the path used by the `analysis4d_fast` worker job. The track file
 bytes are unchanged. A keyframe with depth and no calibration still stores a
-box with `metric_scale` `unavailable`. Those numbers are not meters and they
-stay out of the static cloud.
+box with `metric_scale` `unavailable`. Those numbers are not meters, the
+bundle speed check ignores them, and they stay out of the static cloud.
 
 - `geometry/<track_id>/<milliseconds>.json` is one `ss-video.geometry-sample.v1`.
 - `embeddings/<track_id>/` holds `ss-video.track-embedding.v1` prototypes.

@@ -1,4 +1,4 @@
-.PHONY: help up down logs data-dirs fix-data env env-interactive venv venv-cuda venv-pip venv-rebuild-xformers docker-check test test-no-gpu test-ci test-unit test-heavy test-unit-no-cv2 test-dir lint lint-spec-plan lint-doc-links lint-imports plan-status ci ci-github cvat-up cvat-down cvat-logs cvat-admin mapper-logs utlz-install utlz utlz-endpoints export-openapi frigate-up run analyze run-full
+.PHONY: help up down logs data-dirs fix-data env env-interactive venv venv-cuda venv-pip venv-rebuild-xformers docker-check test test-no-gpu test-ci test-unit test-heavy test-unit-no-cv2 test-dir lint lint-spec-plan lint-doc-links lint-imports plan-status ci ci-github cvat-up cvat-down cvat-logs cvat-admin mapper-logs utlz-install utlz utlz-endpoints export-openapi frigate-up run analyze run-full models
 
 # Base data directory — overridden by DATA_DIR in .env or shell environment.
 DATA_DIR ?= .data
@@ -53,6 +53,7 @@ help:
 	@echo "  make run VIDEO=/path/to/video.mp4        Quick run: sample frames and describe them"
 	@echo "  make analyze VIDEO=/path/to/video.mp4    4D analysis: tracks, events, and a timeline"
 	@echo "  make run-full VIDEO=/path/to/video.mp4   Full run: perception, mapping, and captions"
+	@echo "  make models                                 Cache models required by run-full; skip ones already cached"
 	@echo "  RUN_ARGS and ANALYZE_ARGS append extra flags to run, run-full, and analyze"
 	@echo ""
 	@echo "  Tests"
@@ -178,10 +179,16 @@ analyze:
 	./scripts/install/ensure_prereqs.sh start -- \
 	  .venv/bin/python -m selfsuvis.pipeline.analysis4d.analyze "$(VIDEO)" $(ANALYZE_ARGS)
 
+# Cache every model the default local preflight requires. Cached artifacts are skipped.
+models:
+	./scripts/install/ensure_prereqs.sh start -- \
+	  .venv/bin/python -m selfsuvis.scripts.cache_models
+
 # Full local pipeline: perception, mapping, and captions.
 run-full:
 	@test -n "$(VIDEO)" || { printf '%s\n' "Usage: make run-full VIDEO=/path/to/video.mp4"; exit 1; }
 	@test -f "$(VIDEO)" || { printf '%s\n' "Video not found: $(VIDEO)"; exit 1; }
+	PYTHONPATH=src .venv/bin/python -m selfsuvis.scripts.repair_local_pipeline
 	./scripts/install/ensure_prereqs.sh start -- \
 	  .venv/bin/ssv --mode local --video "$(VIDEO)" $(RUN_ARGS)
 
@@ -307,4 +314,3 @@ utlz:
 
 utlz-endpoints:
 	./scripts/ssv/ssv-utilyze.sh --endpoints
-

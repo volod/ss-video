@@ -12,7 +12,7 @@ import re
 from dataclasses import dataclass, field
 from pathlib import Path
 
-from selfsuvis.pipeline.analysis4d.geometry import relation_holds, velocity_feasible
+from selfsuvis.pipeline.analysis4d.geometry import metric_series_feasible, relation_holds
 from selfsuvis.pipeline.analysis4d.graph import event_token
 from selfsuvis.pipeline.analysis4d.review import (
     ReviewDecision,
@@ -754,8 +754,8 @@ def _gate_reason(sample: GeometrySample, *, metric_required: bool) -> str | None
 
 
 def _series_feasible(samples: list[GeometrySample]) -> bool:
-    series = [(sample.t_sec, sample.center_m) for sample in samples]
-    return velocity_feasible(series)
+    series = [(sample.metric_scale, sample.t_sec, sample.center_m) for sample in samples]
+    return metric_series_feasible(series)
 
 
 def _band(proposal: Proposal) -> tuple[float, float] | None:

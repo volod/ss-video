@@ -154,6 +154,7 @@ def run_fast_profile(
     digest = _input_digest(frames, prompts)
     state = _read_state(target)
     if state.get("fast_done") and state.get("input_digest") == digest:
+        validate_bundle(target)
         return _from_state(target, state, profile="fast", replayed=True)
     if state.get("input_digest") not in (None, digest):
         raise ValueError("mission already has a 4D run for a different input")
@@ -257,6 +258,7 @@ def run_fast_profile(
         replayed=False,
         media_duration_sec=media,
     )
+    validate_bundle(target)
     _write_state(
         target,
         {
@@ -274,7 +276,6 @@ def run_fast_profile(
             "new_ids": new_ids,
         },
     )
-    validate_bundle(target)
     logger.info(
         "fast profile mission=%s published=%d queue_depth=%d rtf=%.4f",
         mission_id,
@@ -323,6 +324,7 @@ def run_deep_profile(
     digest = _input_digest(frames, prompts)
     state = _read_state(target)
     if state.get("deep_done") and state.get("input_digest") == digest:
+        validate_bundle(target)
         return _from_state(target, state, profile="deep", replayed=True)
     fast = run_fast_profile(
         mission_id,

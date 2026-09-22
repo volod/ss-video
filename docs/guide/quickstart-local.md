@@ -76,17 +76,37 @@ ollama pull <REASONING_MODEL>        # value from .env, e.g. deepseek-r1:14b
 
 **vLLM** (if chosen for Qwen or Gemma — each in its own terminal):
 
+Use a separate project-local environment so vLLM's Torch dependencies do not
+replace the pipeline's CUDA build:
+
+```bash
+uv venv .data/venvs/vllm --python 3.11
+UV_CACHE_DIR=.data/.cache/uv uv pip install \
+  --python .data/venvs/vllm/bin/python vllm --torch-backend=auto
+```
+
 ```bash
 # Qwen visual model (port 8010)
-python -m vllm.entrypoints.openai.api_server \
-  --model <QWEN_MODEL> --port 8010 --max-model-len 8192
+.data/venvs/vllm/bin/vllm serve \
+  <QWEN_MODEL> --port 8010 --max-model-len 8192
 
 # Gemma (port 8000) — only if GEMMA_API_BACKEND=vllm
-python -m vllm.entrypoints.openai.api_server \
-  --model <GEMMA_API_MODEL> --port 8000 --max-model-len 8192
+.data/venvs/vllm/bin/vllm serve \
+  <GEMMA_API_MODEL> --port 8000 --max-model-len 8192
 ```
 
 Replace `<GEMMA_API_MODEL>` / `<QWEN_MODEL>` / `<REASONING_MODEL>` with the values written to `.env`.
+
+For a single 16 GiB GPU, serve only one VLM at a time. Stop a local vLLM
+server before a CUDA vision or training step; unlike Ollama, its OpenAI API
+does not evict the model on a `keep_alive=0` request. The local `run-full`
+path verifies Ollama unloads between CUDA steps.
+
+The `owl10/UniDriveVLA_Nusc_Base_Stage3` repository contains a custom `.pt`
+checkpoint, not a Transformers/vLLM chat model. It cannot be served by the
+generic UniDrive sidecar client. For ordinary video input, use
+`RUN_ARGS=--no-unidrive` until a dedicated UniDrive inference bridge is
+configured for its required sensor inputs.
 
 ---
 

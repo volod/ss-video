@@ -9,6 +9,7 @@ from pydantic import ValidationError
 from selfsuvis.pipeline.analysis4d.corpus import build_corpus
 from selfsuvis.pipeline.analysis4d.geometry import (
     contains,
+    metric_series_feasible,
     project_pinhole,
     relation_holds,
     reprojection_residual_px,
@@ -139,6 +140,17 @@ def test_geometry_predicates_and_reprojection() -> None:
     assert reprojection_residual_px([0, 0, 10], (50, 50), focal_px=100, principal_px=(50, 50)) == 0
     assert velocity_feasible([(0.0, [0, 0, 0]), (1.0, [10, 0, 0])])
     assert not velocity_feasible([(0.0, [0, 0, 0]), (1.0, [100, 0, 0])])
+    jump = [
+        ("unavailable", 0.0, [0.0, 0.0, 1.0]),
+        ("unavailable", 1.0, [0.0, 0.0, 3000.0]),
+    ]
+    assert metric_series_feasible(jump)
+    assert not metric_series_feasible(
+        [("metric", 0.0, [0.0, 0.0, 0.0]), ("metric", 1.0, [100.0, 0.0, 0.0])]
+    )
+    assert metric_series_feasible(
+        [("metric", 0.0, [0.0, 0.0, 0.0]), ("metric", 1.0, [10.0, 0.0, 0.0])]
+    )
 
 
 def test_store_is_append_only_and_records_supersession(tmp_path: Path) -> None:

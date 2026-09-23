@@ -65,7 +65,7 @@ def _patch_qwen(source: str) -> str:
     source = _replace(
         source,
         "        self._client = None\n\n    # -- Public interface",
-        '''        self._client = None
+        """        self._client = None
         self._prefer_qwen = prefer_qwen
 
     def _selected_sidecar(self) -> tuple[str, str, str, int]:
@@ -83,7 +83,7 @@ def _patch_qwen(source: str) -> str:
             settings.GEMMA_API_TIMEOUT_SEC,
         )
 
-    # -- Public interface''',
+    # -- Public interface""",
     )
     source = _replace(
         source,
@@ -98,17 +98,17 @@ def _patch_qwen(source: str) -> str:
     )
     source = _replace(
         source,
-        '''        _api_url = settings.QWEN_API_URL
+        """        _api_url = settings.QWEN_API_URL
         backend = (
             settings.QWEN_BACKEND
         ).lower()
         timeout = min(
             settings.QWEN_TIMEOUT_SEC,
             10,
-        )''',
-        '''        _api_url, _, configured_backend, configured_timeout = self._selected_sidecar()
+        )""",
+        """        _api_url, _, configured_backend, configured_timeout = self._selected_sidecar()
         backend = configured_backend.lower()
-        timeout = min(configured_timeout, 10)''',
+        timeout = min(configured_timeout, 10)""",
     )
     source = _replace(
         source,
@@ -123,7 +123,11 @@ def _patch_vram(source: str) -> str:
         return source
     start = source.index("    if baseline_free_gb >= required:\n")
     end = source.index("    unload_count = _unload_known_sidecars(\n", start)
-    source = source[:start] + "    # Evict sidecars at every CUDA handoff, even if free VRAM looks sufficient.\n" + source[end:]
+    source = (
+        source[:start]
+        + "    # Evict sidecars at every CUDA handoff, even if free VRAM looks sufficient.\n"
+        + source[end:]
+    )
     return source
 
 
@@ -147,9 +151,9 @@ def _patch_qwen_step(source: str) -> str:
     )
     source = _replace(
         source,
-        "    _log_vram_snapshot(\"after Qwen sidecar use\")",
+        '    _log_vram_snapshot("after Qwen sidecar use")',
         "    _unload_ollama_model(settings.QWEN_API_URL, settings.QWEN_MODEL)\n"
-        "    _log_vram_snapshot(\"after Qwen sidecar use\")",
+        '    _log_vram_snapshot("after Qwen sidecar use")',
     )
     return source
 
@@ -200,7 +204,7 @@ def _patch_caption_report(source: str) -> str:
     return _replace(
         source,
         'f"Frames captioned: {len(caption_results)}  |  Unique scenes: {n_segments}"',
-        'f"Frames captioned: {sum(bool(r.get(\'caption\')) for r in caption_results)}"'
+        "f\"Frames captioned: {sum(bool(r.get('caption')) for r in caption_results)}\""
         'f"/{len(caption_results)}  |  Unique scenes: {n_segments}"',
     )
 
@@ -211,24 +215,24 @@ def _patch_ocr_sidecar(source: str) -> str:
     source = _replace(
         source,
         '    _log.info("Running OCR on %d frames (model=%s) …", len(frame_list), ocr.model_id)',
-        '''    backend = ocr._get_backend()
+        """    backend = ocr._get_backend()
     using_qwen = backend == "vllm" and not settings.OCR_API_URL
     served_model = settings.QWEN_MODEL if using_qwen else ocr.model_id
     served_backend = settings.QWEN_BACKEND if using_qwen else backend
     _log.info(
         "Running OCR on %d frames (model=%s backend=%s)",
         len(frame_list), served_model, served_backend,
-    )''',
+    )""",
     )
     return _replace(
         source,
         '    ocr.release()\n    _log_vram_snapshot("after OCR model use")',
-        '''    ocr.release()
+        """    ocr.release()
     if using_qwen and settings.QWEN_BACKEND == "ollama":
         from ..caption_helpers.ollama import _unload_ollama_model
 
         _unload_ollama_model(settings.QWEN_API_URL, settings.QWEN_MODEL)
-    _log_vram_snapshot("after OCR model use")''',
+    _log_vram_snapshot("after OCR model use")""",
     )
 
 
@@ -237,11 +241,11 @@ def _patch_qwen_blank_frames(source: str) -> str:
         return source
     return _replace(
         source,
-        '''    if len(frame_list) <= max_frames:
+        """    if len(frame_list) <= max_frames:
         return list(frame_list)
 
-    must_keep: set[int] = set()''',
-        '''    from PIL import Image
+    must_keep: set[int] = set()""",
+        """    from PIL import Image
 
     def _visible(path: str) -> bool:
         try:
@@ -261,14 +265,14 @@ def _patch_qwen_blank_frames(source: str) -> str:
     if len(frame_list) <= max_frames:
         return list(frame_list)
 
-    must_keep: set[int] = set()''',
+    must_keep: set[int] = set()""",
     )
 
 
 def _patch_distill_inputs(source: str) -> str:
     if "_valid_caption_indices" in source:
         return source
-    old = '''                _cap_texts = [r.get("caption") or "" for r in caption_results]
+    old = """                _cap_texts = [r.get("caption") or "" for r in caption_results]
                 _cap_texts = [t for t in _cap_texts if t.strip()]
                 if _cap_texts:
                     _clip_model = models["clip"]
@@ -276,8 +280,8 @@ def _patch_distill_inputs(source: str) -> str:
                         _HAS_GEMMA and isinstance(_clip_model, GemmaEmbedder)
                     ):
                         _cap_anchor_embs = _clip_model.encode_texts(_cap_texts)
-'''
-    new = '''                _cap_texts = [r.get("caption") or "" for r in caption_results]
+"""
+    new = """                _cap_texts = [r.get("caption") or "" for r in caption_results]
                 _valid_caption_indices = [i for i, text in enumerate(_cap_texts) if text.strip()]
                 if _valid_caption_indices:
                     _clip_model = models["clip"]
@@ -291,21 +295,21 @@ def _patch_distill_inputs(source: str) -> str:
                             (len(_cap_texts), _valid_embs.shape[1]), dtype=_valid_embs.dtype
                         )
                         _cap_anchor_embs[_valid_caption_indices] = _valid_embs
-'''
+"""
     return _replace(source, old, new)
 
 
 def _patch_graph_distill_inputs(source: str) -> str:
     if "_valid_caption_indices" in source:
         return source
-    old = '''            _cap_texts = [
+    old = """            _cap_texts = [
                 r.get("caption", "") for r in caption_results if r.get("caption", "").strip()
             ]
             clip_model = models["clip"]
             if _cap_texts and hasattr(clip_model, "encode_texts"):
                 _cap_anchor_embs = clip_model.encode_texts(_cap_texts)
-'''
-    new = '''            import numpy as np
+"""
+    new = """            import numpy as np
 
             _cap_texts = [r.get("caption") or "" for r in caption_results]
             _valid_caption_indices = [i for i, text in enumerate(_cap_texts) if text.strip()]
@@ -318,7 +322,7 @@ def _patch_graph_distill_inputs(source: str) -> str:
                     (len(_cap_texts), _valid_embs.shape[1]), dtype=_valid_embs.dtype
                 )
                 _cap_anchor_embs[_valid_caption_indices] = _valid_embs
-'''
+"""
     return _replace(source, old, new)
 
 
@@ -328,7 +332,7 @@ def _patch_distill_training(source: str) -> str:
     source = _replace(
         source,
         "# -- RKD loss functions --------------------------------------------------------",
-        '''class _IndexedFrameDataset(Dataset):
+        """class _IndexedFrameDataset(Dataset):
     def __init__(self, frames: _FrameDataset) -> None:
         self.frames = frames
 
@@ -339,7 +343,7 @@ def _patch_distill_training(source: str) -> str:
         return self.frames[idx], idx
 
 
-# -- RKD loss functions --------------------------------------------------------''',
+# -- RKD loss functions --------------------------------------------------------""",
     )
     source = _replace(
         source,
@@ -354,15 +358,15 @@ def _patch_distill_training(source: str) -> str:
     source = _replace(
         source,
         "        trainable = list(self.student.parameters()) + list(self._proj.parameters())",
-        '''        trainable = list(self.student.parameters()) + list(self._proj.parameters())
+        """        trainable = list(self.student.parameters()) + list(self._proj.parameters())
         if cfg.lambda_caption_anchor > 0 and cfg.caption_embeddings is not None:
             self._cap_proj = nn.Linear(
                 self._s_dim, cfg.caption_embeddings.shape[1], bias=False
             ).to(self.device)
             nn.init.orthogonal_(self._cap_proj.weight)
-            trainable += list(self._cap_proj.parameters())''',
+            trainable += list(self._cap_proj.parameters())""",
     )
-    old = '''                    # Align caption anchors to this batch by dataset index
+    old = """                    # Align caption anchors to this batch by dataset index
                     start = batch_idx * cfg.batch_size
                     end = min(start + batch.shape[0], len(_cap_anchors))
                     if end > start:
@@ -378,8 +382,8 @@ def _patch_distill_training(source: str) -> str:
                         cap_norm = F.normalize(cap_batch, dim=-1)
                         l_caption = (1.0 - (s_cap_proj * cap_norm).sum(dim=-1)).mean()
                         loss = loss + cfg.lambda_caption_anchor * l_caption
-'''
-    new = '''                    # Match each shuffled frame to its own non-empty caption anchor.
+"""
+    new = """                    # Match each shuffled frame to its own non-empty caption anchor.
                     cap_batch = _cap_anchors[sample_indices.to(self.device)]
                     valid = cap_batch.abs().sum(dim=-1) > 0
                     if valid.any():
@@ -389,7 +393,7 @@ def _patch_distill_training(source: str) -> str:
                         cap_norm = F.normalize(cap_batch[valid], dim=-1)
                         l_caption = (1.0 - (s_cap_proj * cap_norm).sum(dim=-1)).mean()
                         loss = loss + cfg.lambda_caption_anchor * l_caption
-'''
+"""
     return _replace(source, old, new)
 
 
@@ -397,37 +401,37 @@ def _patch_scene_probes(source: str) -> str:
     if '"computer screen showing a map or mission dashboard"' not in source:
         source = _replace(
             source,
-            '''    "coastal or water feature",
-]''',
-            '''    "coastal or water feature",
+            """    "coastal or water feature",
+]""",
+            """    "coastal or water feature",
     "aircraft parked or flying at an airport",
     "computer screen showing a map or mission dashboard",
     "promotional presentation with text and graphics",
     "indoor meeting or military briefing",
-]''',
+]""",
         )
     if "Scene mix:" in source:
         return source
     source = _replace(
         source,
-        '''        if clf.get("category_distribution"):
-            self.scene_type = next(iter(clf["category_distribution"]), "")''',
-        '''        distribution = clf.get("category_distribution") or {}
+        """        if clf.get("category_distribution"):
+            self.scene_type = next(iter(clf["category_distribution"]), "")""",
+        """        distribution = clf.get("category_distribution") or {}
         if distribution:
             top_category, top_count = next(iter(distribution.items()))
             total = max(1, int(clf.get("n_frames", sum(distribution.values()))))
             if top_count / total < 0.6:
                 self.scene_type = "Scene mix: " + ", ".join(list(distribution)[:3])
             else:
-                self.scene_type = top_category''',
+                self.scene_type = top_category""",
     )
     return _replace(
         source,
         'parts.append(f"Dominant scene: {self.scene_type}")',
-        '''parts.append(
+        """parts.append(
                 self.scene_type if self.scene_type.startswith("Scene mix:")
                 else f"Dominant scene: {self.scene_type}"
-            )''',
+            )""",
     )
 
 
@@ -437,7 +441,7 @@ def _patch_video_prompts(source: str) -> str:
     return _replace(
         source,
         '    "radar detector or traffic speed radar on a road",\n]',
-        '''    "radar detector or traffic speed radar on a road",
+        """    "radar detector or traffic speed radar on a road",
     "military aircraft taking off from an airport runway",
     "a promotional video about military mission analysis software",
     "a computer screen displaying a mission map and tracked vehicles",
@@ -446,7 +450,7 @@ def _patch_video_prompts(source: str) -> str:
     "a software demonstration of a military training and debriefing system",
     "people reviewing a military mission in a meeting room",
     "a map showing tracked vehicles and planned flight paths",
-]''',
+]""",
     )
 
 
@@ -551,7 +555,9 @@ def _patch_synthesis_precision(source: str) -> str:
         return source
     start = source.index("    ontology_prompt = (\n")
     end = source.index("    try:\n", start)
-    source = source[:start] + '''    ontology_prompt = (
+    source = (
+        source[:start]
+        + """    ontology_prompt = (
         f"{context_str}\\n\\n"
         "Summarize the whole edited video as valid JSON. Narration can describe a product "
         "while visuals show illustrative examples. If the narration presents a tool, use "
@@ -564,10 +570,14 @@ def _patch_synthesis_precision(source: str) -> str:
         '"confidence":0.0}\\n'
         "Output only the JSON object."
     )
-''' + source[end:]
+"""
+        + source[end:]
+    )
     start = source.index("    narrative_prompt = (\n")
     end = source.index("    try:\n", start)
-    source = source[:start] + '''    narrative_prompt = (
+    source = (
+        source[:start]
+        + """    narrative_prompt = (
         f"{context_str}\\n\\n"
         "Write a concise, evidence-grounded account of this edited video in three short "
         "markdown paragraphs: first describe visual scenes in timestamp order, including "
@@ -576,7 +586,9 @@ def _patch_synthesis_precision(source: str) -> str:
         "uncertainty. Distinguish illustrative footage from an actual operation. Do not "
         "invent weather, surface condition, identity, location, or events."
     )
-''' + source[end:]
+"""
+        + source[end:]
+    )
     return _replace(source, '"temperature": 0.3,', '"temperature": 0.0,')
 
 
@@ -589,17 +601,17 @@ def _patch_phase4_handoff(source: str) -> str:
         return source
     return _replace(
         source,
-        '''        step_video_synthesis(
+        """        step_video_synthesis(
             video_name, video_dir, video_context, api_url=_qwen_url, model=_qwen_model
         )
-    _append_agentic_step(''',
-        '''        step_video_synthesis(
+    _append_agentic_step(""",
+        """        step_video_synthesis(
             video_name, video_dir, video_context, api_url=_qwen_url, model=_qwen_model
         )
     # Release synthesis VLM before reasoning audit.
     if device == "cuda":
         _unload_known_sidecars([(_qwen_url, _qwen_model)])
-    _append_agentic_step(''',
+    _append_agentic_step(""",
     )
 
 
@@ -608,17 +620,17 @@ def _patch_graph_phase4_handoff(source: str) -> str:
         return source
     return _replace(
         source,
-        '''    stats.setdefault("timings", {})["Z_synthesis"] = time.monotonic() - t0
+        """    stats.setdefault("timings", {})["Z_synthesis"] = time.monotonic() - t0
 
-    _append_agentic_step(''',
-        '''    stats.setdefault("timings", {})["Z_synthesis"] = time.monotonic() - t0
+    _append_agentic_step(""",
+        """    stats.setdefault("timings", {})["Z_synthesis"] = time.monotonic() - t0
     # Release synthesis VLM before reasoning audit.
     if device == "cuda":
         from ...steps.caption import _unload_known_sidecars
 
         _unload_known_sidecars([(_qwen_url, _qwen_model)])
 
-    _append_agentic_step(''',
+    _append_agentic_step(""",
     )
 
 
@@ -702,16 +714,16 @@ def _patch_comparison_report(source: str) -> str:
     source = _replace(source, '"## Search Quality Comparison",', '"## Retrieval Diagnostics",')
     return _replace(
         source,
-        '''        f"| Δ score | — | {avg_ft - avg_base:+.4f} |",
+        """        f"| Δ score | — | {avg_ft - avg_base:+.4f} |",
         f"| Result overlap | {overlap}/{len(base_results)} frames in common | |",
         "",
-        "## Model Statistics",''',
-        '''        f"| Result overlap | {overlap}/{len(base_results)} frames in common | |",
+        "## Model Statistics",""",
+        """        f"| Result overlap | {overlap}/{len(base_results)} frames in common | |",
         "",
         "Cosine values from different embedding spaces are not directly comparable. "
         "Use ranked neighbors or held-out labels to judge retrieval quality.",
         "",
-        "## Model Statistics",''',
+        "## Model Statistics",""",
     )
 
 

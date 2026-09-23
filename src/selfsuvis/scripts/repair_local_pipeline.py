@@ -205,6 +205,66 @@ def _patch_caption_report(source: str) -> str:
     )
 
 
+def _patch_ocr_sidecar(source: str) -> str:
+    if "served_model = settings.QWEN_MODEL" in source:
+        return source
+    source = _replace(
+        source,
+        '    _log.info("Running OCR on %d frames (model=%s) …", len(frame_list), ocr.model_id)',
+        '''    backend = ocr._get_backend()
+    using_qwen = backend == "vllm" and not settings.OCR_API_URL
+    served_model = settings.QWEN_MODEL if using_qwen else ocr.model_id
+    served_backend = settings.QWEN_BACKEND if using_qwen else backend
+    _log.info(
+        "Running OCR on %d frames (model=%s backend=%s)",
+        len(frame_list), served_model, served_backend,
+    )''',
+    )
+    return _replace(
+        source,
+        '    ocr.release()\n    _log_vram_snapshot("after OCR model use")',
+        '''    ocr.release()
+    if using_qwen and settings.QWEN_BACKEND == "ollama":
+        from ..caption_helpers.ollama import _unload_ollama_model
+
+        _unload_ollama_model(settings.QWEN_API_URL, settings.QWEN_MODEL)
+    _log_vram_snapshot("after OCR model use")''',
+    )
+
+
+def _patch_qwen_blank_frames(source: str) -> str:
+    if "Qwen frame selection: discarded" in source:
+        return source
+    return _replace(
+        source,
+        '''    if len(frame_list) <= max_frames:
+        return list(frame_list)
+
+    must_keep: set[int] = set()''',
+        '''    from PIL import Image
+
+    def _visible(path: str) -> bool:
+        try:
+            with Image.open(path) as image:
+                low, high = image.convert("L").resize((32, 32)).getextrema()
+            return high > 8 and high - low > 2
+        except OSError:
+            return True
+
+    original_count = len(frame_list)
+    frame_list = [row for row in frame_list if _visible(row[0])]
+    if len(frame_list) != original_count:
+        _log.info(
+            "Qwen frame selection: discarded %d blank frames",
+            original_count - len(frame_list),
+        )
+    if len(frame_list) <= max_frames:
+        return list(frame_list)
+
+    must_keep: set[int] = set()''',
+    )
+
+
 def _patch_distill_inputs(source: str) -> str:
     if "_valid_caption_indices" in source:
         return source
@@ -371,6 +431,159 @@ def _patch_scene_probes(source: str) -> str:
     )
 
 
+def _patch_video_prompts(source: str) -> str:
+    if '"a software demonstration of a military training and debriefing system"' in source:
+        return source
+    return _replace(
+        source,
+        '    "radar detector or traffic speed radar on a road",\n]',
+        '''    "radar detector or traffic speed radar on a road",
+    "military aircraft taking off from an airport runway",
+    "a promotional video about military mission analysis software",
+    "a computer screen displaying a mission map and tracked vehicles",
+    "a mission control dashboard with maps and aircraft tracking",
+    "a fighter jet taxiing on an airport runway",
+    "a software demonstration of a military training and debriefing system",
+    "people reviewing a military mission in a meeting room",
+    "a map showing tracked vehicles and planned flight paths",
+]''',
+    )
+
+
+def _patch_synthesis_grounding(source: str) -> str:
+    if "def _build_synthesis_context(" in source:
+        return source.replace("count = min(8, len(detailed))", "count = min(12, len(detailed))")
+    source = _replace(
+        source,
+        "_log = get_logger(__name__)\n\n",
+        '''_log = get_logger(__name__)
+
+
+def _build_synthesis_context(video_name: str, video_context: dict[str, Any]) -> str:
+    """Keep direct audio and visual evidence ahead of weak CLIP hypotheses."""
+    parts = [f"Video: {video_name}"]
+    meta = video_context.get("meta") or {}
+    if meta:
+        parts.append(
+            f"Duration: {meta.get('duration_sec', 0):.1f}s; "
+            f"frames: {meta.get('frame_count', 0)}"
+        )
+    parts.append(
+        "This video can contain different scenes, graphics, and narration. "
+        "Do not assume one physical location or invent details absent from the evidence."
+    )
+
+    transcript = video_context.get("asr_segments") or []
+    if transcript:
+        parts.append("Audio transcript:")
+        for segment in transcript[:8]:
+            words = str(segment.get("text") or "").strip()
+            if words:
+                stamp = segment.get("timestamp") or (0.0, 0.0)
+                parts.append(f"  [{stamp[0]:.1f}s] {words[:220]}")
+
+    detailed = video_context.get("qwen_captions") or []
+    if detailed:
+        parts.append("Detailed sampled frame observations:")
+        count = min(12, len(detailed))
+        indices = sorted({round(i * (len(detailed) - 1) / max(1, count - 1)) for i in range(count)})
+        for index in indices:
+            row = detailed[index]
+            caption = row.get("caption") or row.get("scene_description") or row.get("scene_summary")
+            if caption:
+                parts.append(f"  [{row.get('t_sec', 0.0):.1f}s] {str(caption)[:175]}")
+
+    gemma = video_context.get("gemma_analysis") or {}
+    distribution = (
+        (gemma.get("task_results") or {}).get("scene_classification") or {}
+    ).get("category_distribution") or {}
+    if distribution:
+        parts.append(
+            "Weak zero-shot scene categories: "
+            + ", ".join(f"{name} ({count})" for name, count in list(distribution.items())[:4])
+        )
+
+    visible = [row for row in video_context.get("ocr") or [] if row.get("ocr_text")]
+    if visible:
+        parts.append("Visible text from sampled frames:")
+        for row in visible[:3]:
+            parts.append(f"  [{row.get('t_sec', 0.0):.1f}s] {str(row['ocr_text'])[:125]}")
+
+    if not detailed:
+        captions = [row for row in video_context.get("captions") or [] if row.get("caption")]
+        count = min(6, len(captions))
+        if count:
+            parts.append("Sampled frame captions:")
+            indices = sorted({round(i * (len(captions) - 1) / max(1, count - 1)) for i in range(count)})
+            for index in indices:
+                row = captions[index]
+                parts.append(f"  [{row.get('t_sec', 0.0):.1f}s] {str(row['caption'])[:175]}")
+
+    return "\\n".join(parts)
+
+''',
+    )
+    source = _replace(
+        source,
+        '''    context_str = _build_context_prompt(video_name, video_context)
+    # Cap context to avoid exceeding Ollama's default num_ctx (2048 tokens).
+    # ~3000 chars ≈ 750 tokens, leaving headroom for the prompt suffix + output.
+    if len(context_str) > 3000:
+        context_str = context_str[:3000] + "\\n[context truncated]"''',
+        '''    context_str = _build_synthesis_context(video_name, video_context)
+    if len(context_str) > 4800:
+        context_str = context_str[:4800] + "\\n[context truncated]"''',
+    )
+    source = _replace(
+        source,
+        '"Be specific and grounded in the observations above. Use technical language "\n        "appropriate for outdoor robotics and surveillance contexts."',
+        '"Ground every claim in the observations above. Distinguish illustrative "\n        "footage, software screens, and physical scenes. State uncertainty when "\n        "the evidence does not establish a detail."',
+    )
+    return _replace(
+        source,
+        '"domain": "string (e.g. outdoor_surveillance, urban_traffic, aerial_reconnaissance)",',
+        '"domain": "string (e.g. software_demo, aviation, aerial_reconnaissance)",',
+    )
+
+
+def _patch_synthesis_precision(source: str) -> str:
+    if "Narration can describe a product" in source:
+        return source
+    start = source.index("    ontology_prompt = (\n")
+    end = source.index("    try:\n", start)
+    source = source[:start] + '''    ontology_prompt = (
+        f"{context_str}\\n\\n"
+        "Summarize the whole edited video as valid JSON. Narration can describe a product "
+        "while visuals show illustrative examples. If the narration presents a tool, use "
+        "software_demo as the domain and describe any aircraft as shown footage. Do not "
+        "claim the footage proves a real operation. Use these fields:\\n"
+        '{"domain":"string", "environment":"string (multiple settings if needed)", '
+        '"primary_activities":["observed or narrated activities"], '
+        '"key_objects":["visible entities and named product"], '
+        '"temporal_structure":"string", "scene_complexity":"low|medium|high", '
+        '"confidence":0.0}\\n'
+        "Output only the JSON object."
+    )
+''' + source[end:]
+    start = source.index("    narrative_prompt = (\n")
+    end = source.index("    try:\n", start)
+    source = source[:start] + '''    narrative_prompt = (
+        f"{context_str}\\n\\n"
+        "Write a concise, evidence-grounded account of this edited video in three short "
+        "markdown paragraphs: first describe visual scenes in timestamp order, including "
+        "the final sampled frame; second state what the narration explicitly says about "
+        "the subject or product; third summarize the video as a whole and name meaningful "
+        "uncertainty. Distinguish illustrative footage from an actual operation. Do not "
+        "invent weather, surface condition, identity, location, or events."
+    )
+''' + source[end:]
+    return _replace(source, '"temperature": 0.3,', '"temperature": 0.0,')
+
+
+def _patch_synthesis_imports(source: str) -> str:
+    return source.replace("    _build_context_prompt,\n", "")
+
+
 def _patch_phase4_handoff(source: str) -> str:
     if "# Release synthesis VLM before reasoning audit." in source:
         return source
@@ -508,10 +721,16 @@ _PATCHES = (
     ("ssv_vdp.steps.caption_helpers.vram", _patch_vram),
     ("ssv_vdp.steps.caption._vlm", _patch_qwen_step),
     ("ssv_vdp.steps.report_helpers._captions", _patch_caption_report),
+    ("ssv_vdp.steps.caption._sensing", _patch_ocr_sidecar),
+    ("ssv_vdp.steps.caption_helpers.frame_selection", _patch_qwen_blank_frames),
     ("ssv_vdp.pipeline.runner_helpers._pipeline_phase3", _patch_distill_inputs),
     ("ssv_vdp.pipeline.nodes.phase3_ssl", _patch_graph_distill_inputs),
     ("selfsuvis.pipeline.training.distill", _patch_distill_training),
     ("ssv_vdp.steps.common", _patch_scene_probes),
+    ("ssv_vdp.steps.common", _patch_video_prompts),
+    ("ssv_vdp.pipeline.runner_helpers._synthesis", _patch_synthesis_grounding),
+    ("ssv_vdp.pipeline.runner_helpers._synthesis", _patch_synthesis_precision),
+    ("ssv_vdp.pipeline.runner_helpers._synthesis", _patch_synthesis_imports),
     ("ssv_vdp.pipeline.runner_helpers._pipeline_phase4", _patch_phase4_handoff),
     ("ssv_vdp.pipeline.nodes.phase4", _patch_graph_phase4_handoff),
     ("ssv_vdp.steps.perception.embed", _patch_finetuned_search),

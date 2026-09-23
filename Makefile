@@ -185,12 +185,14 @@ models:
 	  .venv/bin/python -m selfsuvis.scripts.cache_models
 
 # Full local pipeline: perception, mapping, and captions.
+RUN_FULL_UNIDRIVE_ARGS ?= --no-unidrive
+RUN_FULL_DRONE_AUDIO_ARGS ?= --no-drone-audio
 run-full:
 	@test -n "$(VIDEO)" || { printf '%s\n' "Usage: make run-full VIDEO=/path/to/video.mp4"; exit 1; }
 	@test -f "$(VIDEO)" || { printf '%s\n' "Video not found: $(VIDEO)"; exit 1; }
 	PYTHONPATH=src .venv/bin/python -m selfsuvis.scripts.repair_local_pipeline
 	./scripts/install/ensure_prereqs.sh start -- \
-	  .venv/bin/ssv --mode local --video "$(VIDEO)" $(RUN_ARGS)
+	  .venv/bin/ssv --mode local --video "$(VIDEO)" $(RUN_FULL_UNIDRIVE_ARGS) $(RUN_FULL_DRONE_AUDIO_ARGS) $(RUN_ARGS)
 
 # Install pip into existing .venv (when uv created it without pip)
 venv-pip:

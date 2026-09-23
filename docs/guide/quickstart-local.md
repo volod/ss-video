@@ -80,18 +80,28 @@ Use a separate project-local environment so vLLM's Torch dependencies do not
 replace the pipeline's CUDA build:
 
 ```bash
-uv venv .data/venvs/vllm --python 3.11
-UV_CACHE_DIR=.data/.cache/uv uv pip install \
-  --python .data/venvs/vllm/bin/python vllm --torch-backend=auto
+source scripts/shared/common.sh
+data_dir="$(project_data_dir)"
+uv venv "$data_dir/venvs/vllm" --python 3.11
+UV_CACHE_DIR="$data_dir/.cache/uv" uv pip install \
+  --python "$data_dir/venvs/vllm/bin/python" 'vllm==0.30.0' --torch-backend=auto
+UV_CACHE_DIR="$data_dir/.cache/uv" uv pip install \
+  --python "$data_dir/venvs/vllm/bin/python" \
+  'nvidia-cuda-nvcc==13.0.88' 'nvidia-nvvm==13.0.88' 'nvidia-cuda-crt==13.0.88'
 ```
 
 ```bash
+vllm_cuda_root="$data_dir/venvs/vllm/lib/python3.11/site-packages/nvidia/cu13"
+export CUDA_HOME="$vllm_cuda_root"
+export PATH="$vllm_cuda_root/bin:$PATH"
+export FLASHINFER_WORKSPACE_BASE="$data_dir"
+
 # Qwen visual model (port 8010)
-.data/venvs/vllm/bin/vllm serve \
+"$data_dir/venvs/vllm/bin/vllm" serve \
   <QWEN_MODEL> --port 8010 --max-model-len 8192
 
 # Gemma (port 8000) — only if GEMMA_API_BACKEND=vllm
-.data/venvs/vllm/bin/vllm serve \
+"$data_dir/venvs/vllm/bin/vllm" serve \
   <GEMMA_API_MODEL> --port 8000 --max-model-len 8192
 ```
 
@@ -104,9 +114,14 @@ path verifies Ollama unloads between CUDA steps.
 
 The `owl10/UniDriveVLA_Nusc_Base_Stage3` repository contains a custom `.pt`
 checkpoint, not a Transformers/vLLM chat model. It cannot be served by the
-generic UniDrive sidecar client. For ordinary video input, use
-`RUN_ARGS=--no-unidrive` until a dedicated UniDrive inference bridge is
-configured for its required sensor inputs.
+generic UniDrive sidecar client. `make run-full` disables this step by default
+for ordinary video input. Once a dedicated inference bridge accepts its
+required sensor inputs, pass `RUN_FULL_UNIDRIVE_ARGS=` and configure the
+sidecar URL to enable the step.
+
+Drone audio training is also disabled by default because it requires a separate
+training dataset. Prepare that dataset with `ssv-prepare-audio`, then pass
+`RUN_FULL_DRONE_AUDIO_ARGS=` to include the step.
 
 ---
 

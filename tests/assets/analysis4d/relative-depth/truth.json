@@ -1,0 +1,41 @@
+{
+  "boxes": [],
+  "conditions": [
+    "relative_depth"
+  ],
+  "counts": [],
+  "depths": [
+    {
+      "depth_m": 1.0,
+      "subject_id": "n-track-1",
+      "t_sec": 0.0
+    },
+    {
+      "depth_m": 2.0,
+      "subject_id": "n-track-1",
+      "t_sec": 2.0
+    }
+  ],
+  "events": [],
+  "keyframe_boundaries_sec": [],
+  "masks": [],
+  "media_duration_sec": 4.0,
+  "mission_id": "mission-relative",
+  "qa": [],
+  "relations": [],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.2,
+        0.2,
+        0.2,
+        0.2
+      ]
+    }
+  ],
+  "verifier": []
+}

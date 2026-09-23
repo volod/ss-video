@@ -1,7 +1,7 @@
 """Shared in-memory asyncpg-style realtime DB fakes for tests."""
 
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -67,7 +67,7 @@ class FakeRealtimeConn:
                     "covariance_json": json.loads(args[6]) if args[6] else None,
                     "tracking_status": args[7],
                     "global_map_id": args[8],
-                    "created_at": datetime.now(timezone.utc),
+                    "created_at": datetime.now(UTC),
                 }
             )
             return "INSERT 0 1"
@@ -107,7 +107,7 @@ class FakeRealtimeConn:
                     "mask_ref": args[6],
                     "track_id": args[7],
                     "facts_json": json.loads(args[8]),
-                    "created_at": datetime.now(timezone.utc),
+                    "created_at": datetime.now(UTC),
                 }
             )
             return "INSERT 0 1"

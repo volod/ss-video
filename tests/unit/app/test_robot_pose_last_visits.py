@@ -5,7 +5,7 @@ No live Qdrant or PostgreSQL required.
 """
 
 import sys
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
@@ -25,7 +25,7 @@ sys.modules.setdefault("selfsuvis.app.state", _state_stub)
 async def test_get_last_visits_returns_matching_rows():
     from selfsuvis.app.routers.robot import _get_last_visits
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fake_rows = [
         {
             "mission_id": "m1",
@@ -62,7 +62,7 @@ async def test_get_last_visits_returns_matching_rows():
 async def test_get_last_visits_counts_vehicles_across_groups():
     from selfsuvis.app.routers.robot import _get_last_visits
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fake_rows = [
         {
             "mission_id": "m1",
@@ -110,7 +110,7 @@ async def test_get_last_visits_returns_empty_when_no_rows():
 async def test_get_last_visits_null_facts_json():
     from selfsuvis.app.routers.robot import _get_last_visits
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     fake_rows = [
         {
             "mission_id": "m2",

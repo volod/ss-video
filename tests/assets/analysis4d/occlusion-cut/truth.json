@@ -1,0 +1,41 @@
+{
+  "boxes": [],
+  "conditions": [
+    "long_occlusion"
+  ],
+  "counts": [],
+  "depths": [],
+  "events": [],
+  "keyframe_boundaries_sec": [],
+  "masks": [],
+  "media_duration_sec": 10.0,
+  "mission_id": "mission-occlusion",
+  "qa": [],
+  "relations": [],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.1,
+        0.1,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "gt_id": "gt-2",
+      "label": "crate",
+      "t_sec": 9.0,
+      "xywh_norm": [
+        0.6,
+        0.6,
+        0.2,
+        0.2
+      ]
+    }
+  ],
+  "verifier": []
+}

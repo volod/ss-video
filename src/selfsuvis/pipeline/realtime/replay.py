@@ -2,7 +2,7 @@
 
 import json
 from collections.abc import Sequence
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any
 
@@ -50,7 +50,7 @@ def replay_local_run(
     ingest_start: datetime | None = None,
     ingest_delay_sec_by_kind: dict[str, float] | None = None,
 ) -> list[dict[str, Any]]:
-    ingest_start = ingest_start or datetime.now(timezone.utc)
+    ingest_start = ingest_start or datetime.now(UTC)
     ingest_delay_sec_by_kind = dict(ingest_delay_sec_by_kind or {})
 
     video_dirs = sorted(
@@ -216,7 +216,7 @@ def _sector_index(full_fusion: dict[str, Any], video_name: str) -> tuple[list[st
 
 def _base_event_time(video_name: str, t_sec: float) -> datetime:
     seed = sum(ord(ch) for ch in video_name) % 86_400
-    base = datetime(2026, 1, 1, tzinfo=timezone.utc) + timedelta(seconds=seed)
+    base = datetime(2026, 1, 1, tzinfo=UTC) + timedelta(seconds=seed)
     return base + timedelta(seconds=float(t_sec or 0.0))
 
 
@@ -232,4 +232,4 @@ def _parse_iso(value: str) -> datetime:
     if text.endswith("Z"):
         text = text[:-1] + "+00:00"
     dt = datetime.fromisoformat(text)
-    return dt if dt.tzinfo is not None else dt.replace(tzinfo=timezone.utc)
+    return dt if dt.tzinfo is not None else dt.replace(tzinfo=UTC)

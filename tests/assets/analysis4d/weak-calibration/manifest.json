@@ -1,0 +1,92 @@
+{
+  "artifacts": [
+    {
+      "bytes": 379,
+      "kind": "tracks",
+      "path": "tracks.jsonl",
+      "schema_version": "ss-video.track.v1",
+      "sha256": "sha256:5d5e582e5c6afbb6db1fbe48f8a5eff9759a50d2464e57d0fd86a9e0606ba60b"
+    },
+    {
+      "bytes": 0,
+      "kind": "graph_deltas",
+      "path": "graph-deltas.jsonl",
+      "schema_version": "ss-video.graph-delta.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 0,
+      "kind": "proposals",
+      "path": "proposals.jsonl",
+      "schema_version": "ss-video.proposal.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 696,
+      "kind": "timeline",
+      "path": "timeline.json",
+      "schema_version": "ss-video.scene-timeline.v1",
+      "sha256": "sha256:e94695ed90772afab53a9e098703e23f86f6c1c37953a7065c49ab01b00c7109"
+    },
+    {
+      "bytes": 0,
+      "kind": "qa",
+      "path": "qa.jsonl",
+      "schema_version": "ss-video.qa.v1",
+      "sha256": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+    },
+    {
+      "bytes": 157,
+      "kind": "gaps",
+      "path": "gaps.jsonl",
+      "schema_version": "ss-video.gap.v1",
+      "sha256": "sha256:476a1441a8d728e19b446e22aa44252df54b32895876d6f9ed878402227b1bbe"
+    }
+  ],
+  "coordinate_frame": {
+    "calibration_id": null,
+    "metric_scale": "unavailable",
+    "name": "mission_enu"
+  },
+  "created_at": "2026-01-15T00:00:00Z",
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    },
+    {
+      "code": "calibration_missing",
+      "detail": "no calibration id",
+      "stage": "contract"
+    },
+    {
+      "code": "pose_missing",
+      "detail": "no camera pose",
+      "stage": "contract"
+    }
+  ],
+  "keyframes_sec": [],
+  "mission_id": "mission-weak",
+  "models": [],
+  "profile": "fast",
+  "schema_version": "ss-video.analysis4d-manifest.v1",
+  "stages": [
+    {
+      "degradation_flags": [
+        "models_missing",
+        "calibration_missing",
+        "pose_missing"
+      ],
+      "inference_time_sec": 0.0,
+      "model": null,
+      "processed_frames": 1,
+      "queue_delay_sec": 0.0,
+      "queue_depth": 0,
+      "skipped_frames": 2,
+      "stage": "contract",
+      "trigger_reason": "fixture"
+    }
+  ],
+  "supersedes_sha256": null
+}

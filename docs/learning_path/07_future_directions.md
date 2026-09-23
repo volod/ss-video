@@ -28,7 +28,7 @@ not only object similarity.
 
 **Study first:** CLIP and MoCo papers in [06_study_resources.md](06_study_resources.md);
 calibration notes in ss-fusion
-[sensor fusion fundamentals](https://github.com/volod/ss-fusion/blob/v0.1.0/docs/learning_path/03_sensor_fusion_fundamentals.md).
+[sensor fusion fundamentals](https://github.com/volod/ss-fusion/blob/v0.2.0/docs/learning_path/03_sensor_fusion_fundamentals.md).
 
 ## 2. Query evaluation harness
 
@@ -76,6 +76,29 @@ spatial exceedance probability.
 
 **Candidate id:** `environmental-field-models` (ss-fusion / ss-sens).
 
+## 8. Time-varying 3D scene understanding
+
+**Gap.** The indexer can keep diverse frames, estimate depth, refine detections with SAM, run
+directed tracking, and build a semantic environment graph. The `four-d-scene-analysis` capability
+now also writes versioned tracks, masked geometry, interval-bearing graph edges, a verified
+timeline, and published accepted events (`pipeline/analysis4d/`, corpus `analysis4d-v1`).
+
+**Why it matters.** An operator asking "what changed, where, and which evidence proves it?" needs
+track continuity, coordinate-frame discipline, graph edits, and evidence-linked events. Independent
+frame captions cannot reliably answer that question, especially through occlusion or a camera cut.
+
+**Shipped capability:** `four-d-scene-analysis`. Read the
+[specification](../design/spec.md#four-dimensional-video-scene-analysis) and the
+[production server](../impl/current/production-server.md#profile-orchestration).
+Accepted envelopes are handed to the video MQTT publisher on the event-envelope
+topic. Keyframe geometry writes depth-backed boxes from the fast profile when a
+GPU slot is free.
+
+**Study first:** distinguish relative from metric depth; camera calibration from surface-normal
+estimation; a VLM proposal from a verified graph edge; and online bounded keyframe selection from a
+global postflight selection. The capability deliberately keeps learned perception and training in
+ss-fusion while ss-video owns scheduling, evidence persistence, query, and operator-visible quality.
+
 ## Pre-extension checklist
 
 Before adding runtime behavior:
@@ -89,5 +112,5 @@ Before adding runtime behavior:
 If you cannot answer from artifacts, stay in chapters 01-05. Adding a model
 before the evidence path is understood makes the system harder to debug.
 
-Sibling research themes (kernel extraction, HAB landing, LoRaWAN FUOTA) are
-listed as candidates on the plan and owned by ss-fusion or ss-sens.
+Sibling research themes (kernel extraction, LoRaWAN FUOTA) are listed as
+candidates on the plan and owned by ss-fusion or ss-sens.

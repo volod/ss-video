@@ -13,9 +13,14 @@ Operations runbooks for models used by the video indexer and for realtime pose s
 | [depth.md](depth.md) | Monocular depth |
 | [detection-hf.md](detection-hf.md) | HF object detection |
 | [yolo-sam.md](yolo-sam.md) | YOLO11 + SAM2/3 |
+| [four-d-models.md](four-d-models.md) | 4D keyframes, Grounding DINO, and track propagation |
+| [four-d-geometry.md](four-d-geometry.md) | 4D depth, boxes, and masked appearance |
+| [four-d-scene-graph.md](four-d-scene-graph.md) | 4D temporal scene graph and proposals |
+| [four-d-strict-verifier.md](four-d-strict-verifier.md) | Strict verifier and spatial Video-QA |
+| [four-d-profile-orchestration.md](four-d-profile-orchestration.md) | Fast and deep 4D profiles, queues, and verified events |
 
 Research-pipeline models (Gemma, Qwen, UniDrive, world-model, RF-DETR tracking) live in
-[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`.
+[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.
 
 ## Realtime mapping sidecars
 

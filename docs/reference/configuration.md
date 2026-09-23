@@ -162,6 +162,92 @@ python -m selfsuvis.scripts.migrate_postgres --owner fusion
 | `MAX_DIR_BYTES` | `50 GiB` | Directory scan byte limit |
 | `MAX_DIR_DEPTH` | `10` | Directory recursion limit |
 
+## 4D keyframes and tracks
+
+These overrides apply to `workflows/analysis4d_tracks.py`. They are not `KitSettings`.
+The pinned providers and the measured gate are in the
+[4D model runbook](../runbooks/four-d-models.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_GROUNDING_PROVIDER` | `grounding_dino` | Grounding provider. `scripted` and `unavailable` are test stand-ins. |
+| `ANALYSIS4D_MASK_PROVIDER` | `kinematic` | Mask propagator. The shipped path is kinematic box motion. |
+| `ANALYSIS4D_COUNT_PROVIDER` | empty | Count expert. Empty or `off` leaves counting disabled. |
+| `ANALYSIS4D_SEED` | `0` | Tie-break seed for keyframe selection and track ids. |
+| `ANALYSIS4D_VRAM_BUDGET_BYTES` | `8589934592` | Provider pin rejects a probe above this peak allocation (8 GiB). |
+| `ANALYSIS4D_KEYFRAME_LATENCY_SEC` | `1.0` | Provider pin rejects a probe slower than this per keyframe after warmup. |
+| `ANALYSIS4D_MAX_GAP_SEC` | `10` | Insert a forced keyframe when the last selection is older than this. |
+| `ANALYSIS4D_CHUNK_SEC` | `4` | Fast-pass chunk length. The deep pass budgets across the whole span. |
+| `ANALYSIS4D_KEYFRAME_BUDGET` | `2` | MaxInfo selections per chunk. Forced triggers may exceed it. |
+| `ANALYSIS4D_MIN_SPACING_SEC` | `0.25` | Drop a non-forced keyframe closer than this to the previous one. |
+
+Histogram, SSIM, and embedding-drift thresholds stay at the indexer defaults (`0.25`,
+`0.25`, `0.15`) inside `SelectorConfig`. They are not separate environment variables.
+
+## 4D geometry
+
+Depth and appearance pins, and the synthetic-camera tolerances, are in the
+[4D geometry runbook](../runbooks/four-d-geometry.md). The same VRAM and latency
+budgets above apply to those probes.
+
+`HF_TOKEN` in `.env` is sent on Hugging Face downloads. See
+[secrets management](secrets-management.md). A gated or invisible repository with
+an empty or rejected token fails
+`python -m selfsuvis.pipeline.analysis4d.geometry_benchmark`. The failure detail
+names `HF_TOKEN`. The token value is not written to logs or to the report.
+
+## 4D scene graph
+
+These overrides apply to `workflows/analysis4d_graph.py`. The predicates,
+intervals, and the pinned comparison are in the
+[temporal scene-graph runbook](../runbooks/four-d-scene-graph.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_VLM_PROVIDER` | `unavailable` | Proposal provider. `unavailable` keeps the deterministic graph and records `provider_unavailable`. `smolvlm` loads `HuggingFaceTB/SmolVLM-256M-Instruct`. |
+
+SceneGraphVLM training is not configured here. A remote proposal model is not the default.
+
+## Strict verifier and Video-QA
+
+These overrides apply to `workflows/analysis4d_verify.py`. The gate, the
+graph programs, and the pinned rates are in the
+[strict verifier runbook](../runbooks/four-d-strict-verifier.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_REVIEW_PROVIDER` | `unavailable` | Semantic reviewer. `unavailable` leaves unsettled claims `uncertain` and keeps deterministic events. `qwen` loads the local Qwen-VL adapter. `remote` calls the Responses API. |
+| `ANALYSIS4D_QWEN_VL_MODEL` | `Qwen/Qwen2.5-VL-3B-Instruct` | Local Qwen-VL weights used when the reviewer is `qwen`. |
+| `ANALYSIS4D_REVIEW_REMOTE_MODEL` | `gpt-6-astra` | Remote model id used when the reviewer is `remote`. |
+| `ANALYSIS4D_REVIEW_TIMEOUT_SEC` | `30` | Reviewer timeout. A timeout fails closed. |
+
+Remote review is not the default. It sends selected images and a strict JSON
+schema. It does not send video.
+
+## Profile orchestration
+
+These overrides apply to `workflows/analysis4d_profile.py` and to index enqueue.
+The queue, publication, and the 15-minute gate are in the
+[profile orchestration runbook](../runbooks/four-d-profile-orchestration.md).
+
+| Variable | Default | Purpose |
+|---|---|---|
+| `ANALYSIS4D_PROFILE` | `off` | `off` leaves video search unchanged. `fast` enqueues the causal job. `deep` also enqueues the postflight revision. |
+| `ANALYSIS4D_QUEUE_CAPACITY` | `32` | Maximum frames held before the next chunk drain. Extra frames are coalesced into gap records. |
+| `ANALYSIS4D_GPU_SLOTS` | `1` | Optional-stage admission. `0` sheds dense geometry, VLM, and review and records `budget_shed`. Tracks still run. |
+| `ANALYSIS4D_PROFILE_CHUNK_SEC` | `ANALYSIS4D_CHUNK_SEC`, else `4` | Fast-pass chunk length used by the orchestrator. |
+| `ANALYSIS4D_FAST_EVENT_TYPES` | `entered_region,left_region,count_changed` | Event types included in the p95 lag gate. |
+| `ANALYSIS4D_ZONE_ID` | `site` | Zone id on the published event envelope and in the MQTT topic. |
+| `ANALYSIS4D_SENSOR_ID` | mission id | Sensor id on the published event envelope. |
+| `ANALYSIS4D_PROMPTS` | `object` | Comma-separated prompts for a worker profile run. |
+
+`ANALYSIS4D_VLM_PROVIDER` and `ANALYSIS4D_REVIEW_PROVIDER` stay `unavailable`
+unless an operator sets them. A remote model is not the default. A free GPU
+slot runs keyframe depth on the fast profile. Optional region boxes are
+`$DATA_DIR/analysis/<mission_id>/regions.json` (`ss-video.region-boxes.v1`).
+`COOP_SITE_ID` (default `local`) and `ANALYSIS4D_ZONE_ID` fill the MQTT topic
+`ss/v1/site/{site_id}/zone/{zone_id}/event/video_4d`.
+
 ## Notes
 
 - If `ALLOWED_INDEX_PATHS` is empty, path-based indexing endpoints are disabled by design.
@@ -176,7 +262,7 @@ python -m selfsuvis.scripts.migrate_postgres --owner fusion
 - Local runs write `state_fusion.json` (GPS-only baseline) and `full_state_fusion.json` (all four layers: platform + visual-pose + object-state + map-state with RTS smoothing).
 - GPS sidecar: place `<videoname>.gps.jsonl` next to the video; IMU: `<videoname>.imu.jsonl`; baro: `<videoname>.baro.jsonl`.
 - `full_state_fusion.json` is written after step 15 (SfM join) so it has access to SfM poses, RF-DETR tracking results, and Gemma/RSSM semantic analysis.
-- Semantic priors: Gemma's `scene_type` drives process noise scale; RSSM mean surprise drives temporal noise scale; urban canyon objects drive GPS noise inflation. See [ss-fusion probabilistic fusion](https://github.com/volod/ss-fusion/blob/v0.1.0/docs/learning_path/12_probabilistic_fusion_deep_dive.md) for the full noise table.
+- Semantic priors: Gemma's `scene_type` drives process noise scale; RSSM mean surprise drives temporal noise scale; urban canyon objects drive GPS noise inflation. See [ss-fusion probabilistic fusion](https://github.com/volod/ss-fusion/blob/v0.2.0/docs/learning_path/12_probabilistic_fusion_deep_dive.md) for the full noise table.
 - On local Ollama defaults, Qwen uses a smaller sampled-frame budget and OCR only runs on lower-confidence Florence-captioned frames.
 - Local agentic-flow audit runs a simple prompt first and only retries with a compact fallback when the first answer is empty or structurally incomplete.
 - Depth `auto` uses the fast profile by default for local runs; set `DEPTH_AUTO_PROFILE=quality` or an explicit `DEPTH_MODEL` to opt into heavier inference.

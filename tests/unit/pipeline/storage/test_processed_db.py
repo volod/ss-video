@@ -4,7 +4,7 @@ import asyncio
 import importlib
 import sys
 import types
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 if "asyncpg" not in sys.modules:
@@ -37,8 +37,8 @@ async def _test_get_by_hash_happy_path():
         mtime=1.5,
         status="done",
         meta_json={"source": "upload"},
-        created_at=datetime.now(timezone.utc),
-        updated_at=datetime.now(timezone.utc),
+        created_at=datetime.now(UTC),
+        updated_at=datetime.now(UTC),
     )
     conn = AsyncMock()
     conn.fetchrow = AsyncMock(return_value=row)
@@ -67,8 +67,8 @@ async def _test_get_by_url_happy_path():
             mtime=1.0,
             status="done",
             meta_json={"url": "http://example.com/vid.mp4"},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     rec = await aget_by_url("http://example.com/vid.mp4", conn=conn)
@@ -87,8 +87,8 @@ async def _test_get_by_size_multiple_returns_most_recent():
             mtime=2.0,
             status="done",
             meta_json={},
-            created_at=datetime.now(timezone.utc),
-            updated_at=datetime.now(timezone.utc),
+            created_at=datetime.now(UTC),
+            updated_at=datetime.now(UTC),
         )
     )
     rec = await aget_by_size(512, conn=conn)

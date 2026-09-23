@@ -50,7 +50,7 @@ If `/index/video path=...` or `/index/dir` returns path errors, set `ALLOWED_IND
 
 ## Model download or load failures
 
-- Pre-fetch required assets with `python -m selfsuvis.scripts.prepare_models --all`
+- Pre-fetch the models a local preflight requires with `make models`. Cached models are skipped.
 - Set `HF_TOKEN` for gated Hugging Face models
 - Lower batch sizes or disable optional multimodal stages if VRAM is insufficient
 
@@ -60,7 +60,7 @@ Before a local run, `ssv --mode local` now checks that local dependencies are
 installed and that the required model weights are already cached.
 
 - Read the `preflight:` log lines first; they name the exact missing cache or package
-- Warm missing assets with `python -m selfsuvis.scripts.prepare_models --all`
+- Warm the required models with `make models`. Cached models are skipped.
 - If only one stage is missing, run the narrower command, for example:
   - `python -m selfsuvis.scripts.prepare_models --ocr`
   - `python -m selfsuvis.scripts.prepare_models --world-model`

@@ -28,8 +28,10 @@ Index a single video from:
 Form fields:
 
 - `enable_tiles=true|false`
+- `analysis_profile=off|fast|deep` (optional; omitted uses `ANALYSIS4D_PROFILE`, default `off`)
 
-Returns `{"video_id", "job_id"}`.
+Returns `{"video_id", "job_id"}`. The same optional `analysis_profile` field is
+accepted by `POST /index/url`, `POST /index/dir`, and `POST /index/rtsp`.
 
 ### `POST /index/url`
 
@@ -248,6 +250,57 @@ Returns one active or completed live stream runtime entry.
 Stops a live stream runtime. With `{"delete_path": true}`, also deletes the MediaMTX path.
 
 For deployment and publish examples, see [MediaMTX streaming](streaming-mediamtx.md).
+
+## Analysis routes
+
+Read routes for one mission's temporal scene graph, verified timeline, and
+Video-QA. They require the API key. The files live under
+`$DATA_DIR/analysis/<mission_id>/4d/`. A missing manifest is HTTP 404.
+
+### `GET /analysis/{mission_id}/4d/status`
+
+Returns the selected profile, queue depth and capacity, stage degradations,
+optional-stage backlog, published event ids, and the manifest supersession
+digest. A missing manifest is HTTP 404 with `analysis profile not found`.
+
+### `GET /analysis/{mission_id}/4d/graph`
+
+Returns the materialized graph: current nodes, superseded nodes, edges, and
+superseded delta ids.
+
+Query:
+
+- `t_sec` optional. When set, edges are those whose half-open interval contains
+  that time.
+
+### `GET /analysis/{mission_id}/4d/deltas`
+
+Returns the append-only graph log in `(t_sec, delta_id)` order.
+
+### `GET /analysis/{mission_id}/4d/proposals`
+
+Returns proposal rows, including uncertain, rejected, corrected, and superseded
+claims.
+
+### `GET /analysis/{mission_id}/4d/timeline`
+
+Returns the verified timeline. Events may be `accepted`, `rejected`,
+`uncertain`, or `corrected`. An accepted event cites evidence.
+
+### `GET /analysis/{mission_id}/4d/qa`
+
+Returns Video-QA rows. `publishable_qa_ids` lists accepted answers. The
+answer comes from the graph program.
+
+### `GET /analysis/{mission_id}/4d/evidence`
+
+Query: exactly one of `event_id` or `qa_id`. Returns that row and the
+geometry or mask files it cites. Omitting both is HTTP 400. An unknown id
+is HTTP 404.
+
+Runbooks: [temporal scene graph](../runbooks/four-d-scene-graph.md),
+[strict verifier and Video-QA](../runbooks/four-d-strict-verifier.md),
+[profile orchestration](../runbooks/four-d-profile-orchestration.md).
 
 ---
 [← Develop](../guide/develop.md) | [UI →](ui.md)

@@ -1,0 +1,155 @@
+apiVersion: v3.1.0
+kind: DataContract
+id: verified-scene-event
+version: 1.0.0
+status: active
+name: Verified scene event
+domain: video
+description:
+  purpose: >-
+    One accepted 4D scene-timeline event published for site correlation. Rejected and uncertain
+    claims are not valid messages. A deep-profile revision names the fast event it supersedes.
+schema:
+  - name: verified_scene_event
+    logicalType: object
+    physicalType: topic
+    customProperties:
+      - property: ssBinding
+        value:
+          timeBase: utc
+          modality: video_4d
+          mqttTopic: ss/v1/site/{site_id}/video/{mission_id}/verified-event
+      - property: schemaGeneration
+        value:
+          pydantic: {className: VerifiedSceneEvent}
+          avro: {namespace: ss.contracts.video, recordName: VerifiedSceneEvent}
+          proto:
+            package: ss.contracts.video.v1
+            messageName: VerifiedSceneEvent
+            goPackage: github.com/volod/ss-common/gen/go/video/v1;videov1
+    properties:
+      - name: event_id
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Timeline event id. Stable across a replay of the same profile.
+        logicalTypeOptions: {minLength: 1, maxLength: 128}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 1}}
+      - name: mission_id
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Mission that produced the event.
+        logicalTypeOptions: {minLength: 1, maxLength: 128}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 2}}
+      - name: profile
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Analysis profile that accepted the event.
+        logicalTypeOptions: {pattern: "^(fast|deep)$"}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 3}}
+      - name: event_type
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Timeline event type, such as entered_region or count_changed.
+        logicalTypeOptions: {minLength: 1, maxLength: 64}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 4}}
+      - name: summary
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Short description copied from the accepted timeline row.
+        logicalTypeOptions: {minLength: 1, maxLength: 512}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 5}}
+      - name: start_sec
+        logicalType: number
+        physicalType: double
+        required: true
+        description: Media start of the half-open event interval, in seconds.
+        logicalTypeOptions: {minimum: 0}
+        customProperties:
+          - property: ssBinding
+            value: {timeBase: media, unit: s}
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 6}}
+      - name: end_sec
+        logicalType: number
+        physicalType: double
+        required: true
+        description: Media end of the half-open event interval, in seconds.
+        logicalTypeOptions: {minimum: 0}
+        customProperties:
+          - property: ssBinding
+            value: {timeBase: media, unit: s}
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 7}}
+      - name: participants
+        logicalType: array
+        physicalType: array
+        required: true
+        description: Track and region ids that participate in the event.
+        logicalTypeOptions: {minItems: 1}
+        items:
+          logicalType: string
+          physicalType: string
+          description: One participant id.
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 8}}
+      - name: confidence
+        logicalType: number
+        physicalType: double
+        required: true
+        description: Acceptance confidence copied from the timeline row.
+        logicalTypeOptions: {minimum: 0, maximum: 1}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 9}}
+      - name: verification_status
+        logicalType: string
+        physicalType: string
+        required: true
+        description: Always accepted. The publisher drops every other status.
+        logicalTypeOptions: {pattern: "^accepted$"}
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 10}}
+      - name: supersedes
+        logicalType: string
+        physicalType: string
+        required: false
+        description: Event id revised by this message. Unset when the event is new.
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 11}}
+      - name: artifact_uri
+        logicalType: string
+        physicalType: string
+        required: false
+        description: Relative path of the timeline artifact inside the mission directory.
+        customProperties:
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 12}}
+      - name: published_at
+        logicalType: timestamp
+        physicalType: timestamp
+        required: true
+        description: UTC time the event was handed to the site envelope.
+        logicalTypeOptions: {timezone: true}
+        customProperties:
+          - property: ssBinding
+            value: {timeBase: utc}
+          - property: fieldGeneration
+            value: {proto: {fieldNumber: 13}}

@@ -31,7 +31,7 @@ Focus: when CLIP retrieval beats DINO and the reverse. Failure: OOM, wrong
 Production may sample frames for scene type, change detection, and clustering
 when the Gemma extra is enabled. This is a domain hint for later VLMs, not the
 retrieval backbone. Research-path detail:
-[ss-fusion step 3](https://github.com/volod/ss-fusion/blob/v0.1.0/docs/learning_path/02_perception_core_steps_01_08.md).
+[ss-fusion step 3](https://github.com/volod/ss-fusion/blob/v0.2.0/docs/learning_path/02_perception_core_steps_01_08.md).
 
 If the sidecar is down, `scene_type` stays empty and later captions lose the hint.
 
@@ -73,6 +73,12 @@ semantic environment graph. Runbooks: [detection-hf.md](../runbooks/detection-hf
 Optional later stages (Gemma-directed tracking, Qwen VLM, UniDriveVLA) are
 ss-fusion models invoked from the worker when extras are on. Their study docs
 stay in ss-fusion ([siblings.md](siblings.md)).
+
+These stages currently enrich sampled frames or produce a mission-level semantic graph; they are not
+yet a verified temporal 3D scene graph. The planned
+[4D scene-analysis capability](../design/spec.md#four-dimensional-video-scene-analysis) adds
+persistent mask tracks, uncertainty-aware geometry, graph deltas, strict verification, and
+evidence-derived Video-QA without changing this current behavior until its plan tasks ship.
 
 ## Degradation rule
 

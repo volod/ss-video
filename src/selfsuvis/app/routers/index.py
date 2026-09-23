@@ -10,6 +10,7 @@ from selfsuvis.app.db import get_db_pool
 from selfsuvis.app.deps import rate_limit, require_api_key
 from selfsuvis.app.services.upload_utils import hash_upload_limited, write_upload_to_path
 from selfsuvis.app.state import logger
+from selfsuvis.pipeline.analysis4d.profile import stamp_profile
 from selfsuvis.pipeline.core import ensure_dir, file_sha256, resolve_allowed_path, settings
 from selfsuvis.pipeline.media import safe_request, validate_url
 from selfsuvis.pipeline.storage import create_job
@@ -30,7 +31,10 @@ async def _lookup_by_hash(file_hash: str):
     return await aget_by_hash(file_hash)
 
 
-async def _enqueue_job(payload: dict, request: Request) -> str:
+async def _enqueue_job(payload: dict, request: Request, analysis_profile: str | None = None) -> str:
+    if analysis_profile:
+        payload = {**payload, "analysis_profile": analysis_profile}
+    payload = stamp_profile(payload)
     job_id = uuid.uuid4().hex
     pool = get_db_pool(request)
     acquired = pool.acquire()
@@ -99,6 +103,7 @@ async def index_video(
     file: UploadFile | None = File(default=None),
     path: str | None = Form(default=None),
     enable_tiles: bool = Form(default=True),
+    analysis_profile: str | None = Form(default=None),
 ):
     """Accept video file upload or a path (within ALLOWED_INDEX_PATHS). Returns video_id and job_id."""
     if file is None and path is None:
@@ -126,6 +131,7 @@ async def index_video(
     job_id = await _enqueue_job(
         {"video_id": video_id, "video_path": video_path, "enable_tiles": enable_tiles},
         request,
+        analysis_profile,
     )
     logger.info("Enqueued video_id=%s job_id=%s", video_id, job_id)
     return {"video_id": video_id, "job_id": job_id}
@@ -137,6 +143,7 @@ async def index_url(
     url: str | None = Form(default=None),
     stream_url: str | None = Form(default=None),
     enable_tiles: bool = Form(default=True),
+    analysis_profile: str | None = Form(default=None),
 ):
     url = url or stream_url
     if not url:
@@ -149,6 +156,7 @@ async def index_url(
     job_id = await _enqueue_job(
         {"video_id": video_id, "video_url": url, "enable_tiles": enable_tiles},
         request,
+        analysis_profile,
     )
     logger.info("Enqueued url video_id=%s job_id=%s", video_id, job_id)
     return {"video_id": video_id, "job_id": job_id}
@@ -164,6 +172,7 @@ async def index_dir(
     path: str | None = Form(default=None),
     dir_path: str | None = Form(default=None),
     enable_tiles: bool = Form(default=True),
+    analysis_profile: str | None = Form(default=None),
 ):
     path = path or dir_path
     if not path:
@@ -182,6 +191,7 @@ async def index_dir(
             job_id = await _enqueue_job(
                 {"video_id": video_id, "video_path": video_path, "enable_tiles": enable_tiles},
                 request,
+                analysis_profile,
             )
             jobs.append({"video_id": video_id, "job_id": job_id})
     except _DirLimitExceeded as e:
@@ -255,6 +265,7 @@ async def index_rtsp(
     mission_id: str | None = Form(default=None),
     duration_sec: int | None = Form(default=None),
     enable_tiles: bool = Form(default=True),
+    analysis_profile: str | None = Form(default=None),
 ):
     """Record a live RTSP or RTMP stream and queue it for indexing.
 
@@ -285,6 +296,7 @@ async def index_rtsp(
             "enable_tiles": enable_tiles,
         },
         request,
+        analysis_profile,
     )
     logger.info(
         "Enqueued RTSP stream video_id=%s mission_id=%s job_id=%s url=%s",

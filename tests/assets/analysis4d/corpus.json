@@ -1,0 +1,22 @@
+{
+  "corpus_id": "analysis4d-v1",
+  "missions": [
+    "nominal",
+    "occlusion-cut",
+    "crowded",
+    "weak-calibration",
+    "relative-depth",
+    "contradiction",
+    "empty-scene"
+  ],
+  "required_conditions": [
+    "camera_cut",
+    "long_occlusion",
+    "crowded_repeated_objects",
+    "moving_camera",
+    "weak_calibration",
+    "relative_depth",
+    "contradictory_proposal",
+    "empty_scene"
+  ]
+}

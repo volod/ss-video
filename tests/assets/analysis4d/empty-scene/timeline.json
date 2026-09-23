@@ -1,0 +1,26 @@
+{
+  "coordinate_frame": {
+    "calibration_id": null,
+    "metric_scale": "unavailable",
+    "name": "mission_enu"
+  },
+  "degradations": [
+    {
+      "code": "empty_scene",
+      "detail": "no claim passed verification",
+      "stage": "contract"
+    },
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "events": [],
+  "mission_id": "mission-empty",
+  "model_manifest_ref": "manifest.json",
+  "profile": "fast",
+  "qa_pairs": [],
+  "schema_version": "ss-video.scene-timeline.v1",
+  "supersedes_sha256": null
+}

@@ -22,7 +22,7 @@ Event payload shape (Frigate ≥ 0.13):
 
 import json
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 
@@ -66,14 +66,14 @@ class FrigateEventConsumer:
             return None
 
         try:
-            started_at = datetime.fromtimestamp(after["start_time"], tz=timezone.utc)
+            started_at = datetime.fromtimestamp(after["start_time"], tz=UTC)
         except (KeyError, TypeError, ValueError, OSError):
-            started_at = datetime.now(timezone.utc)
+            started_at = datetime.now(UTC)
 
         ended_at: datetime | None = None
         if (end_ts := after.get("end_time")) is not None:
             try:
-                ended_at = datetime.fromtimestamp(end_ts, tz=timezone.utc)
+                ended_at = datetime.fromtimestamp(end_ts, tz=UTC)
             except (TypeError, ValueError, OSError):
                 pass
 

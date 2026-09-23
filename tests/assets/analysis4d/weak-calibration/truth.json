@@ -1,0 +1,30 @@
+{
+  "boxes": [],
+  "conditions": [
+    "weak_calibration"
+  ],
+  "counts": [],
+  "depths": [],
+  "events": [],
+  "keyframe_boundaries_sec": [],
+  "masks": [],
+  "media_duration_sec": 5.0,
+  "mission_id": "mission-weak",
+  "qa": [],
+  "relations": [],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-1",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.2,
+        0.2,
+        0.2,
+        0.2
+      ]
+    }
+  ],
+  "verifier": []
+}

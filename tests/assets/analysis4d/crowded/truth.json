@@ -1,0 +1,49 @@
+{
+  "boxes": [],
+  "conditions": [
+    "crowded_repeated_objects"
+  ],
+  "counts": [
+    {
+      "count": 2,
+      "label": "crate",
+      "t_sec": 0.0
+    }
+  ],
+  "depths": [],
+  "events": [],
+  "keyframe_boundaries_sec": [
+    0.0
+  ],
+  "masks": [],
+  "media_duration_sec": 4.0,
+  "mission_id": "mission-crowded",
+  "qa": [],
+  "relations": [],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [
+    {
+      "gt_id": "gt-l",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.1,
+        0.1,
+        0.2,
+        0.2
+      ]
+    },
+    {
+      "gt_id": "gt-r",
+      "label": "crate",
+      "t_sec": 0.0,
+      "xywh_norm": [
+        0.6,
+        0.1,
+        0.2,
+        0.2
+      ]
+    }
+  ],
+  "verifier": []
+}

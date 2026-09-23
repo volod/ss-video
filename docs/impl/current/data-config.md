@@ -36,7 +36,7 @@ Video and fusion may share one Postgres instance and use separate databases:
 
 | Owner | Env var | Default database | Schema module | Tables |
 | --- | --- | --- | --- | --- |
-| ss-video | `DATABASE_URL` | `selfsuvis` | `pipeline/storage/migrate_video.py` | `jobs`, `processed_files`, `missions`, `frames`, mapping/realtime/CVAT tables, `scene_timeline` |
+| ss-video | `DATABASE_URL` | `selfsuvis` | `pipeline/storage/migrate_video.py` | `jobs`, `processed_files`, `missions`, `frames`, mapping/realtime/CVAT tables, `scene_timeline`, `analysis4d_runs`, `analysis4d_events`, `analysis4d_edges`, `analysis4d_qa` |
 | ss-fusion | `FUSION_DATABASE_URL` | `selfsuvis_fusion` | `fusion_rt/migrate.py` | `sensor_keys`, `site_events`, `zones`, `fusion_rules`, `incidents`, `incident_notes` |
 
 `ssv-migrate` (`python -m selfsuvis.scripts.migrate_postgres`) applies both owners by
@@ -65,8 +65,8 @@ new database. New installs skip this.
 
 ## Shared runtime helpers
 
-This repository pins published ss-common (`ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0`
-in `pyproject.toml`, `[tool.uv.sources]` tag `v0.1.0`). Docker builders install `git` and
+This repository pins published ss-common (`ss-common @ git+https://github.com/volod/ss-common.git@v0.2.1`
+in `pyproject.toml`, `[tool.uv.sources]` tag `v0.2.1`). Docker builders install `git` and
 `ca-certificates` so `pip` can fetch that URL, and use `python:3.11-slim` because ss-common
 requires Python 3.11.
 
@@ -123,13 +123,62 @@ Canonical seed YAML is package data at
   [ss-sens-data-dirs.sh](https://github.com/volod/ss-sens/blob/v0.1.0/scripts/ss-sens/ss-sens-data-dirs.sh)
   before first start.
 
+## Four-dimensional analysis artifacts
+
+Versioned 4D outputs are separate from the ss-common `mission-bundle` and `model-artifact`
+manifests. Schema `ss-video.analysis4d-manifest.v1` is internal to ss-video.
+`pipeline/storage/analysis4d.py` materializes query rows; the files remain the audit copy.
+Layout and the benchmark commands are in
+[production-server.md](production-server.md#four-dimensional-analysis-contracts).
+Keyframe selection and the pinned grounding model are in the
+[4D model runbook](../../runbooks/four-d-models.md). Records:
+[0001-four-d-scene-analysis-four-d-contracts-and-benchmark](../records/0001-four-d-scene-analysis-four-d-contracts-and-benchmark.md),
+[0002-four-d-scene-analysis-four-d-keyframes-and-tracks](../records/0002-four-d-scene-analysis-four-d-keyframes-and-tracks.md),
+[0003-four-d-scene-analysis-four-d-spatial-reconstruction](../records/0003-four-d-scene-analysis-four-d-spatial-reconstruction.md),
+[0004-four-d-scene-analysis-four-d-scene-graph](../records/0004-four-d-scene-analysis-four-d-scene-graph.md),
+[0005-four-d-scene-analysis-four-d-strict-verifier-and-qa](../records/0005-four-d-scene-analysis-four-d-strict-verifier-and-qa.md),
+[0006-four-d-scene-analysis-four-d-profile-orchestration](../records/0006-four-d-scene-analysis-four-d-profile-orchestration.md),
+[0007-four-d-scene-analysis-four-d-keyframe-geometry](../records/0007-four-d-scene-analysis-four-d-keyframe-geometry.md),
+[0008-four-d-scene-analysis-four-d-verified-event-delivery](../records/0008-four-d-scene-analysis-four-d-verified-event-delivery.md).
+Accepted events are also copied into `published-events.jsonl` as `event-envelope`
+1.0.0 rows and handed to the video MQTT publisher. The payload contract is
+`contracts/odcs/verified-scene-event.odcs.yaml`. The topic modality is `video_4d`.
+
+```text
+$DATA_DIR/analysis/<mission_id>/4d/
+  manifest.json
+  tracks.jsonl
+  graph-deltas.jsonl
+  proposals.jsonl
+  timeline.json
+  qa.jsonl
+  gaps.jsonl          optional; required when a stage skips frames
+  orchestration-state.json  profile digest, queue depth, and replay flags
+  published-events.jsonl    accepted event envelopes, append-only
+  track-audit.json    keyframe reasons, memory resets, count disagreements
+  geometry/           one JSON sample per track and timestamp
+  embeddings/         masked appearance prototypes, one directory per track
+  masks/              mask artifacts referenced by evidence
+  history/            previous timeline or manifest, named by digest prefix
+$DATA_DIR/analysis/_benchmark/report.json
+$DATA_DIR/analysis/_benchmark/tracks-report.json
+$DATA_DIR/analysis/_benchmark/geometry-report.json
+$DATA_DIR/analysis/_benchmark/graph-report.json
+$DATA_DIR/analysis/_benchmark/verifier-report.json
+$DATA_DIR/analysis/_benchmark/profile-report.json
+$DATA_DIR/hf-cache/   Hugging Face weights when HF_HOME is unset
+```
+
+`truth.json` is evaluation-only and is not listed in the runtime manifest. The pinned
+corpus that the benchmark scores is `tests/assets/analysis4d/` (`analysis4d-v1`).
+
 ## Manifests
 
 Two file manifests follow ss-common contracts
-([manifest contracts](https://github.com/volod/ss-common/blob/v0.1.0/docs/impl/current/contracts.md#manifest-contracts)).
+([manifest contracts](https://github.com/volod/ss-common/blob/v0.2.1/docs/impl/current/contracts.md#manifest-contracts)).
 Builders return plain dicts in the canonical wire form, so the generated models validate them
 unchanged. This repository pins ss-common; unit tests import `ss_contracts.models` and compare
-against `tests/assets/contracts/golden/` (snapshot of the v0.1.0 goldens).
+against `tests/assets/contracts/golden/` (snapshot of the v0.2.1 goldens).
 Runtime builders still return dicts rather than constructing those models.
 
 | Manifest | Builder | Written by | Location |

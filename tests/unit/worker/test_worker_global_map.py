@@ -28,6 +28,7 @@ not imported directly.
 import asyncio
 import os
 import tempfile
+from datetime import UTC
 from typing import Any
 
 import numpy as np
@@ -295,15 +296,15 @@ class TestUpdateMissionSplatPath:
         assert args[2] == "m1"
 
     def test_updated_at_is_recent(self):
-        from datetime import datetime, timezone
+        from datetime import datetime
 
         from selfsuvis.pipeline.storage.global_maps import update_mission_splat_path
 
         conn = MockConn()
         conn._missions = [{"id": "m1", "splat_path": None, "updated_at": 0.0}]
-        before = datetime.now(timezone.utc)
+        before = datetime.now(UTC)
         _run(update_mission_splat_path(conn, "m1", "/maps/m1/splat.ply"))
-        after = datetime.now(timezone.utc)
+        after = datetime.now(UTC)
         _, args = conn.execute_calls[0]
         assert before <= args[1] <= after
 

@@ -3,7 +3,7 @@
 Set up the ss-video API, worker, and UI for local development with hot-reload. This covers the Docker-backed service stack only.
 
 The research pipeline (`ssv --mode local`) lives in
-[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`.
+[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`.
 
 ---
 
@@ -76,17 +76,52 @@ ollama pull <REASONING_MODEL>        # value from .env, e.g. deepseek-r1:14b
 
 **vLLM** (if chosen for Qwen or Gemma — each in its own terminal):
 
+Use a separate project-local environment so vLLM's Torch dependencies do not
+replace the pipeline's CUDA build:
+
 ```bash
+source scripts/shared/common.sh
+data_dir="$(project_data_dir)"
+uv venv "$data_dir/venvs/vllm" --python 3.11
+UV_CACHE_DIR="$data_dir/.cache/uv" uv pip install \
+  --python "$data_dir/venvs/vllm/bin/python" 'vllm==0.30.0' --torch-backend=auto
+UV_CACHE_DIR="$data_dir/.cache/uv" uv pip install \
+  --python "$data_dir/venvs/vllm/bin/python" \
+  'nvidia-cuda-nvcc==13.0.88' 'nvidia-nvvm==13.0.88' 'nvidia-cuda-crt==13.0.88'
+```
+
+```bash
+vllm_cuda_root="$data_dir/venvs/vllm/lib/python3.11/site-packages/nvidia/cu13"
+export CUDA_HOME="$vllm_cuda_root"
+export PATH="$vllm_cuda_root/bin:$PATH"
+export FLASHINFER_WORKSPACE_BASE="$data_dir"
+
 # Qwen visual model (port 8010)
-python -m vllm.entrypoints.openai.api_server \
-  --model <QWEN_MODEL> --port 8010 --max-model-len 8192
+"$data_dir/venvs/vllm/bin/vllm" serve \
+  <QWEN_MODEL> --port 8010 --max-model-len 8192
 
 # Gemma (port 8000) — only if GEMMA_API_BACKEND=vllm
-python -m vllm.entrypoints.openai.api_server \
-  --model <GEMMA_API_MODEL> --port 8000 --max-model-len 8192
+"$data_dir/venvs/vllm/bin/vllm" serve \
+  <GEMMA_API_MODEL> --port 8000 --max-model-len 8192
 ```
 
 Replace `<GEMMA_API_MODEL>` / `<QWEN_MODEL>` / `<REASONING_MODEL>` with the values written to `.env`.
+
+For a single 16 GiB GPU, serve only one VLM at a time. Stop a local vLLM
+server before a CUDA vision or training step; unlike Ollama, its OpenAI API
+does not evict the model on a `keep_alive=0` request. The local `run-full`
+path verifies Ollama unloads between CUDA steps.
+
+The `owl10/UniDriveVLA_Nusc_Base_Stage3` repository contains a custom `.pt`
+checkpoint, not a Transformers/vLLM chat model. It cannot be served by the
+generic UniDrive sidecar client. `make run-full` disables this step by default
+for ordinary video input. Once a dedicated inference bridge accepts its
+required sensor inputs, pass `RUN_FULL_UNIDRIVE_ARGS=` and configure the
+sidecar URL to enable the step.
+
+Drone audio training is also disabled by default because it requires a separate
+training dataset. Prepare that dataset with `ssv-prepare-audio`, then pass
+`RUN_FULL_DRONE_AUDIO_ARGS=` to include the step.
 
 ---
 

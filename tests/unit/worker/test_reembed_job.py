@@ -132,7 +132,7 @@ async def test_run_reembed_checkpoints_after_each_batch(tmp_path):
 
     from selfsuvis.worker.handlers.reembed import _run_reembed
 
-    ts = datetime.datetime(2025, 1, 1, tzinfo=datetime.timezone.utc)
+    ts = datetime.datetime(2025, 1, 1, tzinfo=datetime.UTC)
     frame_rows = [
         {
             "id": f"f{i}",

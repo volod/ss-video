@@ -7,6 +7,7 @@ from fastapi.responses import HTMLResponse
 
 from selfsuvis.app.db import close_db_pool, init_db_pool
 from selfsuvis.app.routers.admin import router as admin_router
+from selfsuvis.app.routers.analysis4d import router as analysis4d_router
 from selfsuvis.app.routers.cvat import cvat_admin_router, webhook_router
 from selfsuvis.app.routers.health import router as health_router
 from selfsuvis.app.routers.index import router as index_router
@@ -103,6 +104,7 @@ app = FastAPI(title="ss-video", lifespan=lifespan)
 app.add_middleware(SecurityHeadersMiddleware)
 
 app.include_router(site_router)
+app.include_router(analysis4d_router)
 app.include_router(admin_router)
 app.include_router(cvat_admin_router)
 app.include_router(health_router)

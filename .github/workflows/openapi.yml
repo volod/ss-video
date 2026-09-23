@@ -25,14 +25,14 @@ jobs:
           # published ss-common (web + mqtt extras for FusionSettings).
           pip install -e ".[dev]" --no-deps
           pip install --no-deps \
-            "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-perception" \
-            "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-mapping" \
-            "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-fusion" \
-            "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=apps/fusion-rt"
+            "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-perception" \
+            "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-mapping" \
+            "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-fusion" \
+            "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=apps/fusion-rt"
           pip install \
             fastapi pydantic sse-starlette asyncpg python-multipart \
             httpx numpy pillow requests scipy pyyaml \
-            "ss-common[web,mqtt] @ git+https://github.com/volod/ss-common.git@v0.1.0"
+            "ss-common[web,mqtt] @ git+https://github.com/volod/ss-common.git@v0.2.1"
 
       - name: Export OpenAPI spec
         run: make export-openapi

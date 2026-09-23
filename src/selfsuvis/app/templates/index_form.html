@@ -31,6 +31,12 @@
     <label for="url">Video URL (HTTP/HTTPS)</label>
     <input type="text" id="url" name="url" placeholder="https://example.com/video.mp4" inputmode="url">
     <label><input type="checkbox" id="enable_tiles" name="enable_tiles" checked> Enable tile indexing</label>
+    <label for="analysis_profile">4D analysis profile</label>
+    <select id="analysis_profile" name="analysis_profile">
+      <option value="off" selected>off</option>
+      <option value="fast">fast</option>
+      <option value="deep">deep</option>
+    </select>
     <label for="api_key">API key <span class="hint">(optional, if configured)</span></label>
     <input type="password" id="api_key" name="api_key" placeholder="Leave empty if not required" autocomplete="off">
     <button type="submit">Index Video</button>
@@ -44,6 +50,7 @@
       const pathInput = document.getElementById('path').value.trim();
       const urlInput = document.getElementById('url').value.trim();
       const enableTiles = document.getElementById('enable_tiles').checked;
+      const analysisProfile = document.getElementById('analysis_profile').value;
       const apiKey = document.getElementById('api_key').value.trim();
       const result = document.getElementById('result');
       result.innerHTML = '';
@@ -53,6 +60,7 @@
         const fd = new FormData();
         fd.append('file', fileInput.files[0]);
         fd.append('enable_tiles', enableTiles ? 'true' : 'false');
+        fd.append('analysis_profile', analysisProfile);
         try {
           const r = await fetch('/index/video', { method: 'POST', headers, body: fd });
           const data = await r.json().catch(() => ({}));
@@ -66,7 +74,7 @@
         }
       } else if (pathInput) {
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        const body = 'path=' + encodeURIComponent(pathInput) + '&enable_tiles=' + enableTiles;
+        const body = 'path=' + encodeURIComponent(pathInput) + '&enable_tiles=' + enableTiles + '&analysis_profile=' + encodeURIComponent(analysisProfile);
         try {
           const r = await fetch('/index/video', { method: 'POST', headers, body });
           const data = await r.json().catch(() => ({}));
@@ -80,7 +88,7 @@
         }
       } else if (urlInput) {
         headers['Content-Type'] = 'application/x-www-form-urlencoded';
-        const body = 'url=' + encodeURIComponent(urlInput) + '&enable_tiles=' + enableTiles;
+        const body = 'url=' + encodeURIComponent(urlInput) + '&enable_tiles=' + enableTiles + '&analysis_profile=' + encodeURIComponent(analysisProfile);
         try {
           const r = await fetch('/index/url', { method: 'POST', headers, body });
           const data = await r.json().catch(() => ({}));

@@ -1,0 +1,9 @@
+{
+  "bits": "0000000001111110011111100111111001111110011111100111111000000000",
+  "height": 8,
+  "mission_id": "mission-nominal",
+  "schema_version": "ss-video.mask.v1",
+  "t_sec": 0.0,
+  "track_id": "track-1",
+  "width": 8
+}

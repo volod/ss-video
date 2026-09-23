@@ -1,0 +1,8 @@
+registryVersion: 1
+jsonSchemaIdBase: urn:ss:contracts
+modelsDir: models
+generatedDir: generated
+contracts:
+  verified-scene-event:
+    odcs: odcs/verified-scene-event.odcs.yaml
+    owner: ss-video

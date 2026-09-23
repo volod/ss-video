@@ -7,7 +7,7 @@ Product intent lives in the [specification](../design/spec.md). What exists live
 
 This path explains **why** each stage exists and what to inspect. It is not the
 36-step research runner. That runner, and its original chapter files, live in
-[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.1.0`. IoT mesh deep
+[volod/ss-fusion](https://github.com/volod/ss-fusion) tag `v0.2.0`. IoT mesh deep
 dives live in [volod/ss-sens](https://github.com/volod/ss-sens). See
 [siblings.md](siblings.md) for the full chapter map.
 

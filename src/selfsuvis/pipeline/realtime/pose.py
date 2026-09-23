@@ -9,7 +9,7 @@ fresh enough to trust together.
 
 import math
 from collections.abc import Iterable
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 from selfsuvis.pipeline.core import settings
@@ -344,6 +344,6 @@ def pose_freshness_ms(created_at: Any, now: datetime | None = None) -> int | Non
     else:
         created_dt = created_at
     if created_dt.tzinfo is None:
-        created_dt = created_dt.replace(tzinfo=timezone.utc)
-    now_dt = now or datetime.now(timezone.utc)
+        created_dt = created_dt.replace(tzinfo=UTC)
+    now_dt = now or datetime.now(UTC)
     return max(0, int((now_dt - created_dt).total_seconds() * 1000))

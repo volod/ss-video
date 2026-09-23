@@ -37,6 +37,10 @@ VIDEO_TABLES = (
     "map_tiles",
     "semantic_observations",
     "scene_timeline",
+    "analysis4d_runs",
+    "analysis4d_events",
+    "analysis4d_edges",
+    "analysis4d_qa",
 )
 
 

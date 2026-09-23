@@ -10,6 +10,7 @@ The current UI is a single Streamlit app in [`ui/app.py`](/home/vola/src/selfsuv
 - Submit a remote URL
 - Submit a local directory path for batch indexing
 - Poll job status by job ID
+- Choose an analysis profile (`off`, `fast`, or `deep`). `off` is the default and does not enqueue 4D jobs. A finished 4D job shows queue depth, backlog, degradations, and the published event count.
 
 ### Image Query
 

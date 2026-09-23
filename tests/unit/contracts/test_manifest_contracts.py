@@ -6,7 +6,7 @@ generators plus a DJI srt GPS file); model-artifact manifests come from the FINE
 field outside the contract, and, where its inputs are fixed, equal the committed golden fixture.
 `SS_UPDATE_GOLDEN=1` rewrites those fixtures from the code. The `local-run-nar` and
 `onnx-*-nar` fixtures were captured from a real local run; ss-common `make contracts` at tag
-`v0.1.0` checks the same snapshots.
+`v0.2.1` checks the same snapshots.
 """
 
 import asyncio

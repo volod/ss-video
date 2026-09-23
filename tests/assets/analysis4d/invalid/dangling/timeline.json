@@ -1,0 +1,57 @@
+{
+  "coordinate_frame": {
+    "calibration_id": "cal-1",
+    "metric_scale": "metric",
+    "name": "mission_enu"
+  },
+  "degradations": [
+    {
+      "code": "models_missing",
+      "detail": "fixture corpus has no model inference",
+      "stage": "contract"
+    }
+  ],
+  "events": [
+    {
+      "confidence": 0.94,
+      "end_sec": 2.0,
+      "event_id": "evt-1",
+      "evidence": [
+        {
+          "frame_id": "mission-dangling:f1:1000",
+          "geometry_ref": null,
+          "mask_ref": null,
+          "t_sec": 1.0,
+          "track_ids": [
+            "track-1"
+          ]
+        }
+      ],
+      "location": null,
+      "participants": [
+        "track-missing"
+      ],
+      "start_sec": 1.0,
+      "state_delta_refs": [
+        "delta-missing"
+      ],
+      "summary": "missing track entered",
+      "supersedes": null,
+      "type": "entered_region",
+      "verification": {
+        "reasons": [],
+        "rules": [
+          "geometry"
+        ],
+        "status": "accepted",
+        "vlm_claim_ref": null
+      }
+    }
+  ],
+  "mission_id": "mission-dangling",
+  "model_manifest_ref": "manifest.json",
+  "profile": "fast",
+  "qa_pairs": [],
+  "schema_version": "ss-video.scene-timeline.v1",
+  "supersedes_sha256": null
+}

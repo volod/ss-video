@@ -1,0 +1,1 @@
+{"box":{"xywh_norm":[0.2,0.2,0.2,0.2]},"confidence":0.9,"exemplars":[],"identity_link":null,"label_normalized":"crate","label_raw":"crate","mask_ref":null,"mission_id":"mission-relative","model":null,"negative_prompts":[],"observation_id":"obs-1","prompt_id":"prompt-crate","schema_version":"ss-video.track.v1","state":"confirmed","supersedes":null,"t_sec":0.0,"track_id":"track-1"}

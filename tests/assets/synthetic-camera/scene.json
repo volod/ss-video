@@ -1,0 +1,19 @@
+{
+  "width": 96,
+  "height": 64,
+  "fx": 80.0,
+  "fy": 80.0,
+  "cx": 48.0,
+  "cy": 32.0,
+  "eye_m": [-2.2, -2.6, 1.5],
+  "target_m": [0.0, 0.0, 0.7],
+  "box_center_m": [0.0, 0.0, 0.7],
+  "box_extent_m": [1.2, 0.7, 1.0],
+  "box_yaw_deg": 28.0,
+  "calibration_id": "cal-synthetic",
+  "reprojection_px_max": 0.05,
+  "box_center_error_m_max": 0.02,
+  "box_extent_error_m_max": 0.02,
+  "yaw_error_deg_max": 1.0,
+  "solid_center_bias_m_max": 0.05
+}

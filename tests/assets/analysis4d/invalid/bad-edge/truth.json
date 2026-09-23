@@ -1,0 +1,18 @@
+{
+  "boxes": [],
+  "conditions": [
+    "bad_edge"
+  ],
+  "counts": [],
+  "depths": [],
+  "events": [],
+  "keyframe_boundaries_sec": [],
+  "masks": [],
+  "media_duration_sec": 3.0,
+  "mission_id": "mission-bad-edge",
+  "qa": [],
+  "relations": [],
+  "schema_version": "ss-video.analysis4d-truth.v1",
+  "tracks": [],
+  "verifier": []
+}

@@ -8,7 +8,7 @@ import asyncio
 import json
 import os
 import time
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 import pytest
@@ -61,7 +61,7 @@ def _publish(topic: str, payload: dict) -> None:
 def test_fixture_uplink_and_camera_event_create_incident():
     from ss_kit.mqtt import TopicBuilder
 
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     now_iso = now.isoformat().replace("+00:00", "Z")
     zone_id = SITE_ID
     headers = {}

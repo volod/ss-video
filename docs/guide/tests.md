@@ -25,6 +25,7 @@ tests/unit/
   models/
   pipeline/
     analysis/
+    analysis4d/
     core/
     mapping/
     media/
@@ -68,8 +69,21 @@ Same as `make test`; `INDEX_DIR_PATH` is set for dir tests.
 
 ## Assets
 ```
-./tests/assets/   # small test videos and reference image
+./tests/assets/            # small test videos and reference image
+./tests/assets/analysis4d/ # pinned 4D contract corpus (analysis4d-v1)
+./tests/assets/synthetic-camera/ # pinned camera and box for the geometry gate
 ```
+
+The contract benchmark is `python -m selfsuvis.pipeline.analysis4d.benchmark`.
+The keyframe and track benchmark is `python -m selfsuvis.pipeline.analysis4d.track_benchmark`
+([4D model runbook](../runbooks/four-d-models.md)).
+The geometry benchmark is `python -m selfsuvis.pipeline.analysis4d.geometry_benchmark`
+([4D geometry runbook](../runbooks/four-d-geometry.md)).
+The 15-minute profile load benchmark is `python -m selfsuvis.pipeline.analysis4d.profile_benchmark`
+([profile orchestration runbook](../runbooks/four-d-profile-orchestration.md)).
+One video file is `python -m selfsuvis.pipeline.analysis4d.analyze VIDEO`. A
+free GPU slot writes geometry samples for kept keyframes. `metric_scale` stays
+`unavailable` without calibration.
 
 ## Integration test coverage
 - Health, index (video/url/dir), precheck, precheck_dir, jobs, query (image/text)

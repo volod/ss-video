@@ -7,7 +7,7 @@ name = "selfsuvis"
 version = "0.1.0"
 description = "Outdoor autonomy perception stack — spatial memory engine for robotics"
 readme = "README.md"
-requires-python = ">=3.10"
+requires-python = ">=3.11"
 dependencies = [
     # Web / API
     "fastapi>=0.115",
@@ -47,13 +47,13 @@ dependencies = [
     "psutil>=5.9",
     "verovio>=3.12",
     # Shared contracts and runtime helpers (published tag).
-    "ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0",
+    "ss-common @ git+https://github.com/volod/ss-common.git@v0.2.1",
     # Published ss-fusion workspace members (uv [tool.uv.sources] git pins;
     # pip also honors these PEP 508 subdirectory URLs).
-    "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-perception",
-    "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-mapping",
-    "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=packages/ss-fusion",
-    "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.1.0#subdirectory=apps/fusion-rt",
+    "ss-perception @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-perception",
+    "ss-mapping @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-mapping",
+    "ss-fusion @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=packages/ss-fusion",
+    "fusion-rt @ git+https://github.com/volod/ss-fusion.git@v0.2.0#subdirectory=apps/fusion-rt",
 ]
 
 [project.optional-dependencies]
@@ -142,7 +142,7 @@ known-first-party = ["selfsuvis", "ssv_vdp", "ss_kit", "ss_contracts"]
 
 # ── pyright ──────────────────────────────────────────────────────────────────
 [tool.pyright]
-pythonVersion = "3.10"
+pythonVersion = "3.11"
 pythonPlatform = "Linux"
 extraPaths = ["src"]
 venvPath = "."
@@ -158,11 +158,11 @@ omit = ["*/tests/*", "*/__main__.py"]
 show_missing = true
 
 [tool.uv.sources]
-ss-common = { git = "https://github.com/volod/ss-common", tag = "v0.1.0" }
-ss-perception = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-perception" }
-ss-mapping = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-mapping" }
-ss-fusion = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "packages/ss-fusion" }
-fusion-rt = { git = "https://github.com/volod/ss-fusion", tag = "v0.1.0", subdirectory = "apps/fusion-rt" }
+ss-common = { git = "https://github.com/volod/ss-common", tag = "v0.2.1" }
+ss-perception = { git = "https://github.com/volod/ss-fusion", tag = "v0.2.0", subdirectory = "packages/ss-perception" }
+ss-mapping = { git = "https://github.com/volod/ss-fusion", tag = "v0.2.0", subdirectory = "packages/ss-mapping" }
+ss-fusion = { git = "https://github.com/volod/ss-fusion", tag = "v0.2.0", subdirectory = "packages/ss-fusion" }
+fusion-rt = { git = "https://github.com/volod/ss-fusion", tag = "v0.2.0", subdirectory = "apps/fusion-rt" }
 
 [tool.importlinter]
 root_packages = ["selfsuvis"]
@@ -177,7 +177,7 @@ type = "layers"
 exhaustive = false
 ignore_imports = []
 layers = [
-    "selfsuvis.app : selfsuvis.camera_cli : selfsuvis.mapper : selfsuvis.pipeline.mapping.icp : selfsuvis.pipeline.mapping.mapper : selfsuvis.pipeline.media.bridge_common : selfsuvis.pipeline.media.download : selfsuvis.pipeline.media.drone_bridge : selfsuvis.pipeline.media.mavlink : selfsuvis.pipeline.media.mission_bundle : selfsuvis.pipeline.media.network : selfsuvis.pipeline.media.ros_bridge : selfsuvis.pipeline.media.rtsp_captioner : selfsuvis.pipeline.media.rtsp_ingest : selfsuvis.pipeline.realtime : selfsuvis.pipeline.storage.global_maps : selfsuvis.pipeline.storage.jobs : selfsuvis.pipeline.storage.map_cache : selfsuvis.pipeline.storage.migrate_video : selfsuvis.pipeline.storage.missions : selfsuvis.pipeline.storage.processed : selfsuvis.pipeline.storage.realtime : selfsuvis.pipeline.workflows : selfsuvis.realtime : selfsuvis.scripts.backfill_captions : selfsuvis.scripts.generate_env : selfsuvis.scripts.migrate_postgres : selfsuvis.scripts.quality : selfsuvis.scripts.shell_helpers : selfsuvis.scripts.smoke_florence : selfsuvis.ui : selfsuvis.worker",
+    "selfsuvis.app : selfsuvis.camera_cli : selfsuvis.mapper : selfsuvis.pipeline.mapping.icp : selfsuvis.pipeline.mapping.mapper : selfsuvis.pipeline.media.bridge_common : selfsuvis.pipeline.media.download : selfsuvis.pipeline.media.drone_bridge : selfsuvis.pipeline.media.mavlink : selfsuvis.pipeline.media.mission_bundle : selfsuvis.pipeline.media.network : selfsuvis.pipeline.media.ros_bridge : selfsuvis.pipeline.media.rtsp_captioner : selfsuvis.pipeline.media.rtsp_ingest : selfsuvis.pipeline.realtime : selfsuvis.pipeline.storage.global_maps : selfsuvis.pipeline.storage.jobs : selfsuvis.pipeline.storage.map_cache : selfsuvis.pipeline.storage.migrate_video : selfsuvis.pipeline.storage.missions : selfsuvis.pipeline.storage.processed : selfsuvis.pipeline.storage.realtime : selfsuvis.pipeline.workflows : selfsuvis.realtime : selfsuvis.scripts.backfill_captions : selfsuvis.scripts.generate_env : selfsuvis.scripts.host_prereqs : selfsuvis.scripts.migrate_postgres : selfsuvis.scripts.quality : selfsuvis.scripts.shell_helpers : selfsuvis.scripts.smoke_florence : selfsuvis.ui : selfsuvis.worker",
 ]
 
 

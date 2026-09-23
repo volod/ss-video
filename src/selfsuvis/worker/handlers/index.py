@@ -5,6 +5,7 @@ import time
 import uuid
 
 import selfsuvis.pipeline.storage.processed as processed_db_mod
+from selfsuvis.pipeline.analysis4d.profile import scheduled_analysis_jobs
 from selfsuvis.pipeline.core import file_sha256, settings
 from selfsuvis.pipeline.media import download_url
 from selfsuvis.pipeline.storage import update_job
@@ -113,7 +114,11 @@ def handle_index_job(job_id: str, payload: dict, job: dict, pool, logger) -> Non
 
         _run(_persist_index_result())
 
-        postflight_jobs = _normalize_postflight_job_names(payload.get("postflight_jobs"))
+        postflight_jobs = _normalize_postflight_job_names(
+            [*(payload.get("postflight_jobs") or []), *scheduled_analysis_jobs(payload)]
+        )
+        if postflight_jobs:
+            payload["postflight_jobs"] = postflight_jobs
 
         async def _finalize_success():
             async with pool.acquire() as conn:

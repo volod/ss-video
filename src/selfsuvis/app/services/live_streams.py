@@ -3,7 +3,7 @@
 import asyncio
 import contextlib
 from dataclasses import dataclass
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 from urllib.parse import quote
 
@@ -173,7 +173,7 @@ class RealtimeStreamManager:
                 caption_fps=caption_rate,
                 stop_event=stop_event,
                 task=asyncio.create_task(asyncio.sleep(0)),
-                started_at=datetime.now(timezone.utc),
+                started_at=datetime.now(UTC),
             )
             runtime.task = asyncio.create_task(self._run(runtime))
             self._sessions[session_id] = runtime
@@ -208,7 +208,7 @@ class RealtimeStreamManager:
         runtime.stop_event.set()
         try:
             await asyncio.wait_for(runtime.task, timeout=5.0)
-        except asyncio.TimeoutError:
+        except TimeoutError:
             runtime.task.cancel()
             with contextlib.suppress(asyncio.CancelledError):
                 await runtime.task

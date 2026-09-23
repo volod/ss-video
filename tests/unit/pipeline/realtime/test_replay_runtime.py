@@ -1,6 +1,6 @@
 import json
 import tempfile
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from selfsuvis.fusion_rt import (
@@ -25,7 +25,7 @@ def _write_json(path: Path, payload) -> None:
 
 def test_event_envelopes_normalize_core_fields():
     event = SensorEvent(
-        event_time=datetime(2026, 1, 1, tzinfo=timezone.utc),
+        event_time=datetime(2026, 1, 1, tzinfo=UTC),
         ingest_time="2026-01-01T00:00:05Z",
         node_id=" Node_A ",
         sensor_type=" Camera ",
@@ -100,7 +100,7 @@ def test_replay_local_run_produces_ordered_events_with_freshness():
 
         events = replay_local_run(
             output_dir,
-            ingest_start=datetime(2026, 1, 1, tzinfo=timezone.utc),
+            ingest_start=datetime(2026, 1, 1, tzinfo=UTC),
             ingest_delay_sec_by_kind={"threat": 4.0},
         )
 

@@ -15,7 +15,7 @@ set -eu
 SPEC="${1:-.}"
 WHEELS_DIR="${WHEELS_DIR:-/tmp/wheels}"
 TORCH_CUDA_INDEX="${TORCH_CUDA_INDEX:-cpu}"
-SS_FUSION_GIT="git+https://github.com/volod/ss-fusion.git@v0.1.0"
+SS_FUSION_GIT="git+https://github.com/volod/ss-fusion.git@v0.2.0"
 
 install_ss_fusion() {
   pip install --no-deps \
@@ -26,7 +26,7 @@ install_ss_fusion() {
 }
 
 pip install --prefer-binary \
-  "ss-common @ git+https://github.com/volod/ss-common.git@v0.1.0"
+  "ss-common @ git+https://github.com/volod/ss-common.git@v0.2.1"
 
 if [ "$SPEC" = "--runtime" ]; then
   echo "fusion-rt runtime install (no torch, no video extra)"
